@@ -229,30 +229,30 @@ public class AlgoAllDiffAC {
                         filter |= v.instantiateTo(k, aCause);
                     } else {
                         filter |= v.removeValue(k, aCause);
-                        digraph.removeArc(i, j);
+//                        digraph.removeArc(i, j);
                     }
                 }
             }
         }
-        for (int i = 0; i < n; i++) {
-            v = vars[i];
-            if (!v.hasEnumeratedDomain()) {
-                ub = v.getUB();
-                for (int k = v.getLB(); k <= ub; k++) {
-                    j = map.get(k);
-                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
-                        filter |= v.removeValue(k, aCause);
-                    }
-                }
-                int lb = v.getLB();
-                for (int k = v.getUB(); k >= lb; k--) {
-                    j = map.get(k);
-                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
-                        filter |= v.removeValue(k, aCause);
-                    }
-                }
-            }
-        }
+//        for (int i = 0; i < n; i++) {
+//            v = vars[i];
+//            if (!v.hasEnumeratedDomain()) {
+//                ub = v.getUB();
+//                for (int k = v.getLB(); k <= ub; k++) {
+//                    j = map.get(k);
+//                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
+//                        filter |= v.removeValue(k, aCause);
+//                    }
+//                }
+//                int lb = v.getLB();
+//                for (int k = v.getUB(); k >= lb; k--) {
+//                    j = map.get(k);
+//                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
+//                        filter |= v.removeValue(k, aCause);
+//                    }
+//                }
+//            }
+//        }
         return filter;
     }
 }

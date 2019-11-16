@@ -51,6 +51,7 @@ import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.search.strategy.decision.DecisionPath;
 import org.chocosolver.solver.search.strategy.strategy.AbstractStrategy;
 import org.chocosolver.solver.trace.IOutputFactory;
+import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.Task;
 import org.chocosolver.solver.variables.Variable;
 import org.chocosolver.util.ESat;
@@ -290,7 +291,16 @@ public class Solver implements ISolver, IMeasures, IOutputFactory {
                 case initialize:
                     throw new UnsupportedOperationException("should not initialize during search loop");
                 case propagate:
+//                    System.out.println(getDecisionPath().getLastDecision().toString());
+//                    System.out.println("before");
+//                    for(Variable v : getModel().getVars()){
+//                        System.out.println(v.toString());
+//                    }
                     propagate(left);
+//                    System.out.println("after");
+//                    for(Variable v : getModel().getVars()){
+//                        System.out.println(v.toString());
+//                    }
                     break;
                 case extend:
                     left = true;

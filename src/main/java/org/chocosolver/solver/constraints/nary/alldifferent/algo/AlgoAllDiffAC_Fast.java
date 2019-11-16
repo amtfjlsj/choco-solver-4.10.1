@@ -20,6 +20,8 @@ import org.chocosolver.util.objects.setDataStructures.SetType;
 
 import java.util.BitSet;
 
+import static java.lang.System.out;
+
 /**
  * Algorithm of Alldifferent with AC
  * <p>
@@ -100,6 +102,10 @@ public class AlgoAllDiffAC_Fast {
     //***********************************************************************************
 
     public boolean propagate() throws ContradictionException {
+//        out.println("vars: ");
+//        for (IntVar v : vars) {
+//            System.out.println(v.toString());
+//        }
         findMaximumMatching();
         return filter();
     }
@@ -253,39 +259,46 @@ public class AlgoAllDiffAC_Fast {
                 j = map.get(k);
                 if (distinction.get(i) && !distinction.get(j)) { // 删除第一类边，变量在Γ(A)中，值在Dc-A中
                     filter |= v.removeValue(k, aCause);
-                    digraph.removeArc(i, j);
+//                    out.println(v.getName() + " remove " + k);
+//                    digraph.removeArc(i, j);
                 } else if (!distinction.get(i) && !distinction.get(j)) { // 删除第二类边，变量在Xc-Γ(A)中，值在Dc-A中
                     if (nodeSCC[i] != nodeSCC[j]) {
                         if (matching[i] == j) {
                             filter |= v.instantiateTo(k, aCause);
+//                            out.println(v.getName() + " instantiate to " + k);
                         } else {
                             filter |= v.removeValue(k, aCause);
+//                            out.println(v.getName() + " remove " + k);
                             // 我觉得不用更新digraph，因为每次调用propagate时都会更新digraph
-                            digraph.removeArc(i, j);
+//                            digraph.removeArc(i, j);
                         }
                     }
                 }
             }
         }
-        for (int i = 0; i < n; i++) {
-            v = vars[i];
-            if (!v.hasEnumeratedDomain()) {
-                ub = v.getUB();
-                for (int k = v.getLB(); k <= ub; k++) {
-                    j = map.get(k);
-                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
-                        filter |= v.removeValue(k, aCause);
-                    }
-                }
-                int lb = v.getLB();
-                for (int k = v.getUB(); k >= lb; k--) {
-                    j = map.get(k);
-                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
-                        filter |= v.removeValue(k, aCause);
-                    }
-                }
-            }
-        }
+//        for (int i = 0; i < n; i++) {
+//            v = vars[i];
+//            if (!v.hasEnumeratedDomain()) {
+//                ub = v.getUB();
+//                for (int k = v.getLB(); k <= ub; k++) {
+//                    j = map.get(k);
+//                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
+//                        filter |= v.removeValue(k, aCause);
+//                    }
+//                }
+//                int lb = v.getLB();
+//                for (int k = v.getUB(); k >= lb; k--) {
+//                    j = map.get(k);
+//                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
+//                        filter |= v.removeValue(k, aCause);
+//                    }
+//                }
+//            }
+//        }
+//        out.println("after vars: ");
+//        for (IntVar x : vars) {
+//            System.out.println(x.toString());
+//        }
         return filter;
     }
 }

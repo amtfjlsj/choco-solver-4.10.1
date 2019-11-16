@@ -368,32 +368,48 @@ public class AllDifferentTest {
 
     @Test(groups="1s", timeOut=60000)
     public void testB3() throws ContradictionException {
-        out.println("AC============>");
+        out.println("ACFast============>");
 
         Model model = new Model();
         IntVar[] X = new IntVar[4];
-        X[0] = model.intVar("V0", new int[]{1, 2});
-        X[1] = model.intVar("V1", new int[]{1, 2});
-        X[2] = model.intVar("V2", new int[]{2, 3, 4});
-        X[3] = model.intVar("V3", new int[]{3, 4, 5});
+        X[0] = model.intVar("V0", new int[]{0, 1});
+        X[1] = model.intVar("V3", new int[]{2, 3});
+        X[2] = model.intVar("V1", new int[]{3, 0});
+        X[3] = model.intVar("V3", new int[]{3, 1});
 
-        model.allDifferent(X, "AC").post();
+        model.allDifferent(X, "ACFast").post();
         model.getSolver().propagate();
 
         for(IntVar x : X) {
             out.println(x.toString());
         }
+//
+//        out.println("ACFast============>");
+//
+//        model = new Model();
+//        X = new IntVar[4];
+//        X[0] = model.intVar("V0", new int[]{1, 2});
+//        X[1] = model.intVar("V1", new int[]{1, 2});
+//        X[2] = model.intVar("V2", new int[]{2, 3, 4});
+//        X[3] = model.intVar("V3", new int[]{3, 4, 5});
+//
+//        model.allDifferent(X, "ACFast").post();
+//        model.getSolver().propagate();
+//
+//        for(IntVar x : X) {
+//            out.println(x.toString());
+//        }
 
-        out.println("ACFast============>");
+        out.println("ACFastbit============>");
 
         model = new Model();
         X = new IntVar[4];
-        X[0] = model.intVar("V0", new int[]{1, 2});
-        X[1] = model.intVar("V1", new int[]{1, 2});
-        X[2] = model.intVar("V2", new int[]{2, 3, 4});
-        X[3] = model.intVar("V3", new int[]{3, 4, 5});
+        X[0] = model.intVar("V0", new int[]{0, 1});
+        X[1] = model.intVar("V3", new int[]{2, 3});
+        X[2] = model.intVar("V1", new int[]{3, 0});
+        X[3] = model.intVar("V3", new int[]{3, 1});
 
-        model.allDifferent(X, "ACFast").post();
+        model.allDifferent(X, "ACFastbit").post();
         model.getSolver().propagate();
 
         for(IntVar x : X) {
