@@ -21,5 +21,7 @@ public class amtf {
         while (sparseSet.hasNextInvalid()) {
             out.println(sparseSet.next());
         }
+
+        out.println(sparseSet.contain(4));
     }
 }

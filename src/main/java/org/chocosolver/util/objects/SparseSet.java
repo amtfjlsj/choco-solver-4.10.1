@@ -1,5 +1,7 @@
 package org.chocosolver.util.objects;
 
+import java.util.BitSet;
+
 /**
  * Implementation based on "2013_TRICS_Sparse-Sets for Domain Implementation".
  * <p/>
@@ -33,6 +35,10 @@ public class SparseSet {
 
     public void fill() {
         limit = length - 1;
+    }
+
+    public boolean contain(int e) {
+        return sparse[e] <= limit;
     }
 
     public void remove(int e) {

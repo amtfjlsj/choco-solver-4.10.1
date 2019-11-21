@@ -291,7 +291,11 @@ public class Solver implements ISolver, IMeasures, IOutputFactory {
                 case initialize:
                     throw new UnsupportedOperationException("should not initialize during search loop");
                 case propagate:
-//                    System.out.println(getDecisionPath().getLastDecision().toString());
+//                    if (getNodeCount() == 200000) {
+//                        out.println("node: " + getNodeCount());
+//                        out.println(getDecisionPath().getLastDecision().toString());
+//                        stop = true;
+//                    }
 //                    System.out.println("before");
 //                    for(Variable v : getModel().getVars()){
 //                        System.out.println(v.toString());

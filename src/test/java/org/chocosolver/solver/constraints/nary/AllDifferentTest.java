@@ -17,6 +17,7 @@ import org.chocosolver.solver.variables.IntVar;
 import org.testng.annotations.Test;
 
 import java.util.Random;
+
 import static java.lang.System.out;
 
 import static org.chocosolver.solver.constraints.checker.DomainBuilder.buildFullDomains;
@@ -73,18 +74,18 @@ public class AllDifferentTest {
     }
 
 
-    @Test(groups="1s", timeOut=60000)
+    @Test(groups = "1s", timeOut = 60000)
     public void test1() {
         model(true, 8, 92);
         model(false, 8, 92);
     }
 
-    @Test(groups="1s", timeOut=60000)
+    @Test(groups = "1s", timeOut = 60000)
     public void test2() {
         model(true, 8, 92);
     }
 
-    @Test(groups="1s", timeOut=60000)
+    @Test(groups = "1s", timeOut = 60000)
     public void test3() {
 
         Model s = new Model();
@@ -114,7 +115,7 @@ public class AllDifferentTest {
     }
 
 
-    @Test(groups="1s", timeOut=60000)
+    @Test(groups = "1s", timeOut = 60000)
     public void test4() {
         Model s = new Model();
         int n = 5;
@@ -132,7 +133,7 @@ public class AllDifferentTest {
     }
 
 
-    @Test(groups="10s", timeOut=60000)
+    @Test(groups = "10s", timeOut = 60000)
     public void test6() {
         Random rand;
         for (int seed = 0; seed < 10; seed++) {
@@ -203,7 +204,7 @@ public class AllDifferentTest {
         return s;
     }
 
-    @Test(groups="1s", timeOut=60000)
+    @Test(groups = "1s", timeOut = 60000)
     public void testXX() {
         Model model = new Model();
         IntVar[] ts = new IntVar[4];
@@ -231,7 +232,7 @@ public class AllDifferentTest {
 
     }
 
-    @Test(groups="1s", timeOut=60000)
+    @Test(groups = "1s", timeOut = 60000)
     public void testXXX() throws ContradictionException {
         Model model = new Model();
         IntVar[] ts = new IntVar[3];
@@ -246,7 +247,7 @@ public class AllDifferentTest {
         assertEquals(ts[2].getDomainSize(), 2);
     }
 
-    @Test(groups="1s", timeOut=60000)
+    @Test(groups = "1s", timeOut = 60000)
     public void testB() {
         Model model = new Model();
         IntVar[] ts = new IntVar[3];
@@ -261,7 +262,7 @@ public class AllDifferentTest {
         assertEquals(model.getSolver().getNodeCount(), 23);
     }
 
-    @Test(groups="1s", timeOut=60000)
+    @Test(groups = "1s", timeOut = 60000)
     public void testE() {
         Model model = new Model();
         IntVar[] ts = new IntVar[3];
@@ -276,7 +277,7 @@ public class AllDifferentTest {
         assertEquals(model.getSolver().getNodeCount(), 19);
     }
 
-    @Test(groups="1s", timeOut=60000)
+    @Test(groups = "1s", timeOut = 60000)
     public void testB1() throws ContradictionException {
         Model model = new Model();
         IntVar[] X = new IntVar[32];
@@ -321,7 +322,7 @@ public class AllDifferentTest {
         assertEquals(X[14].getDomainSize(), 2);
     }
 
-    @Test(groups="1s", timeOut=60000)
+    @Test(groups = "1s", timeOut = 60000)
     public void testB2() throws ContradictionException {
         Model model = new Model();
         IntVar[] X = new IntVar[32];
@@ -366,16 +367,31 @@ public class AllDifferentTest {
         assertEquals(X[14].getDomainSize(), 2);
     }
 
-    @Test(groups="1s", timeOut=60000)
+    @Test(groups = "1s", timeOut = 60000)
     public void testB3() throws ContradictionException {
         out.println("ACFast============>");
 
         Model model = new Model();
-        IntVar[] X = new IntVar[4];
-        X[0] = model.intVar("V0", new int[]{0, 1});
-        X[1] = model.intVar("V3", new int[]{2, 3});
-        X[2] = model.intVar("V1", new int[]{3, 0});
-        X[3] = model.intVar("V3", new int[]{3, 1});
+        IntVar[] X = new IntVar[3];
+        X[0] = model.intVar(new int[]{0, 1});
+        X[1] = model.intVar(new int[]{0, 1});
+        X[2] = model.intVar(new int[]{0, 1, 2});
+//        X[3] = model.intVar("V3", new int[]{3, 1});
+
+        model.allDifferent(X, "ACFast").post();
+        model.getSolver().propagate();
+
+        for (IntVar x : X) {
+            out.println(x.toString());
+        }
+//
+        out.println("ACFastbit1============>");
+
+        model = new Model();
+        X = new IntVar[3];
+        X[0] = model.intVar(new int[]{0, 1});
+        X[1] = model.intVar(new int[]{0, 1});
+        X[2] = model.intVar(new int[]{0, 1, 2});
 
         model.allDifferent(X, "ACFast").post();
         model.getSolver().propagate();
@@ -383,36 +399,20 @@ public class AllDifferentTest {
         for(IntVar x : X) {
             out.println(x.toString());
         }
-//
-//        out.println("ACFast============>");
-//
-//        model = new Model();
-//        X = new IntVar[4];
-//        X[0] = model.intVar("V0", new int[]{1, 2});
-//        X[1] = model.intVar("V1", new int[]{1, 2});
-//        X[2] = model.intVar("V2", new int[]{2, 3, 4});
-//        X[3] = model.intVar("V3", new int[]{3, 4, 5});
-//
-//        model.allDifferent(X, "ACFast").post();
-//        model.getSolver().propagate();
-//
-//        for(IntVar x : X) {
-//            out.println(x.toString());
-//        }
 
-        out.println("ACFastbit============>");
+        out.println("ACFastbit2============>");
 
         model = new Model();
-        X = new IntVar[4];
-        X[0] = model.intVar("V0", new int[]{0, 1});
-        X[1] = model.intVar("V3", new int[]{2, 3});
-        X[2] = model.intVar("V1", new int[]{3, 0});
-        X[3] = model.intVar("V3", new int[]{3, 1});
+        X = new IntVar[3];
+        X[0] = model.intVar(new int[]{0, 1});
+        X[1] = model.intVar(new int[]{0, 1});
+        X[2] = model.intVar(new int[]{0, 1, 2});
+//        X[3] = model.intVar("V3", new int[]{3, 1});
 
-        model.allDifferent(X, "ACFastbit").post();
+        model.allDifferent(X, "ACFastbit2").post();
         model.getSolver().propagate();
 
-        for(IntVar x : X) {
+        for (IntVar x : X) {
             out.println(x.toString());
         }
     }

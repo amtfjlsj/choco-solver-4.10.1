@@ -9,6 +9,7 @@
  */
 package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 
+import amtf.TimeCount;
 import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
@@ -106,7 +107,11 @@ public class AlgoAllDiffAC_Fast {
 //        for (IntVar v : vars) {
 //            System.out.println(v.toString());
 //        }
+        TimeCount.startTime = System.nanoTime();
         findMaximumMatching();
+        TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
+
+        TimeCount.startTime = System.nanoTime();
         return filter();
     }
 
@@ -264,7 +269,7 @@ public class AlgoAllDiffAC_Fast {
                 } else if (!distinction.get(i) && !distinction.get(j)) { // 删除第二类边，变量在Xc-Γ(A)中，值在Dc-A中
                     if (nodeSCC[i] != nodeSCC[j]) {
                         if (matching[i] == j) {
-                            filter |= v.instantiateTo(k, aCause);
+//                            filter |= v.instantiateTo(k, aCause);
 //                            out.println(v.getName() + " instantiate to " + k);
                         } else {
                             filter |= v.removeValue(k, aCause);
@@ -299,6 +304,7 @@ public class AlgoAllDiffAC_Fast {
 //        for (IntVar x : vars) {
 //            System.out.println(x.toString());
 //        }
+        TimeCount.filterTime += System.nanoTime() - TimeCount.startTime;
         return filter;
     }
 }

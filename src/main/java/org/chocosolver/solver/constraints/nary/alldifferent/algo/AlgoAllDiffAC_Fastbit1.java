@@ -1,5 +1,6 @@
 package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 
+import amtf.TimeCount;
 import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
@@ -23,7 +24,7 @@ import static java.lang.System.out;
  *
  * @author Jean-Guillaume Fages, Zhe Li, Jia'nan Chen
  */
-public class AlgoAllDiffAC_Fastbit {
+public class AlgoAllDiffAC_Fastbit1 {
 
     //***********************************************************************************
     // VARIABLES
@@ -72,20 +73,20 @@ public class AlgoAllDiffAC_Fastbit {
 
     // 变量、值的匹配边和非匹配边
     private int[] varMatchedEdge;
-    int[] valMatchedEdge;
+    private int[] valMatchedEdge;
     private BitSet[] varUnmatchedEdge;
     private BitSet[] valUnmatchedEdge;
 
     // Xc-Γ(A)
-    SparseSet notGamma;
+    private SparseSet notGamma;
     // Dc-A
-    SparseSet notA;
+    private SparseSet notA;
 
     //***********************************************************************************
     // CONSTRUCTORS
     //***********************************************************************************
 
-    public AlgoAllDiffAC_Fastbit(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffAC_Fastbit1(IntVar[] variables, ICause cause) {
         this.vars = variables;
         aCause = cause;
         n = vars.length;
@@ -163,7 +164,11 @@ public class AlgoAllDiffAC_Fastbit {
 //        for (IntVar v : vars) {
 //            out.println(v.toString());
 //        }
+        TimeCount.startTime = System.nanoTime();
         findMaximumMatching();
+        TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
+
+        TimeCount.startTime = System.nanoTime();
         return filter();
     }
 
@@ -352,8 +357,9 @@ public class AlgoAllDiffAC_Fastbit {
         // out.println(allowedEdge.toString());
     }
 
-    // 寻找第一种类型的冗余边
-    private void findFirstPart() {
+    // 过滤第一种类型的冗余边
+    private boolean filterFirstPart() throws ContradictionException {
+        // 先寻找
         redundantEdge.clear();
         notA.iterateValid();
         while (notA.hasNextValid()) {
@@ -369,10 +375,33 @@ public class AlgoAllDiffAC_Fastbit {
         }
         // out.println("-----redundantEdge-----");
         // out.println(redundantEdge.toString());
+
+        // 后过滤
+        boolean filter = false;
+        int varIdx;
+        IntVar v;
+        int k;
+        int edgeIdx = redundantEdge.nextSetBit(0);
+        while (edgeIdx != -1) {
+            // 根据边索引得到对应的变量和取值
+            varIdx = edgeIdx / numValue;
+            v = vars[varIdx];
+            k = idToVal.get(edgeIdx % numValue + n);
+            filter |= v.removeValue(k, aCause);
+//            out.println(v.getName() + " remove " + k);
+            edgeIdx = redundantEdge.nextSetBit(edgeIdx + 1);
+        }
+        return filter;
     }
 
     // 寻找第二种类型的冗余边
-    private void findSecondPart() {
+    private boolean filterSecondPart() throws ContradictionException {
+        boolean filter = false;
+        int varIdx;
+        IntVar v;
+        int k;
+        int edgeIdx;
+
         // 从existentEdge中去掉allowedEdge和跨界边后，即是leftEdge
         // 当前redundantEdge存的就是跨界边
         leftEdge.clear();
@@ -380,98 +409,124 @@ public class AlgoAllDiffAC_Fastbit {
         leftEdge.or(redundantEdge);
         leftEdge.flip(0, numBit);
         leftEdge.and(existentEdge);
-        // 从leftEdge中去掉matchedEdge，即是需要检查的边
+//        out.println("-----leftEdge-----");
+//        out.println(leftEdge.toString());
+
+        // out.println("-----SCC-----");
+        // 记录当前limit
+        notGamma.record();
+
+        // -------------------先检查匹配边-------------------
+        // 从leftEdge和matchedEdge共有的边，即是需要检查的匹配边
+//        checkEdge.clear();
+//        checkEdge.or(matchedEdge);
+//        checkEdge.and(leftEdge);
+////        out.println("-----matchedEdge-----");
+////        out.println(matchedEdge.toString());
+////        out.println("-----checkMatchedEdge-----");
+////        out.println(checkEdge.toString());
+//        edgeIdx = checkEdge.nextSetBit(0);
+//        // 论域大小大于1的变量才需要检查
+//        while (edgeIdx != -1 && vars[edgeIdx / numValue].getDomainSize() > 1) {
+//            if (checkSCC(edgeIdx, true)) {
+//                // 进一步的还可以回溯路径，从checkEdge中删除
+////                //out.println(edgeIdx + " is in SCC");
+//            } else {
+//                // 根据边索引得到对应的变量和取值
+//                varIdx = edgeIdx / numValue;
+//                v = vars[varIdx];
+//                k = idToVal.get(matching[varIdx]);
+//                filter |= v.instantiateTo(k, aCause);
+////                out.println(v.getName() + " instantiate to " + k);
+//                // 从leftEdge中去掉被删的边
+//                tmp.clear();
+//                tmp.or(varUnmatchedEdge[varIdx]);
+//                tmp.flip(0, numBit);
+//                leftEdge.and(tmp);
+//            }
+//            edgeIdx = checkEdge.nextSetBit(edgeIdx + 1);
+//        }
+
+        // -------------------后检查非匹配边-------------------
+        // 从leftEdge中去掉matchedEdge，即是需要检查的非匹配边
         checkEdge.clear();
         checkEdge.or(matchedEdge);
         checkEdge.flip(0, numBit);
         checkEdge.and(leftEdge);
-
-        // out.println("-----leftEdge-----");
-        // out.println(leftEdge.toString());
-        // out.println("-----checkEdge-----");
-        // out.println(checkEdge.toString());
-
-        // out.println("-----SCC-----");
-        int edgeIdx = checkEdge.nextSetBit(0);
-        notGamma.record();
+//        out.println("-----checkUnmatchedEdge-----");
+//        out.println(checkEdge.toString());
+        edgeIdx = checkEdge.nextSetBit(0);
         while (edgeIdx != -1) {
-            searchEdge.clear();
-            searchEdge.set(edgeIdx);
-            notGamma.restore();
-
-            // 获得边信息这个是非匹配边
-            int val = edgeIdx % numValue;
-            int vme = valMatchedEdge[val];
-            boolean extended;
-            boolean inSCC = false;
-            loop:
-            do {
-                extended = false;
-                // 头部扩展，匹配变量
-                notGamma.iterateValid();
-                while (notGamma.hasNextValid()) {
-                    int varIdx = notGamma.next();
-                    tmp.clear();
-                    tmp.or(searchEdge);
-                    tmp.and(varUnmatchedEdge[varIdx]);
-                    if (!tmp.isEmpty()) {
-                        extended = true;
-                        searchEdge.set(varMatchedEdge[varIdx]);
-                        notGamma.remove();
-                        if (inSCC = searchEdge.get(vme)) {
-                            break loop;
-                        }
-                        // 把与匹配值相连的边并入
-                        int valIdx = matching[varIdx] - n;
-                        searchEdge.or(valUnmatchedEdge[valIdx]);
-                        searchEdge.and(leftEdge);
-                    }
-                }
-            } while (extended);
-
-            if (inSCC) {
+            if (checkSCC(edgeIdx, false)) {
                 // 进一步的还可以回溯路径，从checkEdge中删除
 //                //out.println(edgeIdx + " is in SCC");
             } else {
-//                //out.println(edgeIdx + " is not in SCC");
-                redundantEdge.set(edgeIdx);
+                // 根据边索引得到对应的变量和取值
+                varIdx = edgeIdx / numValue;
+                v = vars[varIdx];
+                k = idToVal.get(edgeIdx % numValue + n);
+                filter |= v.removeValue(k, aCause);
+//                out.println(v.getName() + " remove " + k);
             }
             edgeIdx = checkEdge.nextSetBit(edgeIdx + 1);
         }
-        // out.println("-----redundantEdge-----");
-        // out.println(redundantEdge.toString());
+        return filter;
+    }
+
+    // 判断边是否在SCC中
+    private boolean checkSCC(int edgeIdx, boolean matched) {
+        // 先根据是否是匹配边初始化
+        int valIdx = edgeIdx % numValue;
+        int matchedEdgeIdx;
+        searchEdge.clear();
+        if (matched) { // 如果edge是匹配边
+            matchedEdgeIdx = edgeIdx;
+            searchEdge.or(valUnmatchedEdge[valIdx]);
+        } else { // 如果edge是非匹配边
+            matchedEdgeIdx = valMatchedEdge[valIdx];
+            searchEdge.set(edgeIdx);
+        }
+
+        // 开始搜索
+        boolean extended;
+        notGamma.restore();
+        do {
+            extended = false;
+            // 头部扩展，匹配变量
+            notGamma.iterateValid();
+            while (notGamma.hasNextValid()) {
+                int varIdx = notGamma.next();
+                tmp.clear();
+                tmp.or(searchEdge);
+                tmp.and(varUnmatchedEdge[varIdx]);
+                if (!tmp.isEmpty()) {
+                    extended = true;
+                    searchEdge.set(varMatchedEdge[varIdx]);
+                    notGamma.remove();
+                    if (searchEdge.get(matchedEdgeIdx)) {
+                        return true;
+                    }
+                    // 把与匹配值相连的边并入
+                    valIdx = matching[varIdx] - n;
+                    searchEdge.or(valUnmatchedEdge[valIdx]);
+                    searchEdge.and(leftEdge);
+                }
+            }
+        } while (extended);
+
+        return false;
     }
 
     private boolean filter() throws ContradictionException {
         boolean filter = false;
         distinguish();
-        findFirstPart();
-        findSecondPart();
-        IntVar v;
-        int k;
-        int edgeIdx = redundantEdge.nextSetBit(0);
-        while (edgeIdx != -1) {
-            // 根据边索引得到对应的变量和取值
-            int varIdx = edgeIdx / numValue;
-            v = vars[varIdx];
-            k = idToVal.get(edgeIdx % numValue + n);
-            filter |= v.removeValue(k, aCause);
-            varUnmatchedEdge[varIdx].clear(edgeIdx);
-//            out.println(v.getName() + " remove " + k);
-            edgeIdx = redundantEdge.nextSetBit(edgeIdx + 1);
-        }
-//        for (int i = 0; i < n; i++) {
-//            if (varUnmatchedEdge[i].isEmpty()) {
-//                v = vars[i];
-//                k = idToVal.get(matching[i]);
-//                filter |= v.instantiateTo(k, aCause);
-////                out.println(v.getName() + " instantiate to " + k);
-//            }
-//        }
+        filter |= filterFirstPart();
+        filter |= filterSecondPart();
 //        out.println("after vars: ");
 //        for (IntVar x : vars) {
 //            System.out.println(x.toString());
 //        }
+        TimeCount.filterTime += System.nanoTime() - TimeCount.startTime;
         return filter;
     }
 }
