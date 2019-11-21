@@ -7,6 +7,7 @@ public class amtf {
     public static void main(String[] args) {
         SparseSet sparseSet = new SparseSet(10);
         sparseSet.iterateValid();
+
         int e;
         while (sparseSet.hasNextValid()) {
             e = sparseSet.next();
