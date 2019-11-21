@@ -53,8 +53,6 @@ public class AlgoAllDiffAC_Fastbit1 {
     private BitSet existentEdge;
     // 匹配边
     private BitSet matchedEdge;
-    // 需要被删的边
-    private BitSet redundantEdge;
 
     // 右部图
     // 允许边，从自由点出发的交替路，Γ(A)和A之间的边
@@ -129,7 +127,6 @@ public class AlgoAllDiffAC_Fastbit1 {
         // 构造新增数据结构
         existentEdge = new BitSet(numBit);
         matchedEdge = new BitSet(numBit);
-        redundantEdge = new BitSet(numBit);
 
         allowedEdge = new BitSet(numBit);
 
@@ -359,37 +356,21 @@ public class AlgoAllDiffAC_Fastbit1 {
 
     // 过滤第一种类型的冗余边
     private boolean filterFirstPart() throws ContradictionException {
-        // 先寻找
-        redundantEdge.clear();
-        notA.iterateValid();
-        while (notA.hasNextValid()) {
-            int a = notA.next();
-            notGamma.iterateInvalid();
-            while (notGamma.hasNextInvalid()) {
-                int v = notGamma.next();
-                tmp.clear();
-                tmp.or(valUnmatchedEdge[a]);
-                tmp.and(varUnmatchedEdge[v]);
-                redundantEdge.or(tmp);
-            }
-        }
-        // out.println("-----redundantEdge-----");
-        // out.println(redundantEdge.toString());
-
-        // 后过滤
         boolean filter = false;
-        int varIdx;
+        int varIdx, valIdx;
         IntVar v;
         int k;
-        int edgeIdx = redundantEdge.nextSetBit(0);
-        while (edgeIdx != -1) {
-            // 根据边索引得到对应的变量和取值
-            varIdx = edgeIdx / numValue;
-            v = vars[varIdx];
-            k = idToVal.get(edgeIdx % numValue + n);
-            filter |= v.removeValue(k, aCause);
-//            out.println(v.getName() + " remove " + k);
-            edgeIdx = redundantEdge.nextSetBit(edgeIdx + 1);
+        notA.iterateValid();
+        while (notA.hasNextValid()) {
+            valIdx = notA.next();
+            notGamma.iterateInvalid();
+            while (notGamma.hasNextInvalid()) {
+                varIdx = notGamma.next();
+                v = vars[varIdx];
+                k = idToVal.get(valIdx + n);
+                filter |= v.removeValue(k, aCause);
+                existentEdge.clear(varIdx * numValue + valIdx);
+            }
         }
         return filter;
     }
@@ -406,7 +387,6 @@ public class AlgoAllDiffAC_Fastbit1 {
         // 当前redundantEdge存的就是跨界边
         leftEdge.clear();
         leftEdge.or(allowedEdge);
-        leftEdge.or(redundantEdge);
         leftEdge.flip(0, numBit);
         leftEdge.and(existentEdge);
 //        out.println("-----leftEdge-----");

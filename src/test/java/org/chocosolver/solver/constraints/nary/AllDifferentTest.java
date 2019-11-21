@@ -375,7 +375,7 @@ public class AllDifferentTest {
         IntVar[] X = new IntVar[3];
         X[0] = model.intVar(new int[]{0, 1});
         X[1] = model.intVar(new int[]{0, 1});
-        X[2] = model.intVar(new int[]{0, 1, 2});
+        X[2] = model.intVar(new int[]{0, 1, 2, 3});
 //        X[3] = model.intVar("V3", new int[]{3, 1});
 
         model.allDifferent(X, "ACFast").post();
@@ -391,7 +391,7 @@ public class AllDifferentTest {
         X = new IntVar[3];
         X[0] = model.intVar(new int[]{0, 1});
         X[1] = model.intVar(new int[]{0, 1});
-        X[2] = model.intVar(new int[]{0, 1, 2});
+        X[2] = model.intVar(new int[]{0, 1, 2, 3});
 
         model.allDifferent(X, "ACFast").post();
         model.getSolver().propagate();
@@ -406,7 +406,7 @@ public class AllDifferentTest {
         X = new IntVar[3];
         X[0] = model.intVar(new int[]{0, 1});
         X[1] = model.intVar(new int[]{0, 1});
-        X[2] = model.intVar(new int[]{0, 1, 2});
+        X[2] = model.intVar(new int[]{0, 1, 2, 3});
 //        X[3] = model.intVar("V3", new int[]{3, 1});
 
         model.allDifferent(X, "ACFastbit2").post();
