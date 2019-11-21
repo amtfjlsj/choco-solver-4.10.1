@@ -242,17 +242,17 @@ public class AlgoAllDiffAC_Fastbit1 {
             varUnmatchedEdge[i].clear(edgeIdx);
             valUnmatchedEdge[valIdx].clear(edgeIdx);
         }
-//        // out.println("-----existentEdge-----");
-//        // out.println(existentEdge.toString());
-//        // out.println("-----matchedEdge-----");
-//        // out.println(matchedEdge.toString());
-//        // out.println("---varMatchedEdge---");
+//        out.println("-----existentEdge-----");
+//        out.println(existentEdge.toString());
+//        out.println("-----matchedEdge-----");
+//        out.println(matchedEdge.toString());
+//        out.println("---varMatchedEdge---");
 //        for (int a : varMatchedEdge) {
-//            // out.println(a);
+//            out.println(a);
 //        }
-//        // out.println("---valMatchedEdge---");
+//        out.println("---valMatchedEdge---");
 //        for (int a : valMatchedEdge) {
-//            // out.println(a);
+//            out.println(a);
 //        }
 //        // out.println("---varUnmatchedEdge---");
 //        for (BitSet a : varUnmatchedEdge) {

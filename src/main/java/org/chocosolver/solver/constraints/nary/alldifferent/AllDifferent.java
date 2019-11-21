@@ -25,6 +25,7 @@ public class AllDifferent extends Constraint {
     public static final String ACFast= "ACFast";
     public static final String ACFastbit1= "ACFastbit1";
     public static final String ACFastbit2= "ACFastbit2";
+    public static final String ACNaive= "ACNaive";
     public static final String BC= "BC";
     public static final String FC= "FC";
     public static final String NEQS= "NEQS";
@@ -59,6 +60,8 @@ public class AllDifferent extends Constraint {
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Fastbit1(VARS)};
             case ACFastbit2:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Fastbit2(VARS)};
+            case ACNaive:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Naive(VARS)};
             case DEFAULT:
             default: {
                 // adds a Probabilistic AC (only if at least some variables have an enumerated domain)

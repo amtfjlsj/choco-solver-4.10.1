@@ -9,6 +9,7 @@
  */
 package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 
+import amtf.TimeCount;
 import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
@@ -99,7 +100,11 @@ public class AlgoAllDiffAC {
     //***********************************************************************************
 
     public boolean propagate() throws ContradictionException {
+        TimeCount.startTime = System.nanoTime();
         findMaximumMatching();
+        TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
+
+        TimeCount.startTime = System.nanoTime();
         return filter();
     }
 
@@ -253,6 +258,7 @@ public class AlgoAllDiffAC {
 //                }
 //            }
 //        }
+        TimeCount.filterTime += System.nanoTime() - TimeCount.startTime;
         return filter;
     }
 }

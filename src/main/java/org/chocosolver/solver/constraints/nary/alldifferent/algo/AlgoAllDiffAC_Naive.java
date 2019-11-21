@@ -218,7 +218,7 @@ public class AlgoAllDiffAC_Naive {
         // 重新初始化数据结构
         for (int i = 0; i < n; ++i) {
 //            varUnmatchedEdge[i] = new BitSet(numBit);
-            varUnmatchedEdge[i] = new NaiveSparseBitSet(i * numValue);
+            varUnmatchedEdge[i] = new NaiveSparseBitSet(0);
             for (int j = 0; j < numValue; ++j) {
                 varUnmatchedEdge[i].add(i * numValue + j);
             }
@@ -302,16 +302,17 @@ public class AlgoAllDiffAC_Naive {
                 // Idx是二部图值和边的索引
                 int valIdx = j - n; // 因为构造函数中建立map时是从n开始的，所以这里需要减去n
                 int edgeIdx = i * numValue + valIdx;
-//                existentEdge.set(edgeIdx);
                 // 得到有效的边，
                 leftEdge.set(edgeIdx);
                 varUnmatchedEdge[i].set(edgeIdx);
                 valUnmatchedEdge[valIdx].set(edgeIdx);
             }
-            // 得到无效边，这些边都不需要查SSC了
-            // 此时leftEdge收集不需检查的边
-            leftEdge.flip();
         }
+        // 得到无效边，这些边都不需要查SSC了
+        // 此时leftEdge收集不需检查的边
+//        out.println("-----leftEdge-----");
+//        out.println(leftEdge.toString());
+        leftEdge.flip();
         // 尝试为每个变量都寻找一个匹配，即最大匹配的个数要与变量个数相等，否则回溯
         // 利用匈牙利算法寻找最大匹配
         for (int i = free.nextSetBit(0); i >= 0 && i < n; i = free.nextSetBit(i + 1)) {
@@ -331,25 +332,25 @@ public class AlgoAllDiffAC_Naive {
             varUnmatchedEdge[i].clear(edgeIdx);
             valUnmatchedEdge[valIdx].clear(edgeIdx);
         }
-//        // out.println("-----existentEdge-----");
-//        // out.println(existentEdge.toString());
-//        // out.println("-----matchedEdge-----");
-//        // out.println(matchedEdge.toString());
-//        // out.println("---varMatchedEdge---");
+//        out.println("-----leftEdge-----");
+//        out.println(leftEdge.toString());
+//        out.println("-----matchedEdge-----");
+//        out.println(matchedEdge.toString());
+//        out.println("---varMatchedEdge---");
 //        for (int a : varMatchedEdge) {
-//            // out.println(a);
+//            out.println(a);
 //        }
-//        // out.println("---valMatchedEdge---");
+//        out.println("---valMatchedEdge---");
 //        for (int a : valMatchedEdge) {
-//            // out.println(a);
+//            out.println(a);
 //        }
-//        // out.println("---varUnmatchedEdge---");
-//        for (BitSet a : varUnmatchedEdge) {
-//            // out.println(a.toString());
+        // out.println("---varUnmatchedEdge---");
+//        for (NaiveSparseBitSet a : varUnmatchedEdge) {
+//             out.println(a.toString());
 //        }
 //        // out.println("---valUnmatchedEdge---");
-//        for (BitSet a : valUnmatchedEdge) {
-//            // out.println(a.toString());
+//        for (NaiveSparseBitSet a : valUnmatchedEdge) {
+//             out.println(a.toString());
 //        }
     }
 
@@ -408,7 +409,6 @@ public class AlgoAllDiffAC_Naive {
 
     //  新函数从自由点出发，寻找交替路，区分论文中的四个集合
     private void distinguish() {
-//        allowedEdge.clear();
         // 寻找从自由值出发的所有交替路
         // 首先将与自由值相连的边并入允许边
         for (int i = free.nextSetBit(n); i >= n && i < n2; i = free.nextSetBit(i + 1)) {
@@ -445,58 +445,30 @@ public class AlgoAllDiffAC_Naive {
         // out.println(notGamma.toString());
         // out.println("-----notA-----");
         // out.println(notA.toString());
-        // out.println("-----allowedEdge-----");
-        // out.println(allowedEdge.toString());
+//        out.println("-----leftEdge-----");
+//        out.println(leftEdge.toString());
     }
 
     // 过滤第一种类型的冗余边
     private boolean filterFirstPart() throws ContradictionException {
-        // 先寻找
-//        redundantEdge.clear();
         boolean filter = false;
-        IntVar var;
-        int val;
+        IntVar v;
+        int k;
         notA.iterateValid();
         while (notA.hasNextValid()) {
             int a = notA.next();
             notGamma.iterateInvalid();
             while (notGamma.hasNextInvalid()) {
-                int v = notGamma.next();
-//                tmp.clear();
-//                tmp.or(valUnmatchedEdge[a]);
-//                tmp.and(varUnmatchedEdge[v]);
-//                redundantEdge.or(tmp);
-                int edgeIdx = v * numValue + a;
-//                redundantEdge.set(edgeIdx);
+                int varIdx = notGamma.next();
+                int edgeIdx = varIdx * numValue + a;
                 leftEdge.set(edgeIdx);
-
-                var = vars[v];
-                val = idToVal.get(edgeIdx % numValue + n);
-                filter |= var.removeValue(val, aCause);
+                v = vars[varIdx];
+                k = idToVal.get(edgeIdx % numValue + n);
+                filter |= v.removeValue(k, aCause);
 //            out.println(v.getName() + " remove " + k);
             }
         }
-
         return filter;
-        // out.println("-----redundantEdge-----");
-        // out.println(redundantEdge.toString());
-
-        // 后过滤
-
-//        int varIdx;
-//        IntVar v;
-//        int k;
-//        int edgeIdx = redundantEdge.nextSetBit(0);
-//        while (edgeIdx != -1) {
-//            // 根据边索引得到对应的变量和取值
-//            varIdx = edgeIdx / numValue;
-//            v = vars[varIdx];
-//            k = idToVal.get(edgeIdx % numValue + n);
-//            filter |= v.removeValue(k, aCause);
-////            out.println(v.getName() + " remove " + k);
-//            edgeIdx = redundantEdge.nextSetBit(edgeIdx + 1);
-//        }
-//        return filter;
     }
 
     // 寻找第二种类型的冗余边
@@ -511,8 +483,8 @@ public class AlgoAllDiffAC_Naive {
         // 不需检查的边翻转成需要检查的边
         leftEdge.flip();
         // leftEdge已变成需要检查的边
-        out.println("-----leftEdge-----");
-        out.println(leftEdge.toString());
+//        out.println("-----leftEdge-----");
+//        out.println(leftEdge.toString());
         // 修剪valUnmatchedEdge去掉他们不需要检查的边
 
         notA.iterateValid();
@@ -523,7 +495,7 @@ public class AlgoAllDiffAC_Naive {
 
         edgeIdx = leftEdge.nextSetBit(0);
         while (edgeIdx != -1) {
-            if (checkSCC(edgeIdx, false)) {
+            if (checkSCC(edgeIdx)) {
                 // 进一步的还可以回溯路径，从checkEdge中删除
 //                //out.println(edgeIdx + " is in SCC");
             } else {
@@ -531,8 +503,12 @@ public class AlgoAllDiffAC_Naive {
                 varIdx = edgeIdx / numValue;
                 v = vars[varIdx];
                 k = idToVal.get(edgeIdx % numValue + n);
-                filter |= v.removeValue(k, aCause);
+                if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
+                    filter |= v.instantiateTo(k, aCause);
+                } else { // 如果edge是非匹配边
+                    filter |= v.removeValue(k, aCause);
 //                out.println(v.getName() + " remove " + k);
+                }
             }
             edgeIdx = leftEdge.nextSetBit(edgeIdx + 1);
         }
@@ -540,12 +516,12 @@ public class AlgoAllDiffAC_Naive {
     }
 
     // 判断边是否在SCC中
-    private boolean checkSCC(int edgeIdx, boolean matched) {
+    private boolean checkSCC(int edgeIdx) {
         // 先根据是否是匹配边初始化
         int valIdx = edgeIdx % numValue;
         int matchedEdgeIdx;
         searchEdge.clear();
-        if (matched) { // 如果edge是匹配边
+        if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
             matchedEdgeIdx = edgeIdx;
             searchEdge.or(valUnmatchedEdge[valIdx]);
         } else { // 如果edge是非匹配边
@@ -562,11 +538,7 @@ public class AlgoAllDiffAC_Naive {
             notGamma.iterateValid();
             while (notGamma.hasNextValid()) {
                 int varIdx = notGamma.next();
-//                tmp.clear();
-//                tmp.or(searchEdge);
-//                tmp.and(varUnmatchedEdge[varIdx]);
-//                if (!tmp.isEmpty()) {
-                if(!searchEdge.tryAndEmpty(varUnmatchedEdge[varIdx])){
+                if (!searchEdge.tryAndEmpty(varUnmatchedEdge[varIdx])) {
                     extended = true;
                     searchEdge.set(varMatchedEdge[varIdx]);
                     notGamma.remove();
@@ -576,7 +548,6 @@ public class AlgoAllDiffAC_Naive {
                     // 把与匹配值相连的边并入
                     valIdx = matching[varIdx] - n;
                     searchEdge.or(valUnmatchedEdge[valIdx]);
-                    searchEdge.and(leftEdge);
                 }
             }
         } while (extended);
