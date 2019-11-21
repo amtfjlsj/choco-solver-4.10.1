@@ -8,7 +8,7 @@ package org.chocosolver.util.objects;
  * Project: choco.
  */
 
-public class SparseSet {
+public class  SparseSet {
     private int length;
     private int[] sparse;
     private int[] dense;
