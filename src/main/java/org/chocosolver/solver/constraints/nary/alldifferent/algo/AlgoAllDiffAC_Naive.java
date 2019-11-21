@@ -505,6 +505,7 @@ public class AlgoAllDiffAC_Naive {
                 k = idToVal.get(edgeIdx % numValue + n);
                 if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
                     filter |= v.instantiateTo(k, aCause);
+//                    out.println(v.getName() + " instantiate to " + k);
                 } else { // 如果edge是非匹配边
                     filter |= v.removeValue(k, aCause);
 //                out.println(v.getName() + " remove " + k);

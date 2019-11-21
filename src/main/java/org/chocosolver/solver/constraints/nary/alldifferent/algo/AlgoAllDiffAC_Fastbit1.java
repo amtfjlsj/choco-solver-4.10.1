@@ -429,15 +429,33 @@ public class AlgoAllDiffAC_Fastbit1 {
 
         // -------------------后检查非匹配边-------------------
         // 从leftEdge中去掉matchedEdge，即是需要检查的非匹配边
-        checkEdge.clear();
-        checkEdge.or(matchedEdge);
-        checkEdge.flip(0, numBit);
-        checkEdge.and(leftEdge);
+//        checkEdge.clear();
+//        checkEdge.or(matchedEdge);
+//        checkEdge.flip(0, numBit);
+//        checkEdge.and(leftEdge);
 //        out.println("-----checkUnmatchedEdge-----");
 //        out.println(checkEdge.toString());
-        edgeIdx = checkEdge.nextSetBit(0);
-        while (edgeIdx != -1) {
-            if (checkSCC(edgeIdx, false)) {
+//        edgeIdx = checkEdge.nextSetBit(0);
+//        while (edgeIdx != -1) {
+//            if (checkSCC(edgeIdx)) {
+//                // 进一步的还可以回溯路径，从checkEdge中删除
+////                //out.println(edgeIdx + " is in SCC");
+//            } else {
+//                // 根据边索引得到对应的变量和取值
+//                varIdx = edgeIdx / numValue;
+//                v = vars[varIdx];
+//                k = idToVal.get(edgeIdx % numValue + n);
+//                filter |= v.removeValue(k, aCause);
+////                out.println(v.getName() + " remove " + k);
+//            }
+//            edgeIdx = checkEdge.nextSetBit(edgeIdx + 1);
+//        }
+//        return filter;
+
+        // -------------------放在一起检查-------------------
+        edgeIdx = leftEdge.nextSetBit(0);
+        while (edgeIdx != -1 && vars[edgeIdx / numValue].getDomainSize() > 1) {
+            if (checkSCC(edgeIdx)) {
                 // 进一步的还可以回溯路径，从checkEdge中删除
 //                //out.println(edgeIdx + " is in SCC");
             } else {
@@ -445,21 +463,31 @@ public class AlgoAllDiffAC_Fastbit1 {
                 varIdx = edgeIdx / numValue;
                 v = vars[varIdx];
                 k = idToVal.get(edgeIdx % numValue + n);
-                filter |= v.removeValue(k, aCause);
-//                out.println(v.getName() + " remove " + k);
+                if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
+                    filter |= v.instantiateTo(k, aCause);
+//                    out.println(v.getName() + " instantiate to " + k);
+                    // 从leftEdge中去掉被删的边
+                    tmp.clear();
+                    tmp.or(varUnmatchedEdge[varIdx]);
+                    tmp.flip(0, numBit);
+                    leftEdge.and(tmp);
+                } else { // 如果edge是非匹配边
+                    filter |= v.removeValue(k, aCause);
+//                    out.println(v.getName() + " remove " + k);
+                }
             }
-            edgeIdx = checkEdge.nextSetBit(edgeIdx + 1);
+            edgeIdx = leftEdge.nextSetBit(edgeIdx + 1);
         }
         return filter;
     }
 
     // 判断边是否在SCC中
-    private boolean checkSCC(int edgeIdx, boolean matched) {
+    private boolean checkSCC(int edgeIdx) {
         // 先根据是否是匹配边初始化
         int valIdx = edgeIdx % numValue;
         int matchedEdgeIdx;
         searchEdge.clear();
-        if (matched) { // 如果edge是匹配边
+        if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
             matchedEdgeIdx = edgeIdx;
             searchEdge.or(valUnmatchedEdge[valIdx]);
         } else { // 如果edge是非匹配边

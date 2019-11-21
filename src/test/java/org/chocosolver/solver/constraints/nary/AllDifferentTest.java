@@ -369,36 +369,35 @@ public class AllDifferentTest {
 
     @Test(groups = "1s", timeOut = 60000)
     public void testB3() throws ContradictionException {
-        out.println("ACFast============>");
-
+//        out.println("ACFast============>");
+//
         Model model = new Model();
         IntVar[] X = new IntVar[3];
         X[0] = model.intVar(new int[]{1, 2});
         X[1] = model.intVar(new int[]{1, 2});
         X[2] = model.intVar(new int[]{0, 1, 2});
-//        X[3] = model.intVar("V3", new int[]{3, 1});
-
+//
         model.allDifferent(X, "ACFast").post();
         model.getSolver().propagate();
 
         for (IntVar x : X) {
             out.println(x.toString());
         }
+////
+//        out.println("ACFastbit1============>");
 //
-        out.println("ACFastbit1============>");
-
-        model = new Model();
-        X = new IntVar[3];
-        X[0] = model.intVar(new int[]{1, 2});
-        X[1] = model.intVar(new int[]{1, 2});
-        X[2] = model.intVar(new int[]{0, 1, 2});
-
-        model.allDifferent(X, "ACFastbit1").post();
-        model.getSolver().propagate();
-
-        for(IntVar x : X) {
-            out.println(x.toString());
-        }
+//        model = new Model();
+//        X = new IntVar[3];
+//        X[0] = model.intVar(new int[]{1, 2});
+//        X[1] = model.intVar(new int[]{1, 2});
+//        X[2] = model.intVar(new int[]{0, 1, 2});
+//
+//        model.allDifferent(X, "ACFastbit1").post();
+//        model.getSolver().propagate();
+//
+//        for(IntVar x : X) {
+//            out.println(x.toString());
+//        }
 
         out.println("ACFastbit2============>");
 
@@ -416,20 +415,20 @@ public class AllDifferentTest {
             out.println(x.toString());
         }
 
-        out.println("ACNaive============>");
-
-        model = new Model();
-        X = new IntVar[3];
-        X[0] = model.intVar(new int[]{1, 2});
-        X[1] = model.intVar(new int[]{1, 2});
-        X[2] = model.intVar(new int[]{0, 1, 2});
-//        X[3] = model.intVar("V3", new int[]{3, 1});
-
-        model.allDifferent(X, "ACNaive").post();
-        model.getSolver().propagate();
-
-        for (IntVar x : X) {
-            out.println(x.toString());
-        }
+//        out.println("ACNaive============>");
+//
+//        model = new Model();
+//        X = new IntVar[3];
+//        X[0] = model.intVar(new int[]{1, 2});
+//        X[1] = model.intVar(new int[]{1, 2});
+//        X[2] = model.intVar(new int[]{0, 1, 2});
+////        X[3] = model.intVar("V3", new int[]{3, 1});
+//
+//        model.allDifferent(X, "ACNaive").post();
+//        model.getSolver().propagate();
+//
+//        for (IntVar x : X) {
+//            out.println(x.toString());
+//        }
     }
 }
