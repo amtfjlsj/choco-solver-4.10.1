@@ -89,6 +89,13 @@ public class NaiveSparseBitSet {
         }
     }
 
+    public void and(NaiveBitSet s) {
+        for (int i = 0; i < longSize; ++i) {
+            int offset = this.index[i];
+            this.words[i] &= s.words[offset];
+        }
+    }
+
     public void clear(int pos) {
         int k = wordIndex(pos);
         int v = wordOffset(pos);

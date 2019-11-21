@@ -3,7 +3,7 @@ package org.chocosolver.util.objects;
 
 public class NaiveBitSet {
 
-    private long[] words;
+    protected long[] words;
     private int longSize;
     private int bitSize;
     private int limit;
@@ -164,7 +164,7 @@ public class NaiveBitSet {
         return true;
     }
 
-    public boolean check(int bitIndex) {
+    public boolean get(int bitIndex) {
         int wordIndex = wordIndex(bitIndex);
         return wordIndex < longSize && (this.words[wordIndex] & 1L << bitIndex) != 0L;
 
@@ -182,7 +182,7 @@ public class NaiveBitSet {
         }
     }
 
-    public int nextOneBit(int fromIndex) {
+    public int nextSetBit(int fromIndex) {
         if (fromIndex < 0) {
             throw new IndexOutOfBoundsException("fromIndex < 0: " + fromIndex);
         } else {
@@ -203,7 +203,7 @@ public class NaiveBitSet {
         }
     }
 
-    public int nextZeroBit(int fromIndex) {
+    public int nextClearBit(int fromIndex) {
         // Neither spec nor implementation handle bitsets of maximal length.
         // See 4816253.
         if (fromIndex < 0)
@@ -236,13 +236,13 @@ public class NaiveBitSet {
         StringBuilder b = new StringBuilder(initialCapacity);
         b.append('{');
 
-        int i = nextOneBit(0);
+        int i = nextSetBit(0);
         if (i != -1) {
             b.append(i);
             while (true) {
                 if (++i < 0) break;
-                if ((i = nextOneBit(i)) < 0) break;
-                int endOfRun = nextZeroBit(i);
+                if ((i = nextSetBit(i)) < 0) break;
+                int endOfRun = nextClearBit(i);
                 do {
                     b.append(", ").append(i);
                 }
