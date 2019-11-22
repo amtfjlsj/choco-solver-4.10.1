@@ -10,7 +10,7 @@ import java.util.BitSet;
  * Project: choco.
  */
 
-public class  SparseSet {
+public class SparseSet {
     private int length;
     private int[] sparse;
     private int[] dense;
@@ -19,6 +19,7 @@ public class  SparseSet {
     private int iterator;
     // 用于记住原limit
     private int oldLimit;
+    private int iterator2;
 
     public SparseSet(int length) {
         this.length = length;
@@ -52,6 +53,19 @@ public class  SparseSet {
             limit--;
         }
     }
+
+    public void add(int e) {
+        int index = sparse[e];
+        if (index > limit) {
+            limit++;
+            int tmp = dense[limit];
+            sparse[e] = limit;
+            sparse[tmp] = index;
+            dense[index] = tmp;
+            dense[limit] = e;
+        }
+    }
+
 
     // 遍历有效部分（左部集合）
     public void iterateValid() {
@@ -90,12 +104,42 @@ public class  SparseSet {
         iterator--;
     }
 
+
     public void record() {
         oldLimit = limit;
     }
 
     public void restore() {
         limit = oldLimit;
+    }
+
+
+    // 遍历limit到oldLimit之间的集合
+    public void iterateLimit() {
+        iterator2 = limit;
+    }
+
+    // 只能用于在迭代过程中添加上一个迭代元素
+    public void addLimit() {
+        if (iterator2 == length) {
+            return;
+        }
+        limit++;
+        iterator2++;
+        int e1 = dense[iterator2];
+        int e2 = dense[limit];
+        dense[iterator2] = e2;
+        dense[limit] = e1;
+        sparse[e1] = limit;
+        sparse[e2] = iterator2;
+    }
+
+    public int nextLimit() {
+        return dense[++iterator2];
+    }
+
+    public boolean hasNextLimit() {
+        return iterator2 + 1 <= oldLimit;
     }
 
     @Override

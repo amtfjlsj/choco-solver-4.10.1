@@ -12,8 +12,8 @@ public class NaiveSparseBitSet {
     protected long[] words;
     int startIndex;
     int endIndex;
-    int minIndex = Integer.MAX_VALUE;
-    int maxIndex = Integer.MIN_VALUE;
+//    int minIndex = Integer.MAX_VALUE;
+//    int maxIndex = Integer.MIN_VALUE;
     //    private ArrayList<Integer> tmpList = new ArrayList<>();
     private Map<Integer, Long> tmp = new TreeMap<>();
 
@@ -28,6 +28,10 @@ public class NaiveSparseBitSet {
     protected static final long MOD_MASK = 0x3fL;
     protected static final int MOD_MASK_INT = 0x3f;
 
+    public NaiveSparseBitSet() {
+        this.startIndex = 0;
+    }
+
     public NaiveSparseBitSet(int s) {
         startIndex = s;
     }
@@ -35,8 +39,8 @@ public class NaiveSparseBitSet {
     public void add(int a) {
 //        tmpList.add(a);
         // 获取最大最小值
-        minIndex = Integer.min(a, minIndex);
-        maxIndex = Integer.max(a, maxIndex);
+//        minIndex = Integer.min(a, minIndex);
+//        maxIndex = Integer.max(a, maxIndex);
         // 拿到新地址
         int pos = startIndex + a;
         int k = wordIndex(pos);
@@ -48,7 +52,23 @@ public class NaiveSparseBitSet {
             // 有就在原位置上修改这个值
             tmp.put(k, tmp.get(k) | (1L << v));
         }
+    }
 
+    public void addIndex(int pos) {
+//        tmpList.add(a);
+        // 获取最大最小值
+//        minIndex = Integer.min(a, minIndex);
+//        maxIndex = Integer.max(a, maxIndex);
+        // 拿到新地址
+        int k = wordIndex(pos);
+        int v = wordOffset(pos);
+        if (!tmp.containsKey(k)) {
+            // 没有这个k就加一个新Key进去，并初始化数据
+            tmp.put(k, 1L << v);
+        } else {
+            // 有就在原位置上修改这个值
+            tmp.put(k, tmp.get(k) | (1L << v));
+        }
     }
 
     // 集合类转数组

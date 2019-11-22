@@ -1,6 +1,8 @@
 package org.chocosolver.util.objects;
 
 
+import org.xcsp.modeler.ProblemAPI;
+
 public class NaiveBitSet {
 
     protected long[] words;
@@ -162,6 +164,20 @@ public class NaiveBitSet {
         }
     }
 
+    // 从本集合中移除s中的元素
+    public void clear(NaiveSparseBitSet s) {
+        for (int i = 0, len = s.longSize; i < len; ++i) {
+            this.words[s.index[i]] &= ~s.words[i];
+        }
+    }
+
+    public void clearAfterAnd(NaiveSparseBitSet a, NaiveBitSet b) {
+        for (int i = 0, len = a.longSize; i < len; ++i) {
+            int offset = a.index[i];
+            this.words[offset] &= ~(a.words[i] & b.words[offset]);
+        }
+    }
+
     public boolean isEmpty() {
         for (int i = 0; i < longSize; ++i) {
             if (this.words[i] != 0L) {
@@ -189,10 +205,28 @@ public class NaiveBitSet {
         }
     }
 
+
+    public void setThenAnd(NaiveSparseBitSet a, NaiveBitSet b) {
+        for (int i = 0, len = a.longSize; i < len; ++i) {
+            int offset = a.index[i];
+            this.words[offset] |= a.words[i] & b.words[offset];
+        }
+    }
+
     // 判断两个集合是否有交集
     public boolean isIntersect(NaiveBitSet s) {
         for (int i = 0; i < longSize; ++i) {
-            if((this.words[i] & s.words[i]) != 0L){
+            if ((this.words[i] & s.words[i]) != 0L) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 判断两个集合是否有交集
+    public boolean isIntersect(NaiveSparseBitSet s) {
+        for (int i = 0, len = s.longSize; i < len; ++i) {
+            if ((this.words[s.index[i]] & s.words[i]) != 0L) {
                 return true;
             }
         }
@@ -363,7 +397,7 @@ public class NaiveBitSet {
     public void orAfterAnd(NaiveSparseBitSet a, NaiveSparseBitSet b) {
         int min;
         //以短
-        if(a.longSize>b.longSize){
+        if (a.longSize > b.longSize) {
 
         }
 
