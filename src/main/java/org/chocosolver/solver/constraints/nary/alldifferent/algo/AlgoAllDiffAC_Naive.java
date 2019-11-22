@@ -413,21 +413,34 @@ public class AlgoAllDiffAC_Naive {
 ////                        // 从leftEdge中去掉被删的边
 ////                        leftEdge.clear(edgeIdx);
 //                    }
-////                    varIdx = edgeIdx / numValue;
-////                    sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
-                    notGamma.iterateLimit();
-                    while (notGamma.hasNextLimit()) {
-                        varIdx = notGamma.next();
-                        if (searchEdge.isIntersect(varEdge[varIdx])) {
-                            sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
+//                    varIdx = edgeIdx / numValue;
+//                    sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
 
-                            // 把与匹配值相连的边并入
-                            valIdx = matching[varIdx] - n;
-                            sccEdge.setThenAnd(valEdge[valIdx], leftEdge);
-                            notGamma.addLimit();
-                        }
-                    }
+//                    notGamma.iterateLimit();
+//                    while (notGamma.hasNextLimit()) {
+//                        varIdx = notGamma.next();
+//                        if (searchEdge.isIntersect(varEdge[varIdx])) {
+//                            sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
+//
+//                            // 把与匹配值相连的边并入
+//                            valIdx = matching[varIdx] - n;
+//                            sccEdge.setThenAnd(valEdge[valIdx], leftEdge);
+//                            notGamma.addLimit();
+//                        }
+//                    }
 
+                    int valNewIdx = edgeIdx % numValue;
+                    int tmpNewIdx = valNewIdx;
+                    do {
+                        int backEdgeIdx = valMatchedEdge[tmpNewIdx];
+//                        out.println(backEdgeIdx + " is in SCC");
+                        sccEdge.set(backEdgeIdx);
+                        varIdx = backEdgeIdx / numValue;
+                        backEdgeIdx = father[varIdx];
+//                        out.println(backEdgeIdx + " is in SCC");
+                        sccEdge.set(backEdgeIdx);
+                        tmpNewIdx = backEdgeIdx % numValue;
+                    } while (tmpNewIdx != valNewIdx);
 
                 } else {
                     // 根据边索引得到对应的变量和取值
