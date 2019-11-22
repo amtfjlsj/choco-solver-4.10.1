@@ -45,40 +45,6 @@ public class AlgoAllDiffAC_Naive {
     private int[] fifo;
     private BitSet in;
 
-//    // 以下是bit版本所需数据结构========================
-//    // numValue是二部图中取值编号的个数，numBit是二部图的最大边数
-//    private int numValue, numBit;
-//    // 需要新增一个取值编号到取值的映射，也是一对一
-//    private TIntIntHashMap idToVal;
-//    // 总图
-//    // 图中现存的所有边
-//    private BitSet existentEdge;
-//    // 匹配边
-//    private BitSet matchedEdge;
-//    // 需要被删的边
-//    private BitSet redundantEdge;
-//
-//    // 右部图
-//    // 允许边，从自由点出发的交替路，Γ(A)和A之间的边
-//    private BitSet allowedEdge;
-//
-//    // 左部图
-//    // leftEdge是Xc-Γ(A)和Dc-A之间的边
-//    private BitSet leftEdge;
-//    // 需要检查强连通的边，leftEdge去掉matchedEdge
-//    private BitSet checkEdge;
-//    // 搜索强连通的边
-//    private BitSet searchEdge;
-//
-//    // 临时边
-//    private BitSet tmp;
-//
-//    // 变量、值的匹配边和非匹配边
-//    private int[] varMatchedEdge;
-//    private int[] valMatchedEdge;
-//    private BitSet[] varUnmatchedEdge;
-//    private BitSet[] valUnmatchedEdge;
-
     // 以下是bit版本所需数据结构========================
     // numValue是二部图中取值编号的个数，numBit是二部图的最大边数
     private int numValue, numBit;

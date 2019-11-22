@@ -190,13 +190,17 @@ public class NaiveBitSet {
     }
 
     // 判断两个集合是否有交集
-    public boolean isIntersect(NaiveBitSet s) {
+    // 如果有，返回第一个相交的值
+    // 如果没有，返回-1
+    public int isIntersect(NaiveBitSet s) {
+        long word;
         for (int i = 0; i < longSize; ++i) {
-            if((this.words[i] & s.words[i]) != 0L){
-                return true;
+            word = this.words[i] & s.words[i];
+            if(word != 0L){
+                return i * 64 + Long.numberOfTrailingZeros(word);
             }
         }
-        return false;
+        return -1;
     }
 
     public int nextSetBit(int fromIndex) {
