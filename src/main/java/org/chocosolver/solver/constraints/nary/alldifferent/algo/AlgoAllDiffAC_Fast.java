@@ -265,7 +265,7 @@ public class AlgoAllDiffAC_Fast {
                 if (distinction.get(i) && !distinction.get(j)) { // 删除第一类边，变量在Γ(A)中，值在Dc-A中
                     filter |= v.removeValue(k, aCause);
 //                    out.println(v.getName() + " remove " + k);
-//                    digraph.removeArc(i, j);
+                    digraph.removeArc(i, j);
                 } else if (!distinction.get(i) && !distinction.get(j)) { // 删除第二类边，变量在Xc-Γ(A)中，值在Dc-A中
                     if (nodeSCC[i] != nodeSCC[j]) {
                         if (matching[i] == j) {
@@ -275,7 +275,7 @@ public class AlgoAllDiffAC_Fast {
                             filter |= v.removeValue(k, aCause);
 //                            out.println(v.getName() + " remove " + k);
                             // 我觉得不用更新digraph，因为每次调用propagate时都会更新digraph
-//                            digraph.removeArc(i, j);
+                            digraph.removeArc(i, j);
                         }
                     }
                 }

@@ -4,6 +4,8 @@ import amtf.parser.XCSPParser;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.search.strategy.Search;
+import org.chocosolver.solver.search.strategy.selectors.values.IntDomainMin;
+import org.chocosolver.solver.search.strategy.selectors.variables.FirstFail;
 import org.chocosolver.solver.variables.IntVar;
 
 import java.util.Arrays;
@@ -11,6 +13,7 @@ import java.util.Comparator;
 
 import static java.lang.System.out;
 import static org.chocosolver.solver.search.strategy.Search.activityBasedSearch;
+import static org.chocosolver.solver.search.strategy.Search.intVarSearch;
 
 
 public class testAllDiff {
@@ -20,8 +23,9 @@ public class testAllDiff {
 
         String[] instances = new String[]{
 //                "F:\\chenj\\data\\XCSP3\\GracefulGraph\\GracefulGraph-m1-s1\\GracefulGraph-K03-P05.xml",
-//                "F:\\chenj\\data\\XCSP3\\Langford\\Langford-m1-k2\\Langford-2-05.xml",
-//                "F:\\chenj\\data\\XCSP3\\Queens\\Queens-m1-s1\\Queens-0004-m1.xml",
+//                "F:\\chenj\\data\\XCSP3\\Langford\\Langford-m1-k2\\Langford-2-08.xml",
+//                "F:\\chenj\\data\\XCSP3\\Langford\\Langford-m1-k4\\Langford-4-07.xml",
+//                "F:\\chenj\\data\\XCSP3\\Queens\\Queens-m1-s1\\Queens-0012-m1.xml",
 //                "F:\\chenj\\data\\XCSP3\\LatinSquare\\LatinSquare-xcsp2-bqwh15-106\\bqwh-15-106-01_X2.xml",
 //                "F:\\chenj\\data\\XCSP3\\LatinSquare\\LatinSquare-xcsp2-bqwh15-106\\bqwh-15-106-02_X2.xml",
 //                "F:\\chenj\\data\\XCSP3\\LatinSquare\\LatinSquare-xcsp2-bqwh15-106\\bqwh-15-106-03_X2.xml",
@@ -40,7 +44,7 @@ public class testAllDiff {
         String allDiffConsistency;
         int runNum = 2;
 
-        for(String ins: instances) {
+        for (String ins : instances) {
 
             allDiffConsistency = "AC";
             for (int i = 0; i < runNum; i++) {
@@ -61,6 +65,7 @@ public class testAllDiff {
                 Arrays.sort(decVars, Comparator.comparingInt(IntVar::getId));
                 Solver solver = model.getSolver();
                 solver.setSearch(activityBasedSearch(decVars));
+//                solver.setSearch(Search.defaultSearch(model));
 
                 if (solver.solve()) {
                     out.printf("solution: ");
@@ -94,6 +99,8 @@ public class testAllDiff {
                 Arrays.sort(decVars, Comparator.comparingInt(IntVar::getId));
                 Solver solver = model.getSolver();
                 solver.setSearch(activityBasedSearch(decVars));
+//                solver.setSearch(Search.defaultSearch(model));
+//                solver.setSearch(intVarSearch(new FirstFail(model), new IntDomainMin(), decVars));
 
                 if (solver.solve()) {
                     out.printf("solution: ");
@@ -109,7 +116,7 @@ public class testAllDiff {
             }
 
             allDiffConsistency = "ACFastbit2";
-            for(int i = 0; i < runNum; i++) {
+            for (int i = 0; i < runNum; i++) {
                 TimeCount.initial();
                 out.println(ins);
                 out.println(allDiffConsistency + "====>");
@@ -119,17 +126,20 @@ public class testAllDiff {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                IntVar[] decVars = (IntVar[]) model.getHook("decisions");;
-                if(decVars == null){
+                IntVar[] decVars = (IntVar[]) model.getHook("decisions");
+                ;
+                if (decVars == null) {
                     decVars = parser.mvars.values().toArray(new IntVar[parser.mvars.size()]);
                 }
                 Arrays.sort(decVars, Comparator.comparingInt(IntVar::getId));
                 Solver solver = model.getSolver();
                 solver.setSearch(activityBasedSearch(decVars));
+//                solver.setSearch(Search.defaultSearch(model));
+//                solver.setSearch(intVarSearch(new FirstFail(model), new IntDomainMin(), decVars));
 
                 if (solver.solve()) {
                     out.printf("solution: ");
-                    for (IntVar v: decVars) {
+                    for (IntVar v : decVars) {
                         out.printf("%d ", v.getValue());
                     }
                     out.println();
@@ -191,6 +201,7 @@ public class testAllDiff {
                 Arrays.sort(decVars, Comparator.comparingInt(IntVar::getId));
                 Solver solver = model.getSolver();
                 solver.setSearch(activityBasedSearch(decVars));
+//                solver.setSearch(Search.defaultSearch(model));
 
 
                 if (solver.solve()) {

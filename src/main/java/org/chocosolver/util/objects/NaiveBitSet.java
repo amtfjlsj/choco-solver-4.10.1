@@ -155,6 +155,13 @@ public class NaiveBitSet {
         this.words[wordIndex(bitIndex)] &= ~(1L << bitIndex);
     }
 
+    // 从本集合中移除s中的元素
+    public void clear(NaiveBitSet s) {
+        for (int i = 0; i < longSize; ++i) {
+            this.words[i] &= ~s.words[i];
+        }
+    }
+
     public boolean isEmpty() {
         for (int i = 0; i < longSize; ++i) {
             if (this.words[i] != 0L) {
@@ -180,6 +187,16 @@ public class NaiveBitSet {
         for (int i = 0; i < longSize; ++i) {
             this.words[i] |= s.words[i];
         }
+    }
+
+    // 判断两个集合是否有交集
+    public boolean isIntersect(NaiveBitSet s) {
+        for (int i = 0; i < longSize; ++i) {
+            if((this.words[i] & s.words[i]) != 0L){
+                return true;
+            }
+        }
+        return false;
     }
 
     public int nextSetBit(int fromIndex) {

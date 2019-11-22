@@ -369,8 +369,8 @@ public class AllDifferentTest {
 
     @Test(groups = "1s", timeOut = 60000)
     public void testB3() throws ContradictionException {
-//        out.println("ACFast============>");
-//
+        out.println("ACFast============>");
+
         Model model = new Model();
         IntVar[] X = new IntVar[3];
         X[0] = model.intVar(new int[]{1, 2});

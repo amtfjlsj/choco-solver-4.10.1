@@ -454,26 +454,28 @@ public class AlgoAllDiffAC_Fastbit1 {
 
         // -------------------放在一起检查-------------------
         edgeIdx = leftEdge.nextSetBit(0);
-        while (edgeIdx != -1 && vars[edgeIdx / numValue].getDomainSize() > 1) {
-            if (checkSCC(edgeIdx)) {
-                // 进一步的还可以回溯路径，从checkEdge中删除
+        while (edgeIdx != -1) {
+            if (vars[edgeIdx / numValue].getDomainSize() > 1) {
+                if (checkSCC(edgeIdx)) {
+                    // 进一步的还可以回溯路径，从checkEdge中删除
 //                //out.println(edgeIdx + " is in SCC");
-            } else {
-                // 根据边索引得到对应的变量和取值
-                varIdx = edgeIdx / numValue;
-                v = vars[varIdx];
-                k = idToVal.get(edgeIdx % numValue + n);
-                if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
-                    filter |= v.instantiateTo(k, aCause);
+                } else {
+                    // 根据边索引得到对应的变量和取值
+                    varIdx = edgeIdx / numValue;
+                    v = vars[varIdx];
+                    k = idToVal.get(edgeIdx % numValue + n);
+                    if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
+                        filter |= v.instantiateTo(k, aCause);
 //                    out.println(v.getName() + " instantiate to " + k);
-                    // 从leftEdge中去掉被删的边
-                    tmp.clear();
-                    tmp.or(varUnmatchedEdge[varIdx]);
-                    tmp.flip(0, numBit);
-                    leftEdge.and(tmp);
-                } else { // 如果edge是非匹配边
-                    filter |= v.removeValue(k, aCause);
+                        // 从leftEdge中去掉被删的边
+                        tmp.clear();
+                        tmp.or(varUnmatchedEdge[varIdx]);
+                        tmp.flip(0, numBit);
+                        leftEdge.and(tmp);
+                    } else { // 如果edge是非匹配边
+                        filter |= v.removeValue(k, aCause);
 //                    out.println(v.getName() + " remove " + k);
+                    }
                 }
             }
             edgeIdx = leftEdge.nextSetBit(edgeIdx + 1);
