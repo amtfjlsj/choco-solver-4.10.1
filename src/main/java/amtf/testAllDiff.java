@@ -35,9 +35,9 @@ public class testAllDiff {
 //                "F:\\chenj\\data\\XCSP3\\ColouredQueens\\ColouredQueens-m1-s1\\ColouredQueens-08.xml",
 //                "F:\\chenj\\data\\XCSP3\\ColouredQueens\\ColouredQueens-m1-s1\\ColouredQueens-09.xml",
 //                "F:\\chenj\\data\\XCSP3\\DistinctVectors\\DistinctVectors-m1-s1\\DistinctVectors-30-010-02.xml",
-                "F:\\chenj\\data\\XCSP3\\SchurrLemma\\SchurrLemma-mod-s1\\SchurrLemma-012-9-mod.xml",
+//                "F:\\chenj\\data\\XCSP3\\SchurrLemma\\SchurrLemma-mod-s1\\SchurrLemma-012-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\SchurrLemma\\SchurrLemma-mod-s1\\SchurrLemma-015-9-mod.xml",
-//                "F:\\chenj\\data\\XCSP3\\SchurrLemma\\SchurrLemma-mod-s1\\SchurrLemma-020-9-mod.xml",
+                "F:\\chenj\\data\\XCSP3\\SchurrLemma\\SchurrLemma-mod-s1\\SchurrLemma-020-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\SchurrLemma\\SchurrLemma-mod-s1\\SchurrLemma-030-9-mod.xml",
         };
         XCSPParser parser = new XCSPParser();

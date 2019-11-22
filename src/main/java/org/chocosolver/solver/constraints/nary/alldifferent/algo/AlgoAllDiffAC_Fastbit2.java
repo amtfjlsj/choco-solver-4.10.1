@@ -63,6 +63,8 @@ public class AlgoAllDiffAC_Fastbit2 {
     private NaiveBitSet matchedEdge;
     // 搜索边
     private NaiveBitSet searchEdge;
+    // 连通边
+    private NaiveBitSet sccEdge;
 
     // 变量、值的匹配边和非匹配边
     private int[] varMatchedEdge;
@@ -112,7 +114,7 @@ public class AlgoAllDiffAC_Fastbit2 {
         digraph = new DirectedGraph(n2, SetType.BITSET, false);
         // free应该区分匹配点和非匹配点（true表示非匹配点，false表示匹配点）
         free = new BitSet(n2);
-        // 用于回溯增广路径
+        // 用于回溯路径
         father = new int[n2];
         // 使用队列实现非递归广度优先搜索
         fifo = new int[n2];
@@ -123,6 +125,7 @@ public class AlgoAllDiffAC_Fastbit2 {
         leftEdge = new NaiveBitSet(numBit);
         matchedEdge = new NaiveBitSet(numBit);
         searchEdge = new NaiveBitSet(numBit);
+        sccEdge = new NaiveBitSet(numBit);
 
         varMatchedEdge = new int[n];
         valMatchedEdge = new int[numValue];
@@ -136,7 +139,7 @@ public class AlgoAllDiffAC_Fastbit2 {
             valEdge[i] = new NaiveBitSet(numBit);
         }
 
-        // 只在构造函数中，初始化varUnmatchedEdge、valEdge
+        // 只在构造函数中，初始化varEdge、valEdge
         for (int i = 0; i < n; i++) {
             v = vars[i];
             ub = v.getUB();
@@ -323,7 +326,7 @@ public class AlgoAllDiffAC_Fastbit2 {
             notGamma.iterateValid();
             while (notGamma.hasNextValid()) {
                 int varIdx = notGamma.next();
-                if (searchEdge.isIntersect(varEdge[varIdx])) {
+                if (searchEdge.isIntersect(varEdge[varIdx]) != -1) {
                     extended = true;
                     searchEdge.set(varMatchedEdge[varIdx]);
                     notGamma.remove();
@@ -369,12 +372,11 @@ public class AlgoAllDiffAC_Fastbit2 {
     private boolean filterSecondPart() throws ContradictionException {
         boolean filter = false;
         int varIdx;
-        IntVar v;
-        int k;
         int edgeIdx;
 
         // 从leftEdge中去掉searchEdge，即是需要检查SCC的边
         leftEdge.clear(searchEdge);
+        sccEdge.clear();
 //        out.println("-----leftEdge-----");
 //        out.println(leftEdge.toString());
 
@@ -385,15 +387,27 @@ public class AlgoAllDiffAC_Fastbit2 {
         // -------------------放在一起检查-------------------
         edgeIdx = leftEdge.nextSetBit(0);
         while (edgeIdx != -1) {
-            if (vars[edgeIdx / numValue].getDomainSize() > 1) {
+            if (vars[edgeIdx / numValue].getDomainSize() > 1 && !sccEdge.get(edgeIdx)) {
+//                out.println("checking: " + edgeIdx);
                 if (checkSCC(edgeIdx)) {
-                    // 进一步的还可以回溯路径，从checkEdge中删除
-//                //out.println(edgeIdx + " is in SCC");
+                    // 回溯路径，添加到leftEdge中
+                    int valNewIdx = edgeIdx % numValue;
+                    int tmpNewIdx = valNewIdx;
+                    do {
+                        int backEdgeIdx = valMatchedEdge[tmpNewIdx];
+//                        out.println(backEdgeIdx + " is in SCC");
+                        sccEdge.set(backEdgeIdx);
+                        varIdx = backEdgeIdx / numValue;
+                        backEdgeIdx = father[varIdx];
+//                        out.println(backEdgeIdx + " is in SCC");
+                        sccEdge.set(backEdgeIdx);
+                        tmpNewIdx = backEdgeIdx % numValue;
+                    } while (tmpNewIdx != valNewIdx);
                 } else {
                     // 根据边索引得到对应的变量和取值
                     varIdx = edgeIdx / numValue;
-                    v = vars[varIdx];
-                    k = idToVal.get(edgeIdx % numValue + n);
+                    IntVar v = vars[varIdx];
+                    int k = idToVal.get(edgeIdx % numValue + n);
                     if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
                         filter |= v.instantiateTo(k, aCause);
 //                        out.println(v.getName() + " instantiate to " + k);
@@ -415,15 +429,16 @@ public class AlgoAllDiffAC_Fastbit2 {
     // 判断边是否在SCC中
     private boolean checkSCC(int edgeIdx) {
         // 先根据是否是匹配边初始化
-        int valIdx = edgeIdx % numValue;
+        int valNewIdx = edgeIdx % numValue;
         int matchedEdgeIdx;
         searchEdge.clear();
         if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
             matchedEdgeIdx = edgeIdx;
-            searchEdge.or(valEdge[valIdx]);
+            searchEdge.or(valEdge[valNewIdx]);
+            searchEdge.and(leftEdge);
             searchEdge.clear(edgeIdx);
         } else { // 如果edge是非匹配边
-            matchedEdgeIdx = valMatchedEdge[valIdx];
+            matchedEdgeIdx = valMatchedEdge[valNewIdx];
             searchEdge.set(edgeIdx);
         }
 
@@ -436,16 +451,18 @@ public class AlgoAllDiffAC_Fastbit2 {
             notGamma.iterateValid();
             while (notGamma.hasNextValid()) {
                 int varIdx = notGamma.next();
-                if (searchEdge.isIntersect(varEdge[varIdx])) {
+                int intersectEdgeIdx = searchEdge.isIntersect(varEdge[varIdx]);
+                if (intersectEdgeIdx != -1) {
                     extended = true;
-                    searchEdge.set(varMatchedEdge[varIdx]);
+                    // 记录路径, 变量的一条入边
+                    father[varIdx] = intersectEdgeIdx;
                     notGamma.remove();
-                    if (searchEdge.get(matchedEdgeIdx)) {
+                    if (varMatchedEdge[varIdx] == matchedEdgeIdx) {
                         return true;
                     }
                     // 把与匹配值相连的边并入
-                    valIdx = matching[varIdx] - n;
-                    searchEdge.or(valEdge[valIdx]);
+                    valNewIdx = matching[varIdx] - n;
+                    searchEdge.or(valEdge[valNewIdx]);
                     searchEdge.and(leftEdge);
                 }
             }
