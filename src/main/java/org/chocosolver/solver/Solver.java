@@ -331,16 +331,16 @@ public class Solver implements ISolver, IMeasures, IOutputFactory {
                 case initialize:
                     throw new UnsupportedOperationException("should not initialize during search loop");
                 case propagate:
-//                    out.println("node: " + getNodeCount());
-//                    out.println(getDecisionPath().getLastDecision().toString());
-//                    if (getNodeCount() == 5) {
+//                    if (getNodeCount() == 21) {
+//                        out.println("node: " + getNodeCount());
+//                        out.println(getDecisionPath().getLastDecision().toString());
 //                        System.out.println("before---------------");
 //                        for (Variable v : getModel().getVars()) {
 //                            System.out.println(v.toString());
 //                        }
 //                    }
                     propagate(left);
-//                    if (getNodeCount() == 5) {
+//                    if (getNodeCount() == 21) {
 //                        System.out.println("after---------------");
 //                        for (Variable v : getModel().getVars()) {
 //                            System.out.println(v.toString());

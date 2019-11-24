@@ -392,6 +392,7 @@ public class AlgoAllDiffAC_Naive {
         // 记录当前limit
         notGamma.record();
         sccEdge.clear();
+
         // -------------------放在一起检查-------------------
         edgeIdx = leftEdge.nextSetBit(0);
         while (edgeIdx != -1) {
@@ -401,32 +402,99 @@ public class AlgoAllDiffAC_Naive {
 //                //out.println(edgeIdx + " is in SCC");
 //                    v = vars[varIdx];
 ////                    k = idToVal.get(edgeIdx % numValue + n);
-//                    if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
-////                        filter |= v.instantiateTo(k, aCause);
-//////                        out.println(v.getName() + " instantiate to " + k);
-////                        // 从leftEdge中去掉被删的边
-////                        leftEdge.clear(varEdge[varIdx]);
-////                        varEdge[varIdx]
-//                    } else { // 如果edge是非匹配边
-////                        filter |= v.removeValue(k, aCause);
-//////                        out.println(v.getName() + " remove " + k);
-////                        // 从leftEdge中去掉被删的边
-////                        leftEdge.clear(edgeIdx);
-//                    }
-////                    varIdx = edgeIdx / numValue;
-////                    sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
-                    notGamma.iterateLimit();
-                    while (notGamma.hasNextLimit()) {
-                        varIdx = notGamma.next();
-                        if (searchEdge.isIntersect(varEdge[varIdx])) {
-                            sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
-
-                            // 把与匹配值相连的边并入
-                            valIdx = matching[varIdx] - n;
-                            sccEdge.setThenAnd(valEdge[valIdx], leftEdge);
-                            notGamma.addLimit();
-                        }
+                    if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
+//                        filter |= v.instantiateTo(k, aCause);
+////                        out.println(v.getName() + " instantiate to " + k);
+//                        // 从leftEdge中去掉被删的边
+//                        leftEdge.clear(varEdge[varIdx]);
+//                        varEdge[varIdx]
+//                        System.out.println("----------" + edgeIdx + "----------");
+//                        System.out.println(searchEdge);
+//                        sccEdge.set(edgeIdx);
+//                        System.out.println(sccEdge);
+//                        notGamma.iterateLimit();
+//                        while (notGamma.hasNextLimit()) {
+//                            varIdx = notGamma.next();
+////                            if (sccEdge.isIntersect(varEdge[varIdx])) {
+////                                sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
+////                                System.out.println(sccEdge);
+////                                notGamma.addLimit();
+////                                // 把与匹配值相连的边并入
+////                                valIdx = matching[varIdx] - n;
+////                                sccEdge.setThenAnd(valEdge[valIdx], searchEdge);
+////                                System.out.println(sccEdge);
+////
+////                            }
+//                        }
+//
+//                        varIdx = edgeIdx / numValue;
+//                        sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
+//                        if (vars[2].getValue() == 5) {
+//                            System.out.println("----------" + edgeIdx + "----------");
+//                            System.out.println(sccEdge);
+//                        }
+                    } else { // 如果edge是非匹配边
+//                        valIdx = edgeIdx % numValue;
+//                        varIdx = valMatchedEdge[valIdx] / numValue;
+//                        sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
+//                        sccEdge.set(valMatchedEdge[valIdx]);
+//                        notGamma.iterateLimit();
+////                        notGamma.addLimit();
+//                        while (notGamma.hasNextLimit()) {
+//                            varIdx = notGamma.next();
+////                            if (sccEdge.isIntersect(varEdge[varIdx])) {
+//                                sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
+//                                System.out.println(sccEdge);
+//                                notGamma.addLimit();
+//                                // 把与匹配值相连的边并入
+//                                valIdx = matching[varIdx] - n;
+//                                sccEdge.setThenAnd(valEdge[valIdx], searchEdge);
+//                                System.out.println(sccEdge);
+//
+////                            }
+//                        }
+//                        if (vars[2].getValue() == 5) {
+//                            System.out.println("----------" + edgeIdx + "----------");
+//                            System.out.println(sccEdge);
+//                        }
+//                        System.out.println("----------"+edgeIdx+"----------");
+//                        System.out.println(searchEdge);
+//                        sccEdge.set(edgeIdx);
+//                        System.out.println(sccEdge);
+//
+//
+//                        notGamma.iterateLimit();
+//                        while (notGamma.hasNextLimit()) {
+//                            varIdx = notGamma.next();
+//                            if (sccEdge.isIntersect(varEdge[varIdx])) {
+//                                sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
+//                                System.out.println(sccEdge);
+//                                notGamma.addLimit();
+//                                // 把与匹配值相连的边并入
+//                                valIdx = matching[varIdx] - n;
+//                                sccEdge.setThenAnd(valEdge[valIdx], leftEdge);
+//                                System.out.println(sccEdge);
+//
+//                            }
+//                        }
                     }
+
+                    // 回溯
+
+
+//                    // 回溯路径，添加到leftEdge中
+//                    int valNewIdx = edgeIdx % numValue;
+//                    int tmpNewIdx = valNewIdx;
+//                    do {
+//                        int backEdgeIdx = valMatchedEdge[tmpNewIdx];
+////                        out.println(backEdgeIdx + " is in SCC");
+//                        sccEdge.set(backEdgeIdx);
+//                        varIdx = backEdgeIdx / numValue;
+//                        backEdgeIdx = father[varIdx];
+////                        out.println(backEdgeIdx + " is in SCC");
+//                        sccEdge.set(backEdgeIdx);
+//                        tmpNewIdx = backEdgeIdx % numValue;
+//                    } while (tmpNewIdx != valNewIdx);
 
 
                 } else {
