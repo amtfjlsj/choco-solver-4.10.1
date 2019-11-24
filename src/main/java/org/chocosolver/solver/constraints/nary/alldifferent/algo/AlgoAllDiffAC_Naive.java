@@ -65,6 +65,8 @@ public class AlgoAllDiffAC_Naive {
     private NaiveBitSet matchedEdge;
     // 搜索边
     private NaiveBitSet searchEdge;
+    // 前沿边
+    private NaiveBitSet frontierEdge;
 
     // 变量、值的匹配边和非匹配边
     private int[] varMatchedEdge;
