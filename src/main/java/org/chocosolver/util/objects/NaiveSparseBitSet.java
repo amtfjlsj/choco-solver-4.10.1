@@ -1,7 +1,11 @@
 package org.chocosolver.util.objects;
 
 
-import java.util.*;
+import org.chocosolver.util.objects.NaiveBitSet;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class NaiveSparseBitSet {
     // 用于and运算的mask外侧环以1
@@ -12,7 +16,7 @@ public class NaiveSparseBitSet {
     protected long[] words;
     int startIndex;
     int endIndex;
-//    int minIndex = Integer.MAX_VALUE;
+    //    int minIndex = Integer.MAX_VALUE;
 //    int maxIndex = Integer.MIN_VALUE;
     //    private ArrayList<Integer> tmpList = new ArrayList<>();
     private Map<Integer, Long> tmp = new TreeMap<>();
@@ -133,3 +137,4 @@ public class NaiveSparseBitSet {
 
 
 }
+

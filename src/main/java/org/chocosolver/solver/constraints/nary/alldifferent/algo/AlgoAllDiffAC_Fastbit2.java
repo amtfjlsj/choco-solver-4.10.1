@@ -403,6 +403,10 @@ public class AlgoAllDiffAC_Fastbit2 {
                         sccEdge.set(backEdgeIdx);
                         tmpNewIdx = backEdgeIdx % numValue;
                     } while (tmpNewIdx != valNewIdx);
+//                    if (vars[2].getValue() == 5) {
+//                        System.out.println("----------" + edgeIdx + "----------");
+//                        System.out.println(sccEdge);
+//                    }
                 } else {
                     // 根据边索引得到对应的变量和取值
                     varIdx = edgeIdx / numValue;
