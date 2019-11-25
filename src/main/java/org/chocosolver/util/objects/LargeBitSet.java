@@ -3,6 +3,7 @@ package org.chocosolver.util.objects;
 public class LargeBitSet extends NaiveBitSet {
     // 记录非0索引
     int[] nonClearIndex;
+    SparseSet ClearIndex;
     int limit = 0;
     int indexIterator;
     int iterator;
@@ -16,6 +17,33 @@ public class LargeBitSet extends NaiveBitSet {
     public void clear() {
         for (int i = 0; i < limit; ++i) {
             this.words[nonClearIndex[i]] = 0L;
+        }
+    }
+
+    @Override
+    public void flip() {
+        limit = 0;
+        for (int i = 0; i < longSize; ++i) {
+            words[i] = ~words[i];
+            if (words[i] != 0L) {
+                nonClearIndex[limit++] = i;
+            }
+        }
+        words[longSize - 1] &= lastMask;
+    }
+
+    @Override
+    public void set(int bitIndex) {
+        int index = wordIndex(bitIndex);
+        if (this.words[index] == 0L) {
+            nonClearIndex[limit++] = index;
+        }
+        this.words[wordIndex(index)] |= 1L << bitIndex;
+    }
+
+    public void set(LargeBitSet s) {
+        for (int i = 0; i < longSize; ++i) {
+            this.words[i] = s.words[i];
         }
     }
 
