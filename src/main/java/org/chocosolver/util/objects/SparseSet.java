@@ -20,6 +20,7 @@ public class SparseSet {
     // 用于记住原limit
     private int oldLimit;
     private int iterator2;
+//    private capacity
 
     public SparseSet(int length) {
         this.length = length;
@@ -34,8 +35,27 @@ public class SparseSet {
         this.iterator = -1;
     }
 
+    public void reserve(int length) {
+        this.length = length;
+        this.sparse = null;
+        this.dense = null;
+        this.sparse = new int[length];
+        this.dense = new int[length];
+        for (int i = 0; i < length; i++) {
+            this.sparse[i] = i;
+            this.dense[i] = i;
+        }
+        this.limit = length - 1;
+        this.oldLimit = limit;
+        this.iterator = -1;
+    }
+
     public void fill() {
         limit = length - 1;
+    }
+
+    public void clear() {
+        limit = -1;
     }
 
     public boolean contain(int e) {
@@ -66,10 +86,14 @@ public class SparseSet {
         }
     }
 
-
     // 遍历有效部分（左部集合）
     public void iterateValid() {
         iterator = -1;
+    }
+
+    // 从某个值起，遍历有效部分（左部集合）
+    public void iterateValid(int e) {
+        iterator = sparse[e];
     }
 
     public boolean hasNextValid() {
@@ -87,6 +111,10 @@ public class SparseSet {
 
     public int next() {
         return dense[++iterator];
+    }
+
+    public int current() {
+        return dense[iterator];
     }
 
     // 只能用于在迭代过程中删除上一个迭代元素
