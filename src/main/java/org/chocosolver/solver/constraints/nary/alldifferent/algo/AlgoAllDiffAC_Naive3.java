@@ -5,6 +5,7 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
+import org.chocosolver.util.objects.LargeBitSet;
 import org.chocosolver.util.objects.NaiveSparseBitSet;
 import org.chocosolver.util.objects.NaiveBitSet;
 //import org.chocosolver.util.objects.NaiveSparseBitSet;
@@ -32,7 +33,7 @@ import java.util.BitSet;
  *
  * @author Jean-Guillaume Fages, Zhe Li, Jia'nan Chen
  */
-public class AlgoAllDiffAC_Naive {
+public class AlgoAllDiffAC_Naive3 {
 
     //***********************************************************************************
     // VARIABLES
@@ -71,8 +72,8 @@ public class AlgoAllDiffAC_Naive {
     // 变量、值的匹配边和非匹配边
     private int[] varMatchedEdge;
     private int[] valMatchedEdge;
-    private NaiveSparseBitSet[] varEdge;
-    private NaiveSparseBitSet[] valEdge;
+    private LargeBitSet[] varEdge;
+    private LargeBitSet[] valEdge;
 
     // Xc-Γ(A)
     private SparseSet notGamma;
@@ -83,7 +84,7 @@ public class AlgoAllDiffAC_Naive {
     // CONSTRUCTORS
     //***********************************************************************************
 
-    public AlgoAllDiffAC_Naive(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffAC_Naive3(IntVar[] variables, ICause cause) {
         this.vars = variables;
         aCause = cause;
         n = vars.length;
@@ -131,14 +132,14 @@ public class AlgoAllDiffAC_Naive {
 
         varMatchedEdge = new int[n];
         valMatchedEdge = new int[numValue];
-        varEdge = new NaiveSparseBitSet[n];
-        valEdge = new NaiveSparseBitSet[numValue];
+        varEdge = new LargeBitSet[n];
+        valEdge = new LargeBitSet[numValue];
 
         for (int i = 0; i < n; ++i) {
-            varEdge[i] = new NaiveSparseBitSet();
+            varEdge[i] = new LargeBitSet(numBit);
         }
         for (int i = 0; i < numValue; ++i) {
-            valEdge[i] = new NaiveSparseBitSet();
+            valEdge[i] = new LargeBitSet(numBit);
         }
 
         // 只在构造函数中，初始化varUnmatchedEdge、valEdge
@@ -150,17 +151,13 @@ public class AlgoAllDiffAC_Naive {
                 // Idx是二部图变量、值和边的索引
                 int valIdx = j - n; // 因为建立map时是从n开始的，所以这里需要减去n
                 int edgeIdx = i * numValue + valIdx;
-                varEdge[i].addIndex(edgeIdx);
-                valEdge[valIdx].addIndex(edgeIdx);
+                varEdge[i].add(edgeIdx);
+                valEdge[valIdx].add(edgeIdx);
             }
         }
 
-        for (int i = 0; i < n; ++i) {
-            varEdge[i].complete();
-        }
-        for (int i = 0; i < numValue; ++i) {
-            valEdge[i].complete();
-        }
+        System.out.println(varEdge[0].toBinaryString());
+        System.out.println(valEdge[0].toBinaryString());
 
         notGamma = new SparseSet(n);
         notA = new SparseSet(numValue);
@@ -255,12 +252,12 @@ public class AlgoAllDiffAC_Naive {
             System.out.println(a);
         }
         System.out.println("---varEdge---");
-        for (NaiveSparseBitSet a : varEdge) {
-            System.out.println(a.toString());
+        for (LargeBitSet a : varEdge) {
+            System.out.println(a.toBinaryString());
         }
         System.out.println("---valEdge---");
-        for (NaiveSparseBitSet a : valEdge) {
-            System.out.println(a.toString());
+        for (LargeBitSet a : valEdge) {
+            System.out.println(a.toBinaryString());
         }
     }
 

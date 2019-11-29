@@ -3,6 +3,7 @@ package amtf;
 //import org.chocosolver.util.objects.LargeBitSet;
 
 import org.chocosolver.util.objects.LargeBitSet;
+import org.chocosolver.util.objects.NaiveBitSet;
 import org.chocosolver.util.objects.SparseSet;
 
 import static java.lang.System.out;
@@ -28,11 +29,43 @@ public class amtf {
 //        }
 //
 //        out.println(sparseSet.contain(4));
-        LargeBitSet s = new LargeBitSet(100);
-        s.set(95);
-        s.set(1);
-        s.set(0);
-        s.set(2);
-        out.println(s.toBinaryString());
+
+
+        NaiveBitSet[] v = new NaiveBitSet[3];
+        NaiveBitSet[] a = new NaiveBitSet[3];
+
+        for (int i = 0; i < 3; ++i) {
+            v[i] = new NaiveBitSet(3);
+            a[i] = new NaiveBitSet(3);
+        }
+
+        v[0].set(0);
+        v[0].set(2);
+
+        v[1].set(1);
+        v[1].set(2);
+
+        v[2].set(0);
+        v[2].set(1);
+
+
+        a[0].set(0);
+        a[0].set(2);
+        
+        a[1].set(1);
+        a[1].set(2);
+
+        a[2].set(0);
+        a[2].set(1);
+
+
+        for (int i = 0; i < 3; ++i) {
+            out.println(v[i]);
+        }
+        out.println();
+        for (int i = 0; i < 3; ++i) {
+            out.println(a[i]);
+        }
+
     }
 }

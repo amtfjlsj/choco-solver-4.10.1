@@ -135,6 +135,9 @@ public class NaiveSparseBitSet {
         return bitIndex & MOD_MASK_INT;
     }
 
-
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }
 

@@ -52,6 +52,8 @@ public class AlgoAllDiffBC {
             }
             sorter = new ArraySort<>(n, true, false);
         }
+
+        // 初始化interval，只指定interval的变量，暂不指定上下界
         for (int i = 0; i < n; i++) {
             Interval interval = intervals[i];
             interval.var = vars[i];
@@ -89,6 +91,7 @@ public class AlgoAllDiffBC {
     }
 
     private void sortIt() {
+        // The algorithm examines each interval in turn,
         int n = vars.length;
         IntVar vt;
         for (int i = 0; i < n; i++) {
@@ -96,6 +99,8 @@ public class AlgoAllDiffBC {
             intervals[i].lb = vt.getLB();
             intervals[i].ub = vt.getUB();
         }
+
+        //  sorted by their upper bounds
         sorter.sort(minsorted, n, SORT.MIN);
         sorter.sort(maxsorted, n, SORT.MAX);
         int min = minsorted[0].lb;

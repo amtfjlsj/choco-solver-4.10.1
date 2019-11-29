@@ -211,6 +211,13 @@ public class NaiveBitSet {
         }
     }
 
+    public void setThenAnd(LargeBitSet a, NaiveBitSet b) {
+        for (int i = 0, len = a.limit; i < len; ++i) {
+            int offset = a.dense[i];
+            this.words[offset] |= a.words[i] & b.words[offset];
+        }
+    }
+
     // 判断两个集合是否有交集
     // 如果有，返回第一个相交的值
     // 如果没有，返回-1
@@ -218,11 +225,25 @@ public class NaiveBitSet {
         long word;
         for (int i = 0; i < longSize; ++i) {
             word = this.words[i] & s.words[i];
-            if(word != 0L){
+            if (word != 0L) {
                 return i * 64 + Long.numberOfTrailingZeros(word);
             }
         }
         return -1;
+    }
+
+    // 判断两个集合是否有交集
+    // 如果有，返回第一个相交的值
+    // 如果没有，返回-1
+    public boolean isIntersect(LargeBitSet s) {
+        long word;
+        for (int i = 0; i < s.limit; ++i) {
+            int offset = s.dense[i];
+            if ((this.words[offset] & s.words[i]) != 0L) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // 判断两个集合是否有交集

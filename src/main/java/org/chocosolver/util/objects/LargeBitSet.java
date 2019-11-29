@@ -72,6 +72,8 @@ public class LargeBitSet extends NaiveBitSet {
         }
     }
 
+
+
 //    @Override
 //    public int nextSetBit(int fromIndex) {
 //        if (fromIndex < 0) {
@@ -138,7 +140,7 @@ public class LargeBitSet extends NaiveBitSet {
         }
     }
 
-    private void add(int e) {
+    public void add(int e) {
         if (!contain(e)) {
             swap(dense[e], limit);
             limit++;

@@ -25,7 +25,7 @@ public class testAllDiff {
 //                "E:/X3Benchmarks/alldiff/GracefulGraph/GracefulGraph-m1-s1/GracefulGraph-K03-P05.xml",
 //                "E:/X3Benchmarks/alldiff/Langford/Langford-m1-k2/Langford-2-08.xml",
 //                "E:/X3Benchmarks/alldiff/Langford/Langford-m1-k4/Langford-4-07.xml",
-                "E:/X3Benchmarks/alldiff/Queens/Queens-m1-s1/Queens-0012-m1.xml",
+                "E:/X3Benchmarks/alldiff/Queens/Queens-m1-s1/Queens-0100-m1.xml",
 //                "E:/X3Benchmarks/alldiff/LatinSquare/LatinSquare-xcsp2-bqwh15-106/bqwh-15-106-01_X2.xml",
 //                "E:/X3Benchmarks/alldiff/LatinSquare/LatinSquare-xcsp2-bqwh15-106/bqwh-15-106-02_X2.xml",
 //                "E:/X3Benchmarks/alldiff/LatinSquare/LatinSquare-xcsp2-bqwh15-106/bqwh-15-106-03_X2.xml",
