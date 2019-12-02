@@ -261,7 +261,6 @@ public class AlgoAllDiffAC_Naive2 {
             variable_to_value_[i] = -1;
         }
 
-
         for (int i = 0; i < numValue; ++i) {
             value_to_variable_[i] = -1;
         }
@@ -293,6 +292,8 @@ public class AlgoAllDiffAC_Naive2 {
         // Seed with previous matching.
         for (int x = 0; x < n; x++) {
             if (variable_to_value_[x] != -1) continue;
+
+            // 先前匹配
             int prev_value = prev_matching_[x];
             if (prev_value == -1 || value_to_variable_[prev_value] != -1) continue;
             v = vars[x];
