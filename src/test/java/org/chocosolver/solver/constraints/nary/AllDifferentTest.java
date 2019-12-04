@@ -14,6 +14,7 @@ import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
+import org.chocosolver.solver.variables.impl.BitsetIntVarImpl;
 import org.testng.annotations.Test;
 
 import java.util.Random;
@@ -404,30 +405,51 @@ public class AllDifferentTest {
 //            out.println(x.toString());
 //        }
 
-//        out.println("ACFastbit2============>");
-//
-//        model = new Model();
-//        X = new IntVar[3];
+        out.println("ACFastbit2============>");
+
+        Model model = new Model();
+        IntVar[] X = new IntVar[3];
 //        X[0] = model.intVar(new int[]{1, 2});
 //        X[1] = model.intVar(new int[]{1, 2});
 //        X[2] = model.intVar(new int[]{0, 1, 2});
-////        X[3] = model.intVar("V3", new int[]{3, 1});
-//
-//        model.allDifferent(X, "ACFastbit2").post();
-//        model.getSolver().propagate();
-//
-//        for (IntVar x : X) {
-//            out.println(x.toString());
-//        }
+//        X[3] = model.intVar("V3", new int[]{3, 1});
+
+        X[0] = model.intVar(new int[]{0, 2});
+        X[1] = model.intVar(new int[]{1, 2});
+        X[2] = model.intVar(new int[]{0, 1});
+
+        model.allDifferent(X, "ACFastbit2").post();
+        model.getSolver().propagate();
+
+        for (IntVar x : X) {
+            out.println(x.toString());
+        }
 
         out.println("ACNaive============>");
 
-        Model model = new Model();
+        model = new Model();
 
-        IntVar[] X = new IntVar[3];
-        X[0] = model.intVar(new int[]{1, 2});
+//        IntVar[] X = new IntVar[3];
+//        X[0] = model.intVar(new int[]{1, 2});
+//        X[1] = model.intVar(new int[]{1, 2});
+//        X[2] = model.intVar(new int[]{0, 1, 2});
+//
+
+
+        X = new IntVar[3];
+        X[0] = model.intVar(new int[]{0, 2});
         X[1] = model.intVar(new int[]{1, 2});
-        X[2] = model.intVar(new int[]{0, 1, 2});
+        X[2] = model.intVar(new int[]{0, 1});
+
+
+//        BitsetIntVarImpl[] X = new BitsetIntVarImpl[6];
+//        X[0] = new BitsetIntVarImpl("V_0",new int[]{3, 4}, model);
+//        X[1] = new BitsetIntVarImpl("V_1",new int[]{2, 3, 4}, model);
+//        X[2] = new BitsetIntVarImpl("V_2",new int[]{3, 4}, model);
+//        X[3] = new BitsetIntVarImpl("V_3",new int[]{2, 3, 4, 5}, model);
+//        X[4] = new BitsetIntVarImpl("V_4",new int[]{3, 4, 5, 6}, model);
+//        X[5] = new BitsetIntVarImpl("V_5",new int[]{1, 2, 3, 4, 5, 6}, model);
+
 
 //        IntVar[] X = new IntVar[6];
 //        X[0] = model.intVar(new int[]{3, 4});
@@ -436,7 +458,6 @@ public class AllDifferentTest {
 //        X[3] = model.intVar(new int[]{2, 3, 4, 5});
 //        X[4] = model.intVar(new int[]{3, 4, 5, 6});
 //        X[5] = model.intVar(new int[]{1, 2, 3, 4, 5, 6});
-//        X[3] = model.intVar("V3", new int[]{3, 1});
 
         model.allDifferent(X, "ACNaive").post();
         model.getSolver().propagate();

@@ -1,6 +1,7 @@
 package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 
 import amtf.TimeCount;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
@@ -13,7 +14,7 @@ import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISetIterator;
 import org.chocosolver.util.objects.setDataStructures.SetType;
 
-import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 
@@ -34,7 +35,7 @@ import java.util.BitSet;
  *
  * @author Jean-Guillaume Fages, Zhe Li, Jia'nan Chen
  */
-public class AlgoAllDiffAC_Naive {
+public class AlgoAllDiffAC_Naive4 {
 
     //***********************************************************************************
     // VARIABLES
@@ -81,11 +82,21 @@ public class AlgoAllDiffAC_Naive {
     // Dc-A
     private SparseSet notA;
 
+
+    private ArrayList<Integer>[] successor_;
+    private boolean[] variable_visited_;
+    private boolean[] value_visited_;
+    private int[] value_to_variable_;
+    private int[] variable_to_value_;
+    private int[] prev_matching_;
+    private int[] visiting_;
+    private int[] variable_visited_from_;
+
+
     //***********************************************************************************
     // CONSTRUCTORS
     //***********************************************************************************
-
-    public AlgoAllDiffAC_Naive(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffAC_Naive4(IntVar[] variables, ICause cause) {
         this.vars = variables;
         aCause = cause;
         n = vars.length;
@@ -99,6 +110,7 @@ public class AlgoAllDiffAC_Naive {
         IntVar v;
         int ub;
         int idx = n;
+
         // 统计所有变量论域中不同值的个数
         for (int i = 0; i < n; i++) {
             v = vars[i];
@@ -111,6 +123,7 @@ public class AlgoAllDiffAC_Naive {
                 }
             }
         }
+
         n2 = idx;
         numValue = n2 - n;
         int numBit = n * numValue;
@@ -135,6 +148,7 @@ public class AlgoAllDiffAC_Naive {
         valMatchedEdge = new int[numValue];
         varEdge = new NaiveSparseBitSet[n];
         valEdge = new NaiveSparseBitSet[numValue];
+
 
         for (int i = 0; i < n; ++i) {
             varEdge[i] = new NaiveSparseBitSet();
@@ -166,6 +180,66 @@ public class AlgoAllDiffAC_Naive {
 
         notGamma = new SparseSet(n);
         notA = new SparseSet(numValue);
+
+
+        visiting_ = new int[n];
+        variable_visited_ = new boolean[n];
+        variable_visited_from_ = new int[n];
+        successor_ = new ArrayList[n];
+
+        for (int i = 0; i < n; ++i) {
+            successor_[i] = new ArrayList<>();
+        }
+        value_visited_ = new boolean[numValue];
+        variable_to_value_ = new int[n];
+        prev_matching_ = new int[n];
+        value_to_variable_ = new int[numValue];
+//        prev_matching_ =new int[];
+    }
+
+    boolean MakeAugmentingPath(int start) {
+        // Do a BFS and use visiting_ as a queue, with num_visited pointing
+        // at its begin() and num_to_visit its end().
+        // To switch to the augmenting path once a nonmatched value was found,
+        // we remember the BFS tree in variable_visited_from_.
+        int num_to_visit = 0;
+        int num_visited = 0;
+        // Enqueue start.
+        visiting_[num_to_visit++] = start;
+        variable_visited_[start] = true;
+        variable_visited_from_[start] = -1;
+
+        while (num_visited < num_to_visit) {
+            // Dequeue node to visit.
+            int node = visiting_[num_visited++];
+
+            for (int value : successor_[node]) {
+                if (value_visited_[value]) continue;
+                value_visited_[value] = true;
+                if (value_to_variable_[value] == -1) {
+                    // value is not matched: change path from node to start, and return.
+                    int path_node = node;
+                    int path_value = value;
+                    while (path_node != -1) {
+                        int old_value = variable_to_value_[path_node];
+                        variable_to_value_[path_node] = path_value;
+                        value_to_variable_[path_value] = path_node;
+                        path_node = variable_visited_from_[path_node];
+                        path_value = old_value;
+                    }
+                    return true;
+                } else {
+                    // Enqueue node matched to value.
+                    int next_node = value_to_variable_[value];
+                    variable_visited_[next_node] = true;
+                    visiting_[num_to_visit++] = next_node;
+                    variable_visited_from_[next_node] = node;
+                    free.clear(value);
+                }
+            }
+        }
+
+        return false;
     }
 
     //***********************************************************************************
@@ -178,67 +252,84 @@ public class AlgoAllDiffAC_Naive {
 //            out.println(v.toString());
 //        }
         TimeCount.startTime = System.nanoTime();
-        findMaximumMatching();
-        TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
+//        findMaximumMatching();
+//        System.out.println(Arrays.toString(matching));
 
-        System.out.println(Arrays.toString(matching));
-
-        TimeCount.startTime = System.nanoTime();
-        return filter();
-    }
-
-    //***********************************************************************************
-    // Initialization
-    //***********************************************************************************
-
-    private void findMaximumMatching() throws ContradictionException {
-        // 每次都重新建图
-        for (int i = 0; i < n2; i++) {
-            digraph.getSuccOf(i).clear();
-            digraph.getPredOf(i).clear();
-        }
-        free.set(0, n2);
-
-        leftEdge.clear();
-        matchedEdge.clear();
-        // 初始化两个not集合
-        notGamma.fill();
-        notA.fill();
-
-        int k, ub;
         IntVar v;
-        for (int i = 0; i < n; i++) {
-            v = vars[i];
-            ub = v.getUB();
-            int mate = matching[i];
-            for (k = v.getLB(); k <= ub; k = v.nextValue(k)) {
-                int j = map.get(k);
-                // 利用之前已经找到的匹配
-                if (mate == j) {
-                    assert free.get(i) && free.get(j);
-                    digraph.addArc(j, i);
-                    free.clear(i);
-                    free.clear(j);
-                } else {
-                    digraph.addArc(i, j);
+        for (int i = 0; i < n; ++i) {
+            prev_matching_[i] = variable_to_value_[i];
+            variable_to_value_[i] = -1;
+        }
+
+        for (int i = 0; i < numValue; ++i) {
+            value_to_variable_[i] = -1;
+        }
+
+        for (int x = 0; x < n; x++) {
+            successor_[x].clear();
+            v = vars[x];
+//            int min_value = v.getLB();
+//            int max_value = v.getUB();
+//            for (int value = min_value; value <= max_value; value++) {
+            for (int value = v.getLB(), ub = v.getUB(); value <= ub; value = v.nextValue(value)) {
+                int offset_value = map.get(value) - n;
+                // Forward-checking should propagate xsu != value.
+                successor_[x].add(offset_value);
+
+                int edgeIdx = x * numValue + offset_value;
+                matchedEdge.set(edgeIdx);
+            }
+
+            if (successor_[x].size() == 1) {
+                int offset_value = successor_[x].get(0);
+                if (value_to_variable_[offset_value] == -1) {
+                    value_to_variable_[offset_value] = x;
+                    variable_to_value_[x] = offset_value;
                 }
-                // 更新existentEdge
-                // Idx是二部图值和边的索引
-                int valIdx = j - n; // 因为构造函数中建立map时是从n开始的，所以这里需要减去n
-                int edgeIdx = i * numValue + valIdx;
-                leftEdge.set(edgeIdx);
             }
         }
-        // 尝试为每个变量都寻找一个匹配，即最大匹配的个数要与变量个数相等，否则回溯
-        // 利用匈牙利算法寻找最大匹配
-        for (int i = free.nextSetBit(0); i >= 0 && i < n; i = free.nextSetBit(i + 1)) {
-            tryToMatch(i);
+
+        // Seed with previous matching.
+        for (int x = 0; x < n; x++) {
+            if (variable_to_value_[x] != -1) continue;
+
+            // 先前匹配
+            int prev_value = prev_matching_[x];
+            if (prev_value == -1 || value_to_variable_[prev_value] != -1) continue;
+            v = vars[x];
+//            if (VariableHasPossibleValue(x, prev_matching_[x] + min_all_values_)) {
+            if (v.contains(idToVal.get(prev_matching_[x]))) {
+                variable_to_value_[x] = prev_matching_[x];
+                value_to_variable_[prev_matching_[x]] = x;
+            }
         }
-        // 匹配边是由值指向变量，非匹配边是由变量指向值
-//      out.println("-----matching-----");
+
+        // Compute max matching.
+
+        for (int x = 0; x < n; x++) {
+            if (variable_to_value_[x] == -1) {
+
+                for (int i = 0; i < numValue; ++i) {
+                    value_visited_[i] = false;
+                }
+
+                for (int i = 0; i < n; ++i) {
+                    variable_visited_[i] = false;
+                }
+
+                MakeAugmentingPath(x);
+            }
+            if (variable_to_value_[x] == -1) break;  // No augmenting path exists.
+        }
+
+        System.out.println(Arrays.toString(variable_to_value_));
+        System.out.println(Arrays.toString(value_to_variable_));
+
+        //      out.println("-----matching-----");
         for (int i = 0; i < n; i++) {
-            matching[i] = digraph.getPredOf(i).isEmpty() ? -1 : digraph.getPredOf(i).iterator().next();
+//            matching[i] = digraph.getPredOf(i).isEmpty() ? -1 : digraph.getPredOf(i).iterator().next();
             // 初始化matchedEdge、varMatchedEdge、valMatchedEdge
+            matching[i] = variable_to_value_[i] + n;
             int valIdx = matching[i] - n; // 因为构造函数中建立map时是从n开始的，所以这里需要减去n
 //          out.println(i + " matching " + valIdx);
             int edgeIdx = i * numValue + valIdx;
@@ -246,6 +337,12 @@ public class AlgoAllDiffAC_Naive {
             varMatchedEdge[i] = edgeIdx;
             valMatchedEdge[valIdx] = edgeIdx;
         }
+
+
+        TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
+
+        TimeCount.startTime = System.nanoTime();
+
         System.out.println("-----leftEdge-----");
         System.out.println(leftEdge.toString());
         System.out.println("-----matchedEdge-----");
@@ -266,56 +363,15 @@ public class AlgoAllDiffAC_Naive {
         for (NaiveSparseBitSet a : valEdge) {
             System.out.println(a.toString());
         }
+
+        return filter();
+
     }
 
-    private void tryToMatch(int i) throws ContradictionException {
-        int mate = augmentPath_BFS(i);
-        if (mate != -1) {// 值mate是一个自由点
-            free.clear(mate);
-            free.clear(i);
-            int tmp = mate;
-            // 沿着father回溯即是增广路径
-            while (tmp != i) {
-                // 翻转边的方向
-                digraph.removeArc(father[tmp], tmp);
-                digraph.addArc(tmp, father[tmp]);
-                // 回溯
-                tmp = father[tmp];
-            }
-        } else {//应该是匹配失败，即最大匹配个数与变量个数不相等，需要回溯
-            vars[0].instantiateTo(vars[0].getLB() - 1, aCause);
-        }
-    }
+    //***********************************************************************************
+    // Initialization
+    //***********************************************************************************
 
-    // 宽度优先搜索寻找增广路径
-    private int augmentPath_BFS(int root) {
-        // root是一个自由点（变量）。
-        // 如果与root相连的值中有自由点，就返回第一个自由点；
-        // 如果没有，尝试为匹配变量找一个新的自由点，过程中通过father标记增广路径。
-        in.clear();
-        int indexFirst = 0, indexLast = 0;
-        fifo[indexLast++] = root;
-        int x;
-        ISetIterator succs;
-        while (indexFirst != indexLast) {
-            x = fifo[indexFirst++];
-            // 如果x是一个变量，那么它的后继就是非匹配的值；
-            // 如果x是一个值，那么它的后继只有一个，是与它匹配的变量。
-            succs = digraph.getSuccOf(x).iterator();
-            while (succs.hasNext()) {
-                int y = succs.nextInt();
-                if (!in.get(y)) {
-                    father[y] = x;
-                    fifo[indexLast++] = y;
-                    in.set(y);
-                    if (free.get(y)) { //自由点（值）
-                        return y;
-                    }
-                }
-            }
-        }
-        return -1;
-    }
 
     //***********************************************************************************
     // PRUNING

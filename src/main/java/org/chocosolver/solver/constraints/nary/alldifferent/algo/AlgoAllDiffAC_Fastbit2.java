@@ -11,6 +11,8 @@ import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISetIterator;
 import org.chocosolver.util.objects.setDataStructures.SetType;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.BitSet;
 
 import static java.lang.System.out;
@@ -169,6 +171,8 @@ public class AlgoAllDiffAC_Fastbit2 {
         TimeCount.startTime = System.nanoTime();
         findMaximumMatching();
         TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
+
+        out.println(Arrays.toString(matching));
 
         TimeCount.startTime = System.nanoTime();
         return filter();

@@ -6,6 +6,7 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
+import org.chocosolver.util.objects.LargeBitSet;
 import org.chocosolver.util.objects.NaiveSparseBitSet;
 import org.chocosolver.util.objects.NaiveBitSet;
 //import org.chocosolver.util.objects.NaiveSparseBitSet;
@@ -42,23 +43,31 @@ public class AlgoAllDiffAC_Naive2 {
     //***********************************************************************************
 
     private int n, n2;
+    private int arity;
     private IntVar[] vars;
     private ICause aCause;
     // 原map是取值到取值编号的映射，一对一
     private TIntIntHashMap map;
-    private DirectedGraph digraph;
+    //    private DirectedGraph digraph;
     private int[] matching;
     private BitSet free;
+
+    // 自由值集合
+    private BitSet freeNode;
     // for augmenting matching (BFS)
-    private int[] father;
-    private int[] fifo;
-    private BitSet in;
+//    private int[] father;
+//    private int[] fifo;
+//    private BitSet in;
 
     // 以下是bit版本所需数据结构========================
     // numValue是二部图中取值编号的个数，numBit是二部图的最大边数
     private int numValue;
     // 需要新增一个取值编号到取值的映射，也是一对一
     private TIntIntHashMap idToVal;
+    // 值到索引
+    private TIntIntHashMap val2Idx;
+    // 索引到值
+    private int[] idx2Val;
 
     // 保留边
     private NaiveBitSet leftEdge;
@@ -83,12 +92,22 @@ public class AlgoAllDiffAC_Naive2 {
     private SparseSet notA;
 
 
-    private ArrayList<Integer>[] successor_;
-    private boolean[] variable_visited_;
-    private boolean[] value_visited_;
+    // 记录每个变量的有效值， 可以用BitSet代替，同时生成两个数据结构
+//    private ArrayList<Integer>[] successor_;
+    private NaiveBitSet[] successor_;
+    //    private boolean[] variable_visited_;
+//    private boolean[] value_visited_;
+    // 已访问过的变量和值
+    private NaiveBitSet variable_visited_;
+    private NaiveBitSet value_visited_;
+
+    // matching
     private int[] value_to_variable_;
     private int[] variable_to_value_;
+
+    // 记录之前的匹配
     private int[] prev_matching_;
+    // 记录队列
     private int[] visiting_;
     private int[] variable_visited_from_;
 
@@ -100,6 +119,7 @@ public class AlgoAllDiffAC_Naive2 {
         this.vars = variables;
         aCause = cause;
         n = vars.length;
+        arity = vars.length;
         // 存储匹配
         matching = new int[n];
         for (int i = 0; i < n; i++) {
@@ -107,6 +127,8 @@ public class AlgoAllDiffAC_Naive2 {
         }
         map = new TIntIntHashMap();
         idToVal = new TIntIntHashMap();
+        val2Idx = new TIntIntHashMap();
+
         IntVar v;
         int ub;
         int idx = n;
@@ -119,24 +141,30 @@ public class AlgoAllDiffAC_Naive2 {
                 if (!map.containsKey(j)) {
                     map.put(j, idx);
                     idToVal.put(idx, j);
+                    val2Idx.put(idx - n, j);
                     idx++;
                 }
             }
         }
 
+        idx2Val = val2Idx.keys();
+
+
         n2 = idx;
         numValue = n2 - n;
+        arity = n;
         int numBit = n * numValue;
-        // 用Bitset邻接矩阵的有向图，因为没有辅助点，所以是n2，非n2 + 1
-        digraph = new DirectedGraph(n2, SetType.BITSET, false);
-        // free应该区分匹配点和非匹配点（true表示非匹配点，false表示匹配点）
+//        // 用Bitset邻接矩阵的有向图，因为没有辅助点，所以是n2，非n2 + 1
+//        digraph = new DirectedGraph(n2, SetType.BITSET, false);
+//        // free应该区分匹配点和非匹配点（true表示非匹配点，false表示匹配点）
         free = new BitSet(n2);
-        // 用于回溯增广路径
-        father = new int[n2];
-        // 使用队列实现非递归广度优先搜索
-        fifo = new int[n2];
-        // 哪些点在fifo队列中（true表示在，false表示不在）
-        in = new BitSet(n2);
+        freeNode = new BitSet(numValue);
+//        // 用于回溯增广路径
+//        father = new int[n2];
+//        // 使用队列实现非递归广度优先搜索
+//        fifo = new int[n2];
+//        // 哪些点在fifo队列中（true表示在，false表示不在）
+//        in = new BitSet(n2);
 
         // 构造新增数据结构
         leftEdge = new NaiveBitSet(numBit);
@@ -182,18 +210,36 @@ public class AlgoAllDiffAC_Naive2 {
         notA = new SparseSet(numValue);
 
 
+        // 记录访问过的谈量
         visiting_ = new int[n];
-        variable_visited_ = new boolean[n];
+//        variable_visited_ = new boolean[n];
+        variable_visited_ = new NaiveBitSet(n);
+        // 变量的前驱变量，若前驱变量是-1，则表示无前驱变量，就是第一个变量
         variable_visited_from_ = new int[n];
-        successor_ = new ArrayList[n];
+//        successor_ = new ArrayList[n];
+        successor_ = new NaiveBitSet[n];
 
         for (int i = 0; i < n; ++i) {
-            successor_[i] = new ArrayList<>();
+//            successor_[i] = new ArrayList<>();
+            successor_[i] = new NaiveBitSet(numValue);
         }
-        value_visited_ = new boolean[numValue];
+//        value_visited_ = new boolean[numValue];
+        value_visited_ = new NaiveBitSet(numValue);
         variable_to_value_ = new int[n];
         prev_matching_ = new int[n];
         value_to_variable_ = new int[numValue];
+
+        for (int i = 0; i < n; ++i) {
+            prev_matching_[i] = -1;
+            variable_to_value_[i] = -1;
+        }
+
+        for (int i = 0; i < numValue; ++i) {
+            value_to_variable_[i] = -1;
+        }
+
+//        notGamma = new SparseSet(n);
+//        notA = new SparseSet(numValue);
 //        prev_matching_ =new int[];
     }
 
@@ -202,39 +248,70 @@ public class AlgoAllDiffAC_Naive2 {
         // at its begin() and num_to_visit its end().
         // To switch to the augmenting path once a nonmatched value was found,
         // we remember the BFS tree in variable_visited_from_.
+
+        // start传入的是变量
+        // 执行一个BFS并使用visiting_作为一个队列，num_visited指向它的begin()，
+        // num_to_visit指向它的end()。要在发现不匹配的值时切换到扩展路径，
+        // 我们需要记住variable_visited_from_中的BFS树
+        //
         int num_to_visit = 0;
         int num_visited = 0;
         // Enqueue start.
+        // visit 里存的是变量
         visiting_[num_to_visit++] = start;
-        variable_visited_[start] = true;
+//        variable_visited_[start] = true;
+        variable_visited_.set(start);
         variable_visited_from_[start] = -1;
 
         while (num_visited < num_to_visit) {
             // Dequeue node to visit.
             int node = visiting_[num_visited++];
 
-            for (int value : successor_[node]) {
-                if (value_visited_[value]) continue;
-                value_visited_[value] = true;
+//            for (int value : successor_[node]) {
+            for (int value = successor_[node].nextSetBit(0); value != -1; value = successor_[node].nextSetBit(value + 1)) {
+                if (value_visited_.get(value)) continue;
+                value_visited_.set(value);
                 if (value_to_variable_[value] == -1) {
+                    // value_to_variable_[value] ， value这个值未分配到变量，即是一个free
+                    // ！！ 这里可以改用bitSet 求原数据bitDom (successor_)
+                    // 与matching的余集(matching_bitVector[a]，表示a是否已matching出去了) 再按1取未匹配值，
+                    // 可以惰性取值，即先算两个集合的在特定位置的交：以matching_bv为长度foreach
+                    // （一般不会特别长两个数据结构可以用NaiveBitSet，如400皇后，|D|=400，只需要7个，
+                    // 做&后会得到一个或NaiveBitSet, LargeBitSet）
+                    // 然后
                     // value is not matched: change path from node to start, and return.
+                    // 未匹配值
+
+                    // ！！路线回溯怎么用bit表示。
                     int path_node = node;
                     int path_value = value;
                     while (path_node != -1) {
+                        // 旧变量拿到旧匹配值
                         int old_value = variable_to_value_[path_node];
+                        // 旧变量拿到新匹配值
                         variable_to_value_[path_node] = path_value;
                         value_to_variable_[path_value] = path_node;
+
+                        // 回溯到上一个变量
                         path_node = variable_visited_from_[path_node];
+                        // 由于这个变量传递下去是连贯的，可以检查连通生，做为下一个阶段的记录
                         path_value = old_value;
                     }
+
+                    freeNode.set(value);
                     return true;
                 } else {
                     // Enqueue node matched to value.
+                    // 若没有该值已经有匹配，但变量没有匹配
+
+                    // 先拿到这个值的匹配变量
                     int next_node = value_to_variable_[value];
-                    variable_visited_[next_node] = true;
+//                    variable_visited_[next_node] = true;
+                    variable_visited_.set(next_node);
+                    // 把这个变量加入队列中
                     visiting_[num_to_visit++] = next_node;
                     variable_visited_from_[next_node] = node;
-                    free.clear(value);
+//                    free.clear(value);
                 }
             }
         }
@@ -252,39 +329,78 @@ public class AlgoAllDiffAC_Naive2 {
 //            out.println(v.toString());
 //        }
         TimeCount.startTime = System.nanoTime();
-//        findMaximumMatching();
-//        System.out.println(Arrays.toString(matching));
+        freeNode.set(0, numValue);
+        freeNode.set(0);
+        freeNode.set(2);
 
-        IntVar v;
+        matching[0] = 0;
+        matching[1] = 2;
+        matching[2] = -1;
+
+        variable_to_value_[0] = 0;
+        variable_to_value_[1] = 2;
+        variable_to_value_[2] = -1;
+
+        value_to_variable_[0] = 0;
+        value_to_variable_[1] = -1;
+        value_to_variable_[2] = 1;
+
+
+        for (int i = 0; i < matching.length; ++i) {
+            matching[i] = -1;
+        }
+
         for (int i = 0; i < n; ++i) {
             prev_matching_[i] = variable_to_value_[i];
-            variable_to_value_[i] = -1;
+//            variable_to_value_[i] = -1;
         }
 
         for (int i = 0; i < numValue; ++i) {
-            value_to_variable_[i] = -1;
+//            value_to_variable_[i] = -1;
         }
 
+        // matching 有效性检查
+
+
+        leftEdge.clear();
+        matchedEdge.clear();
+        // 初始化两个not集合
+        notGamma.fill();
+        notA.fill();
+
+
+        IntVar v;
         for (int x = 0; x < n; x++) {
             successor_[x].clear();
             v = vars[x];
-//            int min_value = v.getLB();
-//            int max_value = v.getUB();
-//            for (int value = min_value; value <= max_value; value++) {
-            for (int value = v.getLB(), ub = v.getUB(); value <= ub; value = v.nextValue(value)) {
-                int offset_value = map.get(value) - n;
-                // Forward-checking should propagate xsu != value.
-                successor_[x].add(offset_value);
+            int oldMatchingIndex = variable_to_value_[x];
 
-                int edgeIdx = x * numValue + offset_value;
-                matchedEdge.set(edgeIdx);
+            // 检查原匹配的失效值
+            if (oldMatchingIndex != -1 && !v.contains(val2Idx.get(oldMatchingIndex + n))) {
+                // 如果oldMatchingValue无效，并且不为-1
+                value_to_variable_[oldMatchingIndex] = -1;
+                variable_to_value_[x] = -1;
+                freeNode.clear(oldMatchingIndex);
             }
 
+            for (int value = v.getLB(), ub = v.getUB(); value <= ub; value = v.nextValue(value)) {
+                int offset_value = map.get(value) - n;
+
+                // Forward-checking should propagate xsu != value.
+//                successor_[x].add(offset_value);
+                successor_[x].set(offset_value);
+
+            }
+
+//            if (successor_[x].size() == 1) {
+
+            // ！！这里可以修改一下 已赋值 就不参与修改了
             if (successor_[x].size() == 1) {
-                int offset_value = successor_[x].get(0);
-                if (value_to_variable_[offset_value] == -1) {
-                    value_to_variable_[offset_value] = x;
-                    variable_to_value_[x] = offset_value;
+//                int offsetIndex = successor_[x].get(0);
+                int offsetIndex = successor_[x].nextSetBit(0);
+                if (value_to_variable_[offsetIndex] == -1) {
+                    value_to_variable_[offsetIndex] = x;
+                    variable_to_value_[x] = offsetIndex;
                 }
             }
         }
@@ -298,7 +414,7 @@ public class AlgoAllDiffAC_Naive2 {
             if (prev_value == -1 || value_to_variable_[prev_value] != -1) continue;
             v = vars[x];
 //            if (VariableHasPossibleValue(x, prev_matching_[x] + min_all_values_)) {
-            if (v.contains(idToVal.get(prev_matching_[x]))) {
+            if (v.contains(idToVal.get(prev_matching_[x] + n))) {
                 variable_to_value_[x] = prev_matching_[x];
                 value_to_variable_[prev_matching_[x]] = x;
             }
@@ -308,22 +424,13 @@ public class AlgoAllDiffAC_Naive2 {
 
         for (int x = 0; x < n; x++) {
             if (variable_to_value_[x] == -1) {
-
-                for (int i = 0; i < numValue; ++i) {
-                    value_visited_[i] = false;
-                }
-
-                for (int i = 0; i < n; ++i) {
-                    variable_visited_[i] = false;
-                }
-
+                value_visited_.clear();
+                variable_visited_.clear();
                 MakeAugmentingPath(x);
             }
             if (variable_to_value_[x] == -1) break;  // No augmenting path exists.
         }
 
-        System.out.println(Arrays.toString(variable_to_value_));
-        System.out.println(Arrays.toString(value_to_variable_));
 
         //      out.println("-----matching-----");
         for (int i = 0; i < n; i++) {
@@ -338,33 +445,53 @@ public class AlgoAllDiffAC_Naive2 {
             valMatchedEdge[valIdx] = edgeIdx;
         }
 
+        System.out.println("-----free-----");
+        System.out.println(freeNode);
+        searchEdge.clear();
+        // 寻找从自由值出发的所有交替路
+        // 首先将与自由值相连的边并入允许边
+        for (int i = freeNode.nextSetBit(0); i != -1; i = freeNode.nextSetBit(i + 1)) {
+//            int valIdx = i - n; // 因为构造函数中建立map时是从n开始的，所以这里需要减去n
+            System.out.println(i);
+            notA.remove(i);
+            searchEdge.or(valEdge[i]);
+        }
+        searchEdge.and(leftEdge);
+
 
         TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
 
         TimeCount.startTime = System.nanoTime();
 
-        System.out.println("-----leftEdge-----");
-        System.out.println(leftEdge.toString());
-        System.out.println("-----matchedEdge-----");
-        System.out.println(matchedEdge.toString());
-        System.out.println("---varMatchedEdge---");
-        for (int a : varMatchedEdge) {
-            System.out.println(a);
-        }
-        System.out.println("---valMatchedEdge---");
-        for (int a : valMatchedEdge) {
-            System.out.println(a);
-        }
-        System.out.println("---varEdge---");
-        for (NaiveSparseBitSet a : varEdge) {
-            System.out.println(a.toString());
-        }
-        System.out.println("---valEdge---");
-        for (NaiveSparseBitSet a : valEdge) {
-            System.out.println(a.toString());
-        }
 
-        return filter();
+        System.out.println("-----matching-----");
+        System.out.println(Arrays.toString(variable_to_value_));
+        System.out.println(Arrays.toString(value_to_variable_));
+        System.out.println(Arrays.toString(matching));
+//        System.out.println("-----matching-----");
+//        System.out.println(Arrays.toString(matching));
+//        System.out.println("-----leftEdge-----");
+//        System.out.println(leftEdge.toString());
+//        System.out.println("-----matchedEdge-----");
+//        System.out.println(matchedEdge.toString());
+//        System.out.println("---varMatchedEdge---");
+//        for (int a : varMatchedEdge) {
+//            System.out.println(a);
+//        }
+//        System.out.println("---valMatchedEdge---");
+//        for (int a : valMatchedEdge) {
+//            System.out.println(a);
+//        }
+//        System.out.println("---varEdge---");
+//        for (NaiveSparseBitSet a : varEdge) {
+//            System.out.println(a.toString());
+//        }
+//        System.out.println("---valEdge---");
+//        for (NaiveSparseBitSet a : valEdge) {
+//            System.out.println(a.toString());
+//        }
+//        filter();
+        return false;
 
     }
 

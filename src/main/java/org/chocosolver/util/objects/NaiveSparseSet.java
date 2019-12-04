@@ -1,6 +1,6 @@
 package org.chocosolver.util.objects;
 
-import jdk.internal.vm.annotation.ForceInline;
+//import jdk.internal.vm.annotation.ForceInline;
 
 /**
  * Implementation based on "2013_TRICS_Sparse-Sets for Domain Implementation".
@@ -86,12 +86,10 @@ public class NaiveSparseSet {
         bindPos = 0;
     }
 
-    @ForceInline
     public boolean isValidAtLevel(int e, int level) {
         return sparse[e] < limit[level];
     }
 
-    @ForceInline
     public boolean isValid(int e) {
         return sparse[e] < limit[lastPos];
     }
@@ -101,11 +99,9 @@ public class NaiveSparseSet {
 //        return sparse[e] < limit[level];
 //    }
 
-    @ForceInline
     public boolean isBind(int e) {
         return sparse[e] < bindPos;
     }
-
 
     private void remove(int e) {
         if (isValid(e)) {

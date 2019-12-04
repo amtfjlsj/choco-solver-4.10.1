@@ -299,6 +299,20 @@ public class NaiveBitSet {
         }
     }
 
+    public int capacity() {
+        int sum = 0;
+        for (int i = 0; i < longSize; ++i)
+            sum += Long.bitCount(words[i]);
+        return sum;
+    }
+
+    public int size() {
+        int sum = 0;
+        for (int i = 0; i < longSize; ++i)
+            sum += Long.bitCount(words[i]);
+        return sum;
+    }
+
     @Override
     public String toString() {
 
