@@ -6,16 +6,11 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
-import org.chocosolver.util.objects.LargeBitSet;
 import org.chocosolver.util.objects.NaiveSparseBitSet;
 import org.chocosolver.util.objects.NaiveBitSet;
 //import org.chocosolver.util.objects.NaiveSparseBitSet;
 import org.chocosolver.util.objects.SparseSet;
-import org.chocosolver.util.objects.graphs.DirectedGraph;
-import org.chocosolver.util.objects.setDataStructures.ISetIterator;
-import org.chocosolver.util.objects.setDataStructures.SetType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 
@@ -65,9 +60,9 @@ public class AlgoAllDiffAC_Naive2 {
     // 需要新增一个取值编号到取值的映射，也是一对一
     private TIntIntHashMap idToVal;
     // 值到索引
-    private TIntIntHashMap val2Idx;
-    // 索引到值
     private int[] idx2Val;
+    // 索引到值
+    private TIntIntHashMap val2Idx;
 
     // 保留边
     private NaiveBitSet leftEdge;
@@ -114,6 +109,13 @@ public class AlgoAllDiffAC_Naive2 {
     //变量到变量的连通性
     private NaiveBitSet[] SCCMatrix;
 
+    // 变量的论域
+    private NaiveBitSet[] varMask;
+    private NaiveBitSet[] valMask;
+
+    //记录gamma的bitset
+    private NaiveBitSet gamma;
+
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -131,6 +133,7 @@ public class AlgoAllDiffAC_Naive2 {
         map = new TIntIntHashMap();
         idToVal = new TIntIntHashMap();
         val2Idx = new TIntIntHashMap();
+        TIntArrayList values = new TIntArrayList();
 
         IntVar v;
         int ub;
@@ -144,14 +147,17 @@ public class AlgoAllDiffAC_Naive2 {
                 if (!map.containsKey(j)) {
                     map.put(j, idx);
                     idToVal.put(idx, j);
-                    val2Idx.put(idx - n, j);
+                    val2Idx.put(j, idx - n);
+                    values.add(idx - n);
+
                     idx++;
                 }
             }
         }
 
-        idx2Val = val2Idx.keys();
 
+        idx2Val = values.toArray();
+        values.clear();
 
         n2 = idx;
         numValue = n2 - n;
@@ -181,11 +187,21 @@ public class AlgoAllDiffAC_Naive2 {
         valEdge = new NaiveSparseBitSet[numValue];
 
 
+        SCCMatrix = new NaiveBitSet[n];
+        varMask = new NaiveBitSet[numValue];
+        valMask = new NaiveBitSet[n];
+
+        //
+        gamma = new NaiveBitSet(n);
+
+
         for (int i = 0; i < n; ++i) {
             varEdge[i] = new NaiveSparseBitSet();
+            varMask[i] = new NaiveBitSet(numValue);
         }
         for (int i = 0; i < numValue; ++i) {
             valEdge[i] = new NaiveSparseBitSet();
+            valMask[i] = new NaiveBitSet(n);
         }
 
         // 只在构造函数中，初始化varUnmatchedEdge、valEdge
@@ -241,10 +257,11 @@ public class AlgoAllDiffAC_Naive2 {
             value_to_variable_[i] = -1;
         }
 
-        SCCMatrix = new NaiveBitSet[n];
+
         for (int i = 0; i < n; ++i) {
             SCCMatrix[i] = new NaiveBitSet(n);
         }
+
 
 //        notGamma = new SparseSet(n);
 //        notA = new SparseSet(numValue);
@@ -291,6 +308,7 @@ public class AlgoAllDiffAC_Naive2 {
                     // 未匹配值
 
                     // ！！路线回溯怎么用bit表示。
+                    // !! 这里可以提前记一些scc或是路径
                     int path_node = node;
                     int path_value = value;
                     while (path_node != -1) {
@@ -340,16 +358,10 @@ public class AlgoAllDiffAC_Naive2 {
             matching[i] = -1;
         }
 
-        for (int i = 0; i < n; ++i) {
-            prev_matching_[i] = variable_to_value_[i];
-//            variable_to_value_[i] = -1;
+        for (int i = 0; i < numValue; ++i) {
+            valMask[i].clear();
         }
 
-//        for (int i = 0; i < numValue; ++i) {
-////            value_to_variable_[i] = -1;
-//        }
-
-        // matching 有效性检查
 
         leftEdge.clear();
         matchedEdge.clear();
@@ -358,14 +370,18 @@ public class AlgoAllDiffAC_Naive2 {
         notA.fill();
 
         // 增量检查
+        // matching 有效性检查
+        // !! 可以增量修改值
         IntVar v;
         for (int x = 0; x < n; x++) {
+            prev_matching_[x] = variable_to_value_[x];
             successor_[x].clear();
+            varMask[x].clear();
             v = vars[x];
             int oldMatchingIndex = variable_to_value_[x];
 
             // 检查原匹配的失效值
-            if (oldMatchingIndex != -1 && !v.contains(val2Idx.get(oldMatchingIndex))) {
+            if (oldMatchingIndex != -1 && !v.contains(idx2Val[oldMatchingIndex])) {
                 // 如果oldMatchingValue无效，并且不为-1
                 value_to_variable_[oldMatchingIndex] = -1;
                 variable_to_value_[x] = -1;
@@ -373,26 +389,44 @@ public class AlgoAllDiffAC_Naive2 {
                 System.out.println(oldMatchingIndex + " is free");
             }
 
-            for (int value = v.getLB(), ub = v.getUB(); value <= ub; value = v.nextValue(value)) {
-                int offset_value = map.get(value) - n;
-
-                // Forward-checking should propagate xsu != value.
-//                successor_[x].add(offset_value);
-                successor_[x].set(offset_value);
-
-            }
-
-//            if (successor_[x].size() == 1) {
-
-            // ！！这里可以修改一下 已赋值 就不参与修改了
-            if (successor_[x].size() == 1) {
-//                int offsetIndex = successor_[x].get(0);
-                int offsetIndex = successor_[x].nextSetBit(0);
-                if (value_to_variable_[offsetIndex] == -1) {
-                    value_to_variable_[offsetIndex] = x;
-                    variable_to_value_[x] = offsetIndex;
+            // !! 这里可以修改一下 已赋值 就不参与修改了
+            // 绑定
+            if (v.getDomainSize() == 1) {
+                int valueIndex = val2Idx.get(v.getValue());
+                successor_[x].set(valueIndex);
+                if (value_to_variable_[valueIndex] == -1) {
+                    value_to_variable_[valueIndex] = x;
+                    variable_to_value_[x] = valueIndex;
                 }
+
+                //对于已经绑定的值，不再纳入A和gamma，SCC查找
+                notGamma.remove(x);
+                notA.remove(valueIndex);
+                freeNode.clear(valueIndex);
+            } else {
+                // 生成VarMask和valMask
+                for (int value = v.getLB(), ub = v.getUB(); value <= ub; value = v.nextValue(value)) {
+//                int offset_value = map.get(value) - n;
+//                System.out.println("___________________________");
+//                System.out.println("valid value: (" + v.getName() + ", " + (map.get(value) - n) + ")");
+//                System.out.println("valid value: (" + v.getName() + ", " + val2Idx.get(value) + ")");
+                    int valueIndex = val2Idx.get(value);
+
+                    // Forward-checking should propagate xsu != value.
+//                successor_[x].add(offset_value);
+                    successor_[x].set(valueIndex);
+
+                    // !! 可以增量修改值
+                    varMask[x].set(valueIndex);
+                    valMask[valueIndex].set(x);
+                }
+//                if (successor_[x].size() == 1) {
+////                int offsetIndex = successor_[x].get(0);
+//                    int offsetIndex = successor_[x].nextSetBit(0);
+//
+//                }
             }
+
         }
 
         // Seed with previous matching.
@@ -438,6 +472,7 @@ public class AlgoAllDiffAC_Naive2 {
         System.out.println("-----free-----");
         System.out.println(freeNode);
         searchEdge.clear();
+
         // 寻找从自由值出发的所有交替路
         // 首先将与自由值相连的边并入允许边
         for (int i = freeNode.nextSetBit(0); i != -1; i = freeNode.nextSetBit(i + 1)) {
@@ -445,6 +480,7 @@ public class AlgoAllDiffAC_Naive2 {
             System.out.println(i);
             notA.remove(i);
             searchEdge.or(valEdge[i]);
+
         }
         searchEdge.and(leftEdge);
 
