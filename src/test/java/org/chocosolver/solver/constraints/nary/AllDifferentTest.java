@@ -409,14 +409,14 @@ public class AllDifferentTest {
 
         Model model = new Model();
         IntVar[] X = new IntVar[3];
-//        X[0] = model.intVar(new int[]{1, 2});
-//        X[1] = model.intVar(new int[]{1, 2});
-//        X[2] = model.intVar(new int[]{0, 1, 2});
+        X[0] = model.intVar(new int[]{2, 1});
+        X[1] = model.intVar(new int[]{1, 2});
+        X[2] = model.intVar(new int[]{0, 1, 2});
 //        X[3] = model.intVar("V3", new int[]{3, 1});
 
-        X[0] = model.intVar(new int[]{0, 2});
-        X[1] = model.intVar(new int[]{1, 2});
-        X[2] = model.intVar(new int[]{0, 1});
+//        X[0] = model.intVar(new int[]{0, 2});
+//        X[1] = model.intVar(new int[]{1, 2});
+//        X[2] = model.intVar(new int[]{0, 1, 3});
 
         model.allDifferent(X, "ACFastbit2").post();
         model.getSolver().propagate();
@@ -436,10 +436,16 @@ public class AllDifferentTest {
 //
 
 
-        X = new IntVar[3];
-        X[0] = model.intVar(new int[]{0, 2});
+//        X = new IntVar[3];        X[0] = model.intVar(new int[]{2, 1});
+//        X[1] = model.intVar(new int[]{1, 2});
+//        X[2] = model.intVar(new int[]{0, 1, 2});
+//        X[0] = model.intVar(new int[]{0, 2});
+//        X[1] = model.intVar(new int[]{1, 2});
+//        X[2] = model.intVar(new int[]{0, 1, 3});
+
+        X[0] = model.intVar(new int[]{1, 2});
         X[1] = model.intVar(new int[]{1, 2});
-        X[2] = model.intVar(new int[]{0, 1});
+        X[2] = model.intVar(new int[]{0, 1, 2});
 
 
 //        BitsetIntVarImpl[] X = new BitsetIntVarImpl[6];

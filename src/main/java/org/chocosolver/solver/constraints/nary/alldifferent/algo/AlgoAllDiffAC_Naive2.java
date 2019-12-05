@@ -111,6 +111,9 @@ public class AlgoAllDiffAC_Naive2 {
     private int[] visiting_;
     private int[] variable_visited_from_;
 
+    //变量到变量的连通性
+    private NaiveBitSet[] SCCMatrix;
+
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -238,6 +241,11 @@ public class AlgoAllDiffAC_Naive2 {
             value_to_variable_[i] = -1;
         }
 
+        SCCMatrix = new NaiveBitSet[n];
+        for (int i = 0; i < n; ++i) {
+            SCCMatrix[i] = new NaiveBitSet(n);
+        }
+
 //        notGamma = new SparseSet(n);
 //        notA = new SparseSet(numValue);
 //        prev_matching_ =new int[];
@@ -298,7 +306,8 @@ public class AlgoAllDiffAC_Naive2 {
                         path_value = old_value;
                     }
 
-                    freeNode.set(value);
+                    freeNode.clear(value);
+                    System.out.println(value + " is not free");
                     return true;
                 } else {
                     // Enqueue node matched to value.
@@ -324,27 +333,8 @@ public class AlgoAllDiffAC_Naive2 {
     //***********************************************************************************
 
     public boolean propagate() throws ContradictionException {
-//        out.println("before vars: ");
-//        for (IntVar v : vars) {
-//            out.println(v.toString());
-//        }
         TimeCount.startTime = System.nanoTime();
         freeNode.set(0, numValue);
-        freeNode.set(0);
-        freeNode.set(2);
-
-        matching[0] = 0;
-        matching[1] = 2;
-        matching[2] = -1;
-
-        variable_to_value_[0] = 0;
-        variable_to_value_[1] = 2;
-        variable_to_value_[2] = -1;
-
-        value_to_variable_[0] = 0;
-        value_to_variable_[1] = -1;
-        value_to_variable_[2] = 1;
-
 
         for (int i = 0; i < matching.length; ++i) {
             matching[i] = -1;
@@ -355,12 +345,11 @@ public class AlgoAllDiffAC_Naive2 {
 //            variable_to_value_[i] = -1;
         }
 
-        for (int i = 0; i < numValue; ++i) {
-//            value_to_variable_[i] = -1;
-        }
+//        for (int i = 0; i < numValue; ++i) {
+////            value_to_variable_[i] = -1;
+//        }
 
         // matching 有效性检查
-
 
         leftEdge.clear();
         matchedEdge.clear();
@@ -368,7 +357,7 @@ public class AlgoAllDiffAC_Naive2 {
         notGamma.fill();
         notA.fill();
 
-
+        // 增量检查
         IntVar v;
         for (int x = 0; x < n; x++) {
             successor_[x].clear();
@@ -376,11 +365,12 @@ public class AlgoAllDiffAC_Naive2 {
             int oldMatchingIndex = variable_to_value_[x];
 
             // 检查原匹配的失效值
-            if (oldMatchingIndex != -1 && !v.contains(val2Idx.get(oldMatchingIndex + n))) {
+            if (oldMatchingIndex != -1 && !v.contains(val2Idx.get(oldMatchingIndex))) {
                 // 如果oldMatchingValue无效，并且不为-1
                 value_to_variable_[oldMatchingIndex] = -1;
                 variable_to_value_[x] = -1;
-                freeNode.clear(oldMatchingIndex);
+                freeNode.set(oldMatchingIndex);
+                System.out.println(oldMatchingIndex + " is free");
             }
 
             for (int value = v.getLB(), ub = v.getUB(); value <= ub; value = v.nextValue(value)) {
