@@ -106,8 +106,10 @@ public class AlgoAllDiffAC_Naive2 {
     private int[] visiting_;
     private int[] variable_visited_from_;
 
-    //变量到变量的连通性
+    // 变量到变量的连通性
     private NaiveBitSet[] SCCMatrix;
+    // 对于惰性算法，记录是否知道-变量到变量的连通性
+    private NaiveBitSet[] SCCKnown;
 
     // 变量的论域
     private NaiveBitSet[] varMask;
@@ -188,6 +190,7 @@ public class AlgoAllDiffAC_Naive2 {
 
 
         SCCMatrix = new NaiveBitSet[n];
+        SCCKnown = new NaiveBitSet[n];
         varMask = new NaiveBitSet[numValue];
         valMask = new NaiveBitSet[n];
 
@@ -229,7 +232,7 @@ public class AlgoAllDiffAC_Naive2 {
         notA = new SparseSet(numValue);
 
 
-        // 记录访问过的谈量
+        // 记录访问过的变量
         visiting_ = new int[n];
 //        variable_visited_ = new boolean[n];
         variable_visited_ = new NaiveBitSet(n);
@@ -260,6 +263,7 @@ public class AlgoAllDiffAC_Naive2 {
 
         for (int i = 0; i < n; ++i) {
             SCCMatrix[i] = new NaiveBitSet(n);
+            SCCKnown[i] = new NaiveBitSet(n);
         }
 
 
@@ -473,16 +477,56 @@ public class AlgoAllDiffAC_Naive2 {
         System.out.println(freeNode);
         searchEdge.clear();
 
+        ////////////////////////////////////////////////
+        // 变量和值合在一起
+//        for (int i = 0; i < n; ++i) {
+//            SCCMatrix[i] = new NaiveBitSet(n);
+//            SCCKnown[i] = new NaiveBitSet(n);
+//        }
+        // 重置两个矩阵
+        for (int i = 0; i < n; ++i) {
+            SCCKnown[i].set(valMask[variable_to_value_[i]]);
+            SCCMatrix[i].set(valMask[variable_to_value_[i]]);
+        }
+
+        /////////////////////////////////////////////////////////
         // 寻找从自由值出发的所有交替路
         // 首先将与自由值相连的边并入允许边
+        gamma.clear();
         for (int i = freeNode.nextSetBit(0); i != -1; i = freeNode.nextSetBit(i + 1)) {
 //            int valIdx = i - n; // 因为构造函数中建立map时是从n开始的，所以这里需要减去n
             System.out.println(i);
             notA.remove(i);
             searchEdge.or(valEdge[i]);
-
+            gamma.or(valMask[i]);
         }
         searchEdge.and(leftEdge);
+
+        int num_to_visit = 0;
+        int num_visited = 0;
+
+        // 从gamma向外BFS
+        // visiting_ 用来记录BFS前沿
+        // 也可以记录本次和上次的mask通过位运算算出delta
+        for (int i = gamma.nextSetBit(0); i != -1; i = gamma.nextSetBit(i + 1)) {
+
+            // Enqueue start.
+            // visit 里存的是变量
+            visiting_[num_to_visit++] = i;
+//            gamma.or(valMask[i]);
+//            notA.remove(i);
+        }
+
+        while (num_visited < num_to_visit) {
+            // Dequeue node to visit.
+            int node = visiting_[num_visited++];
+            int val = variable_to_value_[node];
+            gamma.or(valMask[val]);
+            notGamma.remove(node);
+
+
+        }
+        //////////////////////////////////////////
 
 
         TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
