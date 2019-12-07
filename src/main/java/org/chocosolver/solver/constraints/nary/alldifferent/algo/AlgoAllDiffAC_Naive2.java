@@ -109,7 +109,9 @@ public class AlgoAllDiffAC_Naive2 {
     // 变量到变量的连通性
     private NaiveBitSet[] SCCMatrix;
     // 对于惰性算法，记录是否知道-变量到变量的连通性
-    private NaiveBitSet[] SCCKnown;
+//    private NaiveBitSet[] SCCKnown;
+    private NaiveBitSet[] GLinkedMatrix;
+    private NaiveBitSet[] BFSExtended;
 
     // 变量的论域
     private NaiveBitSet[] varMask;
@@ -190,7 +192,9 @@ public class AlgoAllDiffAC_Naive2 {
 
 
         SCCMatrix = new NaiveBitSet[n];
-        SCCKnown = new NaiveBitSet[n];
+        GLinkedMatrix = new NaiveBitSet[n];
+        BFSExtended = new NaiveBitSet[n];
+
         varMask = new NaiveBitSet[numValue];
         valMask = new NaiveBitSet[n];
 
@@ -263,7 +267,9 @@ public class AlgoAllDiffAC_Naive2 {
 
         for (int i = 0; i < n; ++i) {
             SCCMatrix[i] = new NaiveBitSet(n);
-            SCCKnown[i] = new NaiveBitSet(n);
+            GLinkedMatrix[i] = new NaiveBitSet(n);
+            BFSExtended[i] = new NaiveBitSet(n);
+//            SCCKnown[i] = new NaiveBitSet(n);
         }
 
 
@@ -485,8 +491,9 @@ public class AlgoAllDiffAC_Naive2 {
 //        }
         // 重置两个矩阵
         for (int i = 0; i < n; ++i) {
-            SCCKnown[i].set(valMask[variable_to_value_[i]]);
-            SCCMatrix[i].set(valMask[variable_to_value_[i]]);
+            GLinkedMatrix[i].set(valMask[variable_to_value_[i]]);
+            BFSExtended[i].clear();
+//            SCCMatrix[i].set(valMask[variable_to_value_[i]]);
         }
 
         /////////////////////////////////////////////////////////
@@ -513,6 +520,8 @@ public class AlgoAllDiffAC_Naive2 {
             // Enqueue start.
             // visit 里存的是变量
             visiting_[num_to_visit++] = i;
+//            gamma.or(valMask[i]);
+//            notA.remove(i);
 //            gamma.or(valMask[i]);
 //            notA.remove(i);
         }
