@@ -151,6 +151,15 @@ public class NaiveBitSet {
         }
     }
 
+    public void set() {
+        int i = 0;
+        int len = longSize - 1;
+        for (; i < len; ++i) {
+            this.words[i] = WORD_MASK;
+        }
+        this.words[len] = lastMask;
+    }
+
     public void clear(int bitIndex) {
         this.words[wordIndex(bitIndex)] &= ~(1L << bitIndex);
     }
@@ -431,12 +440,49 @@ public class NaiveBitSet {
         return true;
     }
 
-    public void orAfterAnd(NaiveSparseBitSet a, NaiveSparseBitSet b) {
-        int min;
-        //以短
-        if (a.longSize > b.longSize) {
+    public final static int NextSetBitAfterMinus(NaiveBitSet a, NaiveBitSet b, int fromIndex) {
+        if (fromIndex < 0) {
+            throw new IndexOutOfBoundsException("fromIndex < 0: " + fromIndex);
+        } else {
+            int u = a.wordIndex(fromIndex);
+            if (u >= a.longSize) {
+                return -1;
+            } else {
+                long word;
+                for (word = a.words[u] & (~b.words[u]) & -1L << fromIndex; word == 0L; word = (a.words[u] & (~b.words[u]))) {
+                    ++u;
+                    if (u == a.longSize) {
+                        return -1;
+                    }
+                }
 
+                return u * 64 + Long.numberOfTrailingZeros(word);
+            }
         }
-
     }
+
+
+    // 从a中除去b
+    public void orAfterMinus(NaiveBitSet a, NaiveBitSet b) {
+        for (int i = 0; i < longSize; ++i) {
+            this.words[i] |= a.words[i] & ~b.words[i];
+        }
+    }
+
+    // 从a中除去b
+    public void setAfterMinus(NaiveBitSet a, NaiveBitSet b) {
+        for (int i = 0; i < longSize; ++i) {
+            this.words[i] = a.words[i] & ~b.words[i];
+        }
+    }
+
+
+//    public void orAfterAnd(NaiveSparseBitSet a, NaiveSparseBitSet b) {
+//        int min;
+//        //以短
+//        if (a.longSize > b.longSize) {
+//
+//        }
+//
+//    }
 }
