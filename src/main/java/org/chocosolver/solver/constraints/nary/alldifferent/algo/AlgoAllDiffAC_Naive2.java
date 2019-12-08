@@ -111,6 +111,10 @@ public class AlgoAllDiffAC_Naive2 {
     // 对于惰性算法，记录是否知道-变量到变量的连通性
 //    private NaiveBitSet[] SCCKnown;
     private NaiveBitSet[] GLinkedMatrix;
+    // 记录是否已经扩展过了， 扩展过后就不再扩展
+    private NaiveBitSet[] gammaExtended;
+
+    // 为每个变量记录其扩展， 可以在initial函数中修改
     private NaiveBitSet[] BFSExtended;
 
     // 变量的论域
@@ -119,7 +123,6 @@ public class AlgoAllDiffAC_Naive2 {
 
     //记录gamma的bitset
     private NaiveBitSet gamma;
-
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -500,6 +503,7 @@ public class AlgoAllDiffAC_Naive2 {
         // 寻找从自由值出发的所有交替路
         // 首先将与自由值相连的边并入允许边
         gamma.clear();
+//        BFSExtended.clear();
         for (int i = freeNode.nextSetBit(0); i != -1; i = freeNode.nextSetBit(i + 1)) {
 //            int valIdx = i - n; // 因为构造函数中建立map时是从n开始的，所以这里需要减去n
             System.out.println(i);
