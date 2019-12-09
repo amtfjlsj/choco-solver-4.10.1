@@ -21,7 +21,7 @@ public class NaiveBitSet {
         this.bitSize = nbits;
         longSize = wordIndex(nbits - 1) + 1;
         this.limit = nbits % BITS_PER_WORD;
-        this.lastMask = WORD_MASK >> (BITS_PER_WORD - limit);
+        this.lastMask = WORD_MASK >>> (BITS_PER_WORD - limit);
         this.words = new long[longSize];
     }
 
@@ -157,6 +157,7 @@ public class NaiveBitSet {
         for (; i < len; ++i) {
             this.words[i] = WORD_MASK;
         }
+
         this.words[len] = lastMask;
     }
 
@@ -462,7 +463,7 @@ public class NaiveBitSet {
     }
 
 
-    // 从a中除去b
+    // 从a中除去b，再加入现在的值
     public void orAfterMinus(NaiveBitSet a, NaiveBitSet b) {
         for (int i = 0; i < longSize; ++i) {
             this.words[i] |= a.words[i] & ~b.words[i];
@@ -475,7 +476,12 @@ public class NaiveBitSet {
             this.words[i] = a.words[i] & ~b.words[i];
         }
     }
-
+    // 从a中除去b
+    public void setAfterAnd(NaiveBitSet a, NaiveBitSet b) {
+        for (int i = 0; i < longSize; ++i) {
+            this.words[i] = a.words[i] & b.words[i];
+        }
+    }
 
 //    public void orAfterAnd(NaiveSparseBitSet a, NaiveSparseBitSet b) {
 //        int min;
