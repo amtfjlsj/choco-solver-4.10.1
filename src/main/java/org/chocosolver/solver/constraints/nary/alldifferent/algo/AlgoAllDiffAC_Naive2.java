@@ -300,7 +300,8 @@ public class AlgoAllDiffAC_Naive2 {
     public boolean propagate() throws ContradictionException {
         TimeCount.startTime = System.nanoTime();
         freeNode.set();
-        System.out.println(freeNode);
+
+        // !! 可做增量
         for (int i = 0; i < numValue; ++i) {
             valMask[i].clear();
         }
@@ -339,6 +340,8 @@ public class AlgoAllDiffAC_Naive2 {
                 notGammaMask.clear(x);
             } else {
                 // 生成VarMask和valMask
+
+                // !! 利用一下lastSize
                 sSup.add(x);
                 if (lastSize[x] != v.getDomainSize()) {
                     lastSize[x] = v.getDomainSize();
@@ -346,7 +349,6 @@ public class AlgoAllDiffAC_Naive2 {
                 }
 
 //                prev_matching_[x] = variable_to_value_[x];
-                varMask[x].clear();
                 varMask[x].clear();
 
                 // 检查原匹配是否失效
@@ -356,7 +358,7 @@ public class AlgoAllDiffAC_Naive2 {
                     val2Var[oldMatchingIndex] = -1;
                     var2Val[x] = -1;
                     freeNode.set(oldMatchingIndex);
-                    System.out.println(oldMatchingIndex + " is free");
+//                    System.out.println(oldMatchingIndex + " is free");
                 }
 
                 for (int value = v.getLB(), ub = v.getUB(); value <= ub; value = v.nextValue(value)) {
@@ -449,7 +451,7 @@ public class AlgoAllDiffAC_Naive2 {
         gammaFrontier.clear();
         for (int i = freeNode.nextSetBit(0); i != -1; i = freeNode.nextSetBit(i + 1)) {
             // 每个freeNode的值拿出来
-            System.out.println(i);
+//            System.out.println(i);
             notA.remove(i);
             gammaMask.or(valMask[i]);
             notGammaMask.clear(valMask[i]);
@@ -508,6 +510,11 @@ public class AlgoAllDiffAC_Naive2 {
             notGammaMask.clear(i);
             notA.remove(var2Val[i]);
         }
+
+
+//        System.out.println("------------notGammaMask------------");
+//        System.out.println(notGammaMask);
+
 //
 //        // 重置两个矩阵
 //        // 只重置notGamma的变量
@@ -519,19 +526,7 @@ public class AlgoAllDiffAC_Naive2 {
 //            graphLinkedFrontier[varIdx].set(valMask[variable_to_value_[varIdx]]);
 //        }
 
-        // 重置两个矩阵
-        // 只重置notGamma的变量
-        // !! 重置的内容也除去gamma的中的变量
-        notGamma.iterateValid();
-        while (notGamma.hasNextValid()) {
-            // 拿到变量id
-            int varIdx = notGamma.next();
-            // 从变量id拿到匹配值再拿到该值所能到达的变量mask，但只加入gamma中的变量，即mask&gamma
-            graphLinkedMatrix[varIdx].setAfterAnd(valMask[var2Val[varIdx]], gammaMask);
-            // 记录前沿
-            graphLinkedFrontier[varIdx].setAfterAnd(valMask[var2Val[varIdx]], gammaMask);
-        }
-//
+
 //
 //        TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
 //
@@ -564,7 +559,26 @@ public class AlgoAllDiffAC_Naive2 {
 ////        for (NaiveSparseBitSet a : valEdge) {
 ////            System.out.println(a.toString());
 ////        }
-        filterDomains();
+
+        // 这里判断一下，如果notGamma为空则不用进行如下步骤
+        if (!notGamma.empty()) {
+            // 重置两个矩阵
+            // 只重置notGamma的变量
+            // !! 重置的内容也除去gamma的中的变量
+            notGamma.iterateValid();
+            while (notGamma.hasNextValid()) {
+                // 拿到变量id
+                int varIdx = notGamma.next();
+                // 从变量id拿到匹配值再拿到该值所能到达的变量mask，但只加入gamma中的变量，即mask&gamma
+                graphLinkedMatrix[varIdx].setAfterAnd(valMask[var2Val[varIdx]], notGammaMask);
+                // 记录前沿
+                graphLinkedFrontier[varIdx].setAfterAnd(valMask[var2Val[varIdx]], notGammaMask);
+            }
+
+            // 过滤论域
+            filterDomains();
+        }
+
 
         return true;
 
@@ -597,6 +611,32 @@ public class AlgoAllDiffAC_Naive2 {
         return filter;
     }
 
+    //!! 此处可以优化
+    // 1 现在这个集合中gamma有一部分是bind的变量，应该在循环中去掉这部分变量
+    // 2 有的情况下没有gamma,如果notA做为外层循环，会浪费。
+    // 3 一般而言notA要多于gamma，应小循环套大循环
+    private boolean filterFirstEdges() throws ContradictionException {
+        boolean filter = false;
+        int varIdx, valIdx;
+        IntVar v;
+        int k;
+        notGamma.iterateInvalid();
+        while (notGamma.hasNextInvalid()) {
+            varIdx = notGamma.next();
+            v = vars[varIdx];
+
+            notA.iterateValid();
+            while (notA.hasNextValid()) {
+                valIdx = notA.next();
+                k = idx2Val[valIdx];
+//                System.out.println("first delete:" + v + ", " + k);
+                filter |= v.removeValue(k, aCause);
+                --lastSize[varIdx];
+            }
+        }
+        return filter;
+    }
+
     private boolean filterSecondEdges() throws ContradictionException {
         boolean filter = false;
         int varIdx, valIdx, k, matchingValIdx;
@@ -616,8 +656,8 @@ public class AlgoAllDiffAC_Naive2 {
                         // 该值是匹配值
                     } else {
                         // 该值不是该变量的匹配值
-                        if (isSCCUm(varIdx, valIdx)) {
-
+                        if (!isSCCUm(varIdx, valIdx)) {
+//                            System.out.println("second delete:" + x + ", " + k);
                             filter |= x.removeValue(k, aCause);
                             --lastSize[varIdx];
                         }
@@ -658,301 +698,4 @@ public class AlgoAllDiffAC_Naive2 {
     }
 
 
-    //!! 此处可以优化
-    // 1 现在这个集合中gamma有一部分是bind的变量，应该在循环中去掉这部分变量
-    // 2 有的情况下没有gamma,如果notA做为外层循环，会浪费。
-    // 3 一般而言notA要多于gamma，应小循环套大循环
-    private boolean filterFirstEdges() throws ContradictionException {
-        boolean filter = false;
-        int varIdx, valIdx;
-        IntVar v;
-        int k;
-        notGamma.iterateInvalid();
-        while (notGamma.hasNextInvalid()) {
-            varIdx = notGamma.next();
-            v = vars[varIdx];
-
-            notA.iterateValid();
-            while (notA.hasNextValid()) {
-                valIdx = notA.next();
-                k = idx2Val[valIdx];
-                filter |= v.removeValue(k, aCause);
-                --lastSize[varIdx];
-            }
-        }
-        return filter;
-    }
-
-
-    //***********************************************************************************
-    // Initialization
-    // 1 确定修改的变量，
-    // 2 适当初始化一些数据结构
-    //***********************************************************************************
-
-    //***********************************************************************************
-    // PRUNING
-    //***********************************************************************************
-//
-//    //  新函数从自由点出发，寻找交替路，区分论文中的四个集合
-//    private void distinguish() {
-//        searchEdge.clear();
-//        // 寻找从自由值出发的所有交替路
-//        // 首先将与自由值相连的边并入允许边
-//        for (int i = free.nextSetBit(n); i >= n && i < n2; i = free.nextSetBit(i + 1)) {
-//            int valIdx = i - n; // 因为构造函数中建立map时是从n开始的，所以这里需要减去n
-//            notA.remove(valIdx);
-//            searchEdge.or(valEdge[valIdx]);
-//        }
-//        searchEdge.and(leftEdge);
-//        // 然后看是否能继续扩展
-//        boolean extended;
-//        do {
-//            extended = false;
-//            notGamma.iterateValid();
-//            while (notGamma.hasNextValid()) {
-//                int varIdx = notGamma.next();
-//                if (searchEdge.isIntersect(varEdge[varIdx])) {
-//                    extended = true;
-//                    searchEdge.set(varMatchedEdge[varIdx]);
-//                    notGamma.remove();
-//                    // 把与匹配值相连的边并入
-//                    int valIdx = matching[varIdx] - n;
-////                    searchEdge.or(valEdge[valIdx]);
-////                    searchEdge.and(leftEdge);
-//                    searchEdge.setThenAnd(valEdge[valIdx], leftEdge);
-//                    notA.remove(valIdx);
-//                }
-//            }
-//        } while (extended);
-//
-//        // out.println("-----notGamma-----");
-//        // out.println(notGamma.toString());
-//        // out.println("-----notA-----");
-//        // out.println(notA.toString());
-////        out.println("-----searchEdge-----");
-////        out.println(searchEdge.toString());
-//    }
-//
-//    // 过滤第一种类型的冗余边
-//    private boolean filterFirstPart() throws ContradictionException {
-//        boolean filter = false;
-//        int varIdx, valIdx;
-//        IntVar v;
-//        int k;
-//        notA.iterateValid();
-//        while (notA.hasNextValid()) {
-//            valIdx = notA.next();
-//            notGamma.iterateInvalid();
-//            while (notGamma.hasNextInvalid()) {
-//                varIdx = notGamma.next();
-//                v = vars[varIdx];
-//                k = idToVal.get(valIdx + n);
-//                filter |= v.removeValue(k, aCause);
-//                leftEdge.clear(varIdx * numValue + valIdx);
-//            }
-//        }
-//        return filter;
-//    }
-//
-//    // 寻找第二种类型的冗余边
-//    private boolean filterSecondPart() throws ContradictionException {
-//        boolean filter = false;
-//        int varIdx, valIdx;
-//        IntVar v;
-//        int k;
-//        int edgeIdx;
-//
-//        // 从leftEdge中去掉searchEdge，即是需要检查SCC的边
-//        leftEdge.clear(searchEdge);
-////        out.println("-----leftEdge-----");
-////        out.println(leftEdge.toString());
-//
-//        // out.println("-----SCC-----");
-//        // 记录当前limit
-//        notGamma.record();
-//        sccEdge.clear();
-//
-//        // -------------------放在一起检查-------------------
-//        edgeIdx = leftEdge.nextSetBit(0);
-//        while (edgeIdx != -1) {
-//            if (vars[edgeIdx / numValue].getDomainSize() > 1 && !sccEdge.get(edgeIdx)) {
-//                if (checkSCC(edgeIdx)) {
-//                    // 进一步的还可以回溯路径，从checkEdge中删除
-////                //out.println(edgeIdx + " is in SCC");
-////                    v = vars[varIdx];
-//////                    k = idToVal.get(edgeIdx % numValue + n);
-//                    if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
-////                        filter |= v.instantiateTo(k, aCause);
-//////                        out.println(v.getName() + " instantiate to " + k);
-////                        // 从leftEdge中去掉被删的边
-////                        leftEdge.clear(varEdge[varIdx]);
-////                        varEdge[varIdx]
-////                        System.out.println("----------" + edgeIdx + "----------");
-////                        System.out.println(searchEdge);
-////                        sccEdge.set(edgeIdx);
-////                        System.out.println(sccEdge);
-////                        notGamma.iterateLimit();
-////                        while (notGamma.hasNextLimit()) {
-////                            varIdx = notGamma.next();
-//////                            if (sccEdge.isIntersect(varEdge[varIdx])) {
-//////                                sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
-//////                                System.out.println(sccEdge);
-//////                                notGamma.addLimit();
-//////                                // 把与匹配值相连的边并入
-//////                                valIdx = matching[varIdx] - n;
-//////                                sccEdge.setThenAnd(valEdge[valIdx], searchEdge);
-//////                                System.out.println(sccEdge);
-//////
-//////                            }
-////                        }
-////
-////                        varIdx = edgeIdx / numValue;
-////                        sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
-////                        if (vars[2].getValue() == 5) {
-////                            System.out.println("----------" + edgeIdx + "----------");
-////                            System.out.println(sccEdge);
-////                        }
-//                    } else { // 如果edge是非匹配边
-////                        valIdx = edgeIdx % numValue;
-////                        varIdx = valMatchedEdge[valIdx] / numValue;
-////                        sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
-////                        sccEdge.set(valMatchedEdge[valIdx]);
-////                        notGamma.iterateLimit();
-//////                        notGamma.addLimit();
-////                        while (notGamma.hasNextLimit()) {
-////                            varIdx = notGamma.next();
-//////                            if (sccEdge.isIntersect(varEdge[varIdx])) {
-////                                sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
-////                                System.out.println(sccEdge);
-////                                notGamma.addLimit();
-////                                // 把与匹配值相连的边并入
-////                                valIdx = matching[varIdx] - n;
-////                                sccEdge.setThenAnd(valEdge[valIdx], searchEdge);
-////                                System.out.println(sccEdge);
-////
-//////                            }
-////                        }
-////                        if (vars[2].getValue() == 5) {
-////                            System.out.println("----------" + edgeIdx + "----------");
-////                            System.out.println(sccEdge);
-////                        }
-////                        System.out.println("----------"+edgeIdx+"----------");
-////                        System.out.println(searchEdge);
-////                        sccEdge.set(edgeIdx);
-////                        System.out.println(sccEdge);
-////
-////
-////                        notGamma.iterateLimit();
-////                        while (notGamma.hasNextLimit()) {
-////                            varIdx = notGamma.next();
-////                            if (sccEdge.isIntersect(varEdge[varIdx])) {
-////                                sccEdge.setThenAnd(varEdge[varIdx], searchEdge);
-////                                System.out.println(sccEdge);
-////                                notGamma.addLimit();
-////                                // 把与匹配值相连的边并入
-////                                valIdx = matching[varIdx] - n;
-////                                sccEdge.setThenAnd(valEdge[valIdx], leftEdge);
-////                                System.out.println(sccEdge);
-////
-////                            }
-////                        }
-//                    }
-//
-//                    // 回溯
-//
-//
-////                    // 回溯路径，添加到leftEdge中
-////                    int valNewIdx = edgeIdx % numValue;
-////                    int tmpNewIdx = valNewIdx;
-////                    do {
-////                        int backEdgeIdx = valMatchedEdge[tmpNewIdx];
-//////                        out.println(backEdgeIdx + " is in SCC");
-////                        sccEdge.set(backEdgeIdx);
-////                        varIdx = backEdgeIdx / numValue;
-////                        backEdgeIdx = father[varIdx];
-//////                        out.println(backEdgeIdx + " is in SCC");
-////                        sccEdge.set(backEdgeIdx);
-////                        tmpNewIdx = backEdgeIdx % numValue;
-////                    } while (tmpNewIdx != valNewIdx);
-//
-//
-//                } else {
-//                    // 根据边索引得到对应的变量和取值
-//                    varIdx = edgeIdx / numValue;
-//                    v = vars[varIdx];
-//                    k = idToVal.get(edgeIdx % numValue + n);
-//                    if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
-//                        filter |= v.instantiateTo(k, aCause);
-////                        out.println(v.getName() + " instantiate to " + k);
-//                        // 从leftEdge中去掉被删的边
-//                        leftEdge.clear(varEdge[varIdx]);
-//                    } else { // 如果edge是非匹配边
-//                        filter |= v.removeValue(k, aCause);
-////                        out.println(v.getName() + " remove " + k);
-//                        // 从leftEdge中去掉被删的边
-//                        leftEdge.clear(edgeIdx);
-//                    }
-//                }
-//            }
-//            edgeIdx = leftEdge.nextSetBit(edgeIdx + 1);
-//        }
-//        return filter;
-//    }
-//
-//    // 判断边是否在SCC中
-//    private boolean checkSCC(int edgeIdx) {
-//        // 先根据是否是匹配边初始化
-//        int valIdx = edgeIdx % numValue;
-//        int matchedEdgeIdx;
-//        searchEdge.clear();
-//        if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
-//            matchedEdgeIdx = edgeIdx;
-//            searchEdge.or(valEdge[valIdx]);
-//            searchEdge.clear(edgeIdx);
-//        } else { // 如果edge是非匹配边
-//            matchedEdgeIdx = valMatchedEdge[valIdx];
-//            searchEdge.set(edgeIdx);
-//        }
-//
-//        // 开始搜索
-//        boolean extended;
-//        notGamma.restore();
-//        do {
-//            extended = false;
-//            // 头部扩展，匹配变量
-//            notGamma.iterateValid();
-//            while (notGamma.hasNextValid()) {
-//                int varIdx = notGamma.next();
-//                if (searchEdge.isIntersect(varEdge[varIdx])) {
-//                    extended = true;
-//                    searchEdge.set(varMatchedEdge[varIdx]);
-//                    notGamma.remove();
-//                    if (searchEdge.get(matchedEdgeIdx)) {
-//                        return true;
-//                    }
-//                    // 把与匹配值相连的边并入
-//                    valIdx = matching[varIdx] - n;
-////                    searchEdge.or(valEdge[valIdx]);
-////                    searchEdge.and(leftEdge);
-//                    searchEdge.setThenAnd(valEdge[valIdx], leftEdge);
-//                }
-//            }
-//        } while (extended);
-//
-//        return false;
-//    }
-//
-//    private boolean filter() throws ContradictionException {
-//        boolean filter = false;
-//        distinguish();
-//        filter |= filterFirstPart();
-//        filter |= filterSecondPart();
-////        out.println("after vars: ");
-////        for (IntVar x : vars) {
-////            System.out.println(x.toString());
-////        }
-//        TimeCount.filterTime += System.nanoTime() - TimeCount.startTime;
-//        return filter;
-//    }
 }

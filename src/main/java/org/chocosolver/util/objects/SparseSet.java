@@ -62,6 +62,10 @@ public class SparseSet {
         return sparse[e] <= limit;
     }
 
+    public boolean empty() {
+        return limit == -1;
+    }
+
     public void remove(int e) {
         int index = sparse[e];
         if (index <= limit) {
