@@ -3,6 +3,7 @@ package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 import amtf.TimeCount;
 import gnu.trove.iterator.TIntIntIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
+import org.chocosolver.solver.Cause;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
@@ -282,6 +283,7 @@ public class AlgoAllDiffAC_Naive2 {
                     // 先拿到这个值的匹配变量
                     int next_node = val2Var[value];
                     variable_visited_.set(next_node);
+                    System.out.println(num_to_visit + "," + next_node);
                     // 把这个变量加入队列中
                     visiting_[num_to_visit++] = next_node;
                     variable_visited_from_[next_node] = node;
@@ -319,15 +321,21 @@ public class AlgoAllDiffAC_Naive2 {
         // !! 可以增量修改值
         // 这里先统计一下sVal和sSup
         IntVar v;
+        int oldValIdx;
         for (int x = 0; x < arity; x++) {
             v = vars[x];
             // !! 这里可以修改一下 已赋值 就不参与修改了
             // 绑定
             if (v.getDomainSize() == 1) {
+
                 int valueIndex = val2Idx.get(v.getValue());
                 varMask[x].clear();
                 varMask[x].set(valueIndex);
+                oldValIdx = var2Val[x];
                 if (val2Var[valueIndex] == -1) {
+                    // 释出旧匹配值
+//                    int oldValIdx = var2Val[x];
+                    val2Var[oldValIdx] = -1;
                     val2Var[valueIndex] = x;
                     var2Val[x] = valueIndex;
                 }
@@ -342,11 +350,11 @@ public class AlgoAllDiffAC_Naive2 {
                 // 生成VarMask和valMask
 
                 // !! 利用一下lastSize
-                sSup.add(x);
-                if (lastSize[x] != v.getDomainSize()) {
-                    lastSize[x] = v.getDomainSize();
-                    sVal.add(x);
-                }
+//                sSup.add(x);
+//                if (lastSize[x] != v.getDomainSize()) {
+//                    lastSize[x] = v.getDomainSize();
+//                    sVal.add(x);
+//                }
 
 //                prev_matching_[x] = variable_to_value_[x];
                 varMask[x].clear();
@@ -355,6 +363,7 @@ public class AlgoAllDiffAC_Naive2 {
                 int oldMatchingIndex = var2Val[x];
                 if (oldMatchingIndex != -1 && !v.contains(idx2Val[oldMatchingIndex])) {
                     // 如果oldMatchingValue无效，并且不为-1
+                    //
                     val2Var[oldMatchingIndex] = -1;
                     var2Val[x] = -1;
                     freeNode.set(oldMatchingIndex);
@@ -401,6 +410,11 @@ public class AlgoAllDiffAC_Naive2 {
 //            }
 //        }
 
+        System.out.println("-----prematching-----");
+        System.out.println(Arrays.toString(var2Val));
+        System.out.println(Arrays.toString(val2Var));
+        System.out.println("---------------------");
+
         // Compute max matching.
         for (int x = 0; x < arity; x++) {
             if (var2Val[x] == -1) {
@@ -415,7 +429,8 @@ public class AlgoAllDiffAC_Naive2 {
         System.out.println("-----matching-----");
         System.out.println(Arrays.toString(var2Val));
         System.out.println(Arrays.toString(val2Var));
-        System.out.println(freeNode);
+        System.out.println("------------------");
+//        System.out.println(freeNode);
 
         //
         /////////////////////////////////////////////////////////
