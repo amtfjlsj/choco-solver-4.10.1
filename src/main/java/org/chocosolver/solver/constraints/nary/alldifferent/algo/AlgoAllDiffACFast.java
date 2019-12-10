@@ -9,7 +9,7 @@
  */
 package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 
-import amtf.TimeCount;
+import amtf.Measurer;
 import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
@@ -19,9 +19,8 @@ import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISetIterator;
 import org.chocosolver.util.objects.setDataStructures.SetType;
 
+import java.util.Arrays;
 import java.util.BitSet;
-
-import static java.lang.System.out;
 
 /**
  * Algorithm of Alldifferent with AC
@@ -31,7 +30,7 @@ import static java.lang.System.out;
  *
  * @author Jean-Guillaume Fages, Jia'nan Chen
  */
-public class AlgoAllDiffAC_Fast {
+public class AlgoAllDiffACFast {
 
     //***********************************************************************************
     // VARIABLES
@@ -59,15 +58,13 @@ public class AlgoAllDiffAC_Fast {
     // CONSTRUCTORS
     //***********************************************************************************
 
-    public AlgoAllDiffAC_Fast(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffACFast(IntVar[] variables, ICause cause) {
         this.vars = variables;
         aCause = cause;
         n = vars.length;
         // 存储匹配
         matching = new int[n];
-        for (int i = 0; i < n; i++) {
-            matching[i] = -1;
-        }
+        Arrays.fill(matching, -1);
         map = new TIntIntHashMap();
         IntVar v;
         int ub;
@@ -107,12 +104,15 @@ public class AlgoAllDiffAC_Fast {
 //        for (IntVar v : vars) {
 //            System.out.println(v.toString());
 //        }
-        TimeCount.startTime = System.nanoTime();
+        Measurer.propNum++;
+        long startTime = System.nanoTime();
         findMaximumMatching();
-        TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
+        Measurer.matchingTime += System.nanoTime() - startTime;
 
-        TimeCount.startTime = System.nanoTime();
-        return filter();
+        startTime = System.nanoTime();
+        boolean filter = filter();
+        Measurer.filterTime += System.nanoTime() - startTime;
+        return filter;
     }
 
     //***********************************************************************************
@@ -259,23 +259,25 @@ public class AlgoAllDiffAC_Fast {
         // 根据变量和取值的所在集合来确定删除方式
         for (int i = 0; i < n; i++) {
             v = vars[i];
-            ub = v.getUB();
-            for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
-                j = map.get(k);
-                if (distinction.get(i) && !distinction.get(j)) { // 删除第一类边，变量在Γ(A)中，值在Dc-A中
-                    filter |= v.removeValue(k, aCause);
+            if (v.getDomainSize() > 1) {
+                ub = v.getUB();
+                for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
+                    j = map.get(k);
+                    if (distinction.get(i) && !distinction.get(j)) { // 删除第一类边，变量在Γ(A)中，值在Dc-A中
+                        filter |= v.removeValue(k, aCause);
 //                    out.println(v.getName() + " remove " + k);
-                    digraph.removeArc(i, j);
-                } else if (!distinction.get(i) && !distinction.get(j)) { // 删除第二类边，变量在Xc-Γ(A)中，值在Dc-A中
-                    if (nodeSCC[i] != nodeSCC[j]) {
-                        if (matching[i] == j) {
-                            filter |= v.instantiateTo(k, aCause);
+//                    digraph.removeArc(i, j);
+                    } else if (!distinction.get(i) && !distinction.get(j)) { // 删除第二类边，变量在Xc-Γ(A)中，值在Dc-A中
+                        if (nodeSCC[i] != nodeSCC[j]) {
+                            if (matching[i] == j) {
+                                filter |= v.instantiateTo(k, aCause);
 //                            out.println(v.getName() + " instantiate to " + k);
-                        } else {
-                            filter |= v.removeValue(k, aCause);
+                            } else {
+                                filter |= v.removeValue(k, aCause);
 //                            out.println(v.getName() + " remove " + k);
-                            // 我觉得不用更新digraph，因为每次调用propagate时都会更新digraph
-                            digraph.removeArc(i, j);
+                                // 我觉得不用更新digraph，因为每次调用propagate时都会更新digraph
+//                            digraph.removeArc(i, j);
+                            }
                         }
                     }
                 }
@@ -304,7 +306,6 @@ public class AlgoAllDiffAC_Fast {
 //        for (IntVar x : vars) {
 //            System.out.println(x.toString());
 //        }
-        TimeCount.filterTime += System.nanoTime() - TimeCount.startTime;
         return filter;
     }
 }

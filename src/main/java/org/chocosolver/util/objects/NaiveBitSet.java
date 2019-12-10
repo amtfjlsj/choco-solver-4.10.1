@@ -203,6 +203,27 @@ public class NaiveBitSet {
         return -1;
     }
 
+    // 判断两个集合在指定范围内是否有交集
+    // 如果有，返回第一个相交的值
+    // 如果没有，返回-1
+    public int isIntersect(NaiveBitSet s, int fromIndex, int endIndex) {
+        long word;
+        for (int i = wordIndex(fromIndex); i <= wordIndex(endIndex); ++i) {
+            word = this.words[i] & s.words[i];
+            if(word != 0L){
+                return i * 64 + Long.numberOfTrailingZeros(word);
+            }
+        }
+        return -1;
+    }
+
+    // 添加两个集合的交集
+    public void addIntersection(NaiveBitSet s1, NaiveBitSet s2) {
+        for (int i = 0; i < longSize; ++i) {
+            this.words[i] |= (s1.words[i] & s2.words[i]);
+        }
+    }
+
     public int nextSetBit(int fromIndex) {
         if (fromIndex < 0) {
             throw new IndexOutOfBoundsException("fromIndex < 0: " + fromIndex);

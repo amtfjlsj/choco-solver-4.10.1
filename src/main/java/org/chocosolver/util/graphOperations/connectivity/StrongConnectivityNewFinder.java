@@ -74,10 +74,13 @@ public class StrongConnectivityNewFinder {
     public void findAllSCC(BitSet exception) {
         ISet nodes = graph.getNodes();
 //        System.out.println("exception: " + exception.toString());
-        for (int i = 0; i < n; i++) {
-            if (!exception.get(i)) {
-                restriction.set(i, nodes.contains(i));
-            }
+//        for (int i = 0; i < n; i++) {
+//            if (!exception.get(i)) {
+//                restriction.set(i, nodes.contains(i));
+//            }
+//        }
+        for (int i = exception.nextClearBit(0); i >= 0 && i < n; i = exception.nextClearBit(i + 1)) {
+            restriction.set(i, nodes.contains(i));
         }
 //        System.out.println("restriction: " + restriction.toString());
         findAllSCCOf(restriction);
@@ -103,7 +106,7 @@ public class StrongConnectivityNewFinder {
 
     private void findSingletons(BitSet restriction) {
         for (int i = restriction.nextSetBit(0); i >= 0; i = restriction.nextSetBit(i + 1)) {
-            if (graph.getPredOf(i).size() * graph.getSuccOf(i).size() == 0) {
+            if (graph.getPredOf(i).size() == 0 || graph.getSuccOf(i).size() == 0) {
                 nodeSCC[i] = nbSCC;
                 sccFirstNode[nbSCC++] = i;
                 restriction.clear(i);

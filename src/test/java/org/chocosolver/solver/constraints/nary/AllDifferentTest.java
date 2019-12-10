@@ -384,28 +384,28 @@ public class AllDifferentTest {
             out.println(x.toString());
         }
 ////
-//        out.println("ACFastbit1============>");
-//
-//        model = new Model();
-//        X = new IntVar[3];
-//        X[0] = model.intVar(new int[]{1, 2});
-//        X[1] = model.intVar(new int[]{1, 2});
-//        X[2] = model.intVar(new int[]{0, 1, 2});
-//
-//        model.allDifferent(X, "ACFastbit1").post();
-//        model.getSolver().propagate();
-//
-//        for(IntVar x : X) {
-//            out.println(x.toString());
-//        }
+        out.println("ACFastbit1============>");
+
+        model = new Model();
+        X = new IntVar[3];
+        X[0] = model.intVar(new int[]{1, 2});
+        X[1] = model.intVar(new int[]{1, 2});
+        X[2] = model.intVar(new int[]{0, 1, 2});
+
+        model.allDifferent(X, "ACFastbit1").post();
+        model.getSolver().propagate();
+
+        for(IntVar x : X) {
+            out.println(x.toString());
+        }
 
         out.println("ACFastbit2============>");
 
         model = new Model();
         X = new IntVar[3];
-        X[0] = model.intVar(new int[]{0, 1, 2});
-        X[1] = model.intVar(new int[]{0, 1});
-        X[2] = model.intVar(new int[]{1, 2});
+        X[0] = model.intVar(new int[]{1, 2});
+        X[1] = model.intVar(new int[]{1, 2});
+        X[2] = model.intVar(new int[]{0, 1, 2});
 //        X[3] = model.intVar("V3", new int[]{3, 1});
 
         model.allDifferent(X, "ACFastbit2").post();

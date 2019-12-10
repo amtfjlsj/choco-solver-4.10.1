@@ -1,6 +1,6 @@
 package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 
-import amtf.TimeCount;
+import amtf.Measurer;
 import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
@@ -13,8 +13,6 @@ import org.chocosolver.util.objects.setDataStructures.ISetIterator;
 import org.chocosolver.util.objects.setDataStructures.SetType;
 
 import java.util.BitSet;
-
-import static java.lang.System.out;
 
 /**
  * Algorithm of Alldifferent with AC
@@ -213,12 +211,14 @@ public class AlgoAllDiffAC_Naive {
 //        for (IntVar v : vars) {
 //            out.println(v.toString());
 //        }
-        TimeCount.startTime = System.nanoTime();
+        long startTime = System.nanoTime();
         findMaximumMatching();
-        TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
+        Measurer.matchingTime += System.nanoTime() - startTime;
 
-        TimeCount.startTime = System.nanoTime();
-        return filter();
+        startTime = System.nanoTime();
+        boolean filter = filter();
+        Measurer.filterTime += System.nanoTime() - startTime;
+        return filter;
     }
 
     //***********************************************************************************
@@ -531,7 +531,6 @@ public class AlgoAllDiffAC_Naive {
 //        for (IntVar x : vars) {
 //            System.out.println(x.toString());
 //        }
-        TimeCount.filterTime += System.nanoTime() - TimeCount.startTime;
         return filter;
     }
 }

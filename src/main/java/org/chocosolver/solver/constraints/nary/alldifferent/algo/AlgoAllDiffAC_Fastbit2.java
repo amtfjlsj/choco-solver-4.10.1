@@ -1,6 +1,6 @@
 package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 
-import amtf.TimeCount;
+import amtf.Measurer;
 import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
@@ -11,9 +11,8 @@ import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISetIterator;
 import org.chocosolver.util.objects.setDataStructures.SetType;
 
+import java.util.Arrays;
 import java.util.BitSet;
-
-import static java.lang.System.out;
 
 /**
  * Algorithm of Alldifferent with AC
@@ -87,9 +86,7 @@ public class AlgoAllDiffAC_Fastbit2 {
         n = vars.length;
         // 存储匹配
         matching = new int[n];
-        for (int i = 0; i < n; i++) {
-            matching[i] = -1;
-        }
+        Arrays.fill(matching, -1);
         map = new TIntIntHashMap();
         idToVal = new TIntIntHashMap();
         IntVar v;
@@ -146,10 +143,10 @@ public class AlgoAllDiffAC_Fastbit2 {
             for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                 int j = map.get(k);
                 // Idx是二部图变量、值和边的索引
-                int valIdx = j - n; // 因为建立map时是从n开始的，所以这里需要减去n
-                int edgeIdx = i * numValue + valIdx;
+                int valNewIdx = j - n; // 因为建立map时是从n开始的，所以这里需要减去n
+                int edgeIdx = i * numValue + valNewIdx;
                 varEdge[i].set(edgeIdx);
-                valEdge[valIdx].set(edgeIdx);
+                valEdge[valNewIdx].set(edgeIdx);
             }
         }
 
@@ -162,16 +159,15 @@ public class AlgoAllDiffAC_Fastbit2 {
     //***********************************************************************************
 
     public boolean propagate() throws ContradictionException {
-//        out.println("before vars: ");
-//        for (IntVar v : vars) {
-//            out.println(v.toString());
-//        }
-        TimeCount.startTime = System.nanoTime();
+//        Measurer.propNum++;
+        long startTime = System.nanoTime();
         findMaximumMatching();
-        TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
+        Measurer.matchingTime += System.nanoTime() - startTime;
 
-        TimeCount.startTime = System.nanoTime();
-        return filter();
+        startTime = System.nanoTime();
+        boolean filter = filter();
+        Measurer.filterTime += System.nanoTime() - startTime;
+        return filter;
     }
 
     //***********************************************************************************
@@ -209,11 +205,8 @@ public class AlgoAllDiffAC_Fastbit2 {
                 } else {
                     digraph.addArc(i, j);
                 }
-                // 更新existentEdge
-                // Idx是二部图值和边的索引
-                int valIdx = j - n; // 因为构造函数中建立map时是从n开始的，所以这里需要减去n
-                int edgeIdx = i * numValue + valIdx;
-                leftEdge.set(edgeIdx);
+                // 更新leftEdge
+                leftEdge.set(i * numValue + (j - n));
             }
         }
         // 尝试为每个变量都寻找一个匹配，即最大匹配的个数要与变量个数相等，否则回溯
@@ -221,17 +214,14 @@ public class AlgoAllDiffAC_Fastbit2 {
         for (int i = free.nextSetBit(0); i >= 0 && i < n; i = free.nextSetBit(i + 1)) {
             tryToMatch(i);
         }
-        // 匹配边是由值指向变量，非匹配边是由变量指向值
-//      out.println("-----matching-----");
         for (int i = 0; i < n; i++) {
             matching[i] = digraph.getPredOf(i).isEmpty() ? -1 : digraph.getPredOf(i).iterator().next();
             // 初始化matchedEdge、varMatchedEdge、valMatchedEdge
-            int valIdx = matching[i] - n; // 因为构造函数中建立map时是从n开始的，所以这里需要减去n
-//          out.println(i + " matching " + valIdx);
-            int edgeIdx = i * numValue + valIdx;
+            int valNewIdx = matching[i] - n; // 因为构造函数中建立map时是从n开始的，所以这里需要减去n
+            int edgeIdx = i * numValue + valNewIdx;
             matchedEdge.set(edgeIdx);
             varMatchedEdge[i] = edgeIdx;
-            valMatchedEdge[valIdx] = edgeIdx;
+            valMatchedEdge[valNewIdx] = edgeIdx;
         }
 //        out.println("-----leftEdge-----");
 //        out.println(leftEdge.toString());
@@ -326,15 +316,16 @@ public class AlgoAllDiffAC_Fastbit2 {
             notGamma.iterateValid();
             while (notGamma.hasNextValid()) {
                 int varIdx = notGamma.next();
-                if (searchEdge.isIntersect(varEdge[varIdx]) != -1) {
+                int fromIdx = varIdx * numValue;
+                int endIdx = fromIdx + numValue - 1;
+                if (searchEdge.isIntersect(varEdge[varIdx], fromIdx, endIdx) != -1) {
                     extended = true;
                     searchEdge.set(varMatchedEdge[varIdx]);
                     notGamma.remove();
                     // 把与匹配值相连的边并入
-                    int valIdx = matching[varIdx] - n;
-                    searchEdge.or(valEdge[valIdx]);
-                    searchEdge.and(leftEdge);
-                    notA.remove(valIdx);
+                    int valNewIdx = matching[varIdx] - n;
+                    searchEdge.addIntersection(valEdge[valNewIdx], leftEdge);
+                    notA.remove(valNewIdx);
                 }
             }
         } while (extended);
@@ -380,6 +371,14 @@ public class AlgoAllDiffAC_Fastbit2 {
 //        out.println("-----leftEdge-----");
 //        out.println(leftEdge.toString());
 
+        notGamma.iterateValid();
+        while (notGamma.hasNextValid()) {
+            varIdx = notGamma.next();
+            if (vars[varIdx].getDomainSize() == 1) {
+                notGamma.remove();
+            }
+        }
+
         // out.println("-----SCC-----");
         // 记录当前limit
         notGamma.record();
@@ -388,18 +387,16 @@ public class AlgoAllDiffAC_Fastbit2 {
         edgeIdx = leftEdge.nextSetBit(0);
         while (edgeIdx != -1) {
             if (vars[edgeIdx / numValue].getDomainSize() > 1 && !sccEdge.get(edgeIdx)) {
-//                out.println("checking: " + edgeIdx);
                 if (checkSCC(edgeIdx)) {
-                    // 回溯路径，添加到leftEdge中
+                    // 回溯路径，添加到sccEdge中
                     int valNewIdx = edgeIdx % numValue;
                     int tmpNewIdx = valNewIdx;
                     do {
                         int backEdgeIdx = valMatchedEdge[tmpNewIdx];
-//                        out.println(backEdgeIdx + " is in SCC");
                         sccEdge.set(backEdgeIdx);
                         varIdx = backEdgeIdx / numValue;
                         backEdgeIdx = father[varIdx];
-//                        out.println(backEdgeIdx + " is in SCC");
+//                        System.out.println(backEdgeIdx + " is in SCC");
                         sccEdge.set(backEdgeIdx);
                         tmpNewIdx = backEdgeIdx % numValue;
                     } while (tmpNewIdx != valNewIdx);
@@ -410,14 +407,18 @@ public class AlgoAllDiffAC_Fastbit2 {
                     int k = idToVal.get(edgeIdx % numValue + n);
                     if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
                         filter |= v.instantiateTo(k, aCause);
-//                        out.println(v.getName() + " instantiate to " + k);
-                        // 从leftEdge中去掉被删的边
+//                        System.out.println(v.getName() + " instantiate to " + k);
                         leftEdge.clear(varEdge[varIdx]);
                     } else { // 如果edge是非匹配边
                         filter |= v.removeValue(k, aCause);
-//                        out.println(v.getName() + " remove " + k);
-                        // 从leftEdge中去掉被删的边
+//                        System.out.println(v.getName() + " remove " + k);
                         leftEdge.clear(edgeIdx);
+                    }
+                    if (v.getDomainSize() == 1) {
+//                        System.out.println(v.getName() + "domain size is 1");
+                        notGamma.restore();
+                        notGamma.remove(varIdx);
+                        notGamma.record();
                     }
                 }
             }
@@ -434,15 +435,15 @@ public class AlgoAllDiffAC_Fastbit2 {
         searchEdge.clear();
         if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
             matchedEdgeIdx = edgeIdx;
-            searchEdge.or(valEdge[valNewIdx]);
-            searchEdge.and(leftEdge);
+            searchEdge.addIntersection(valEdge[valNewIdx], leftEdge);
             searchEdge.clear(edgeIdx);
         } else { // 如果edge是非匹配边
             matchedEdgeIdx = valMatchedEdge[valNewIdx];
             searchEdge.set(edgeIdx);
         }
-
+//                Measurer.propNum++;
         // 开始搜索
+        long startTime = System.nanoTime();
         boolean extended;
         notGamma.restore();
         do {
@@ -450,24 +451,27 @@ public class AlgoAllDiffAC_Fastbit2 {
             // 头部扩展，匹配变量
             notGamma.iterateValid();
             while (notGamma.hasNextValid()) {
+                Measurer.propNum++;
                 int varIdx = notGamma.next();
-                int intersectEdgeIdx = searchEdge.isIntersect(varEdge[varIdx]);
+                int fromIdx = varIdx * numValue;
+                int endIdx = fromIdx + numValue - 1;
+                int intersectEdgeIdx = searchEdge.isIntersect(varEdge[varIdx], fromIdx, endIdx);
                 if (intersectEdgeIdx != -1) {
                     extended = true;
                     // 记录路径, 变量的一条入边
                     father[varIdx] = intersectEdgeIdx;
                     notGamma.remove();
                     if (varMatchedEdge[varIdx] == matchedEdgeIdx) {
+                        Measurer.checkSCCTime += System.nanoTime() - startTime;
                         return true;
                     }
                     // 把与匹配值相连的边并入
                     valNewIdx = matching[varIdx] - n;
-                    searchEdge.or(valEdge[valNewIdx]);
-                    searchEdge.and(leftEdge);
+                    searchEdge.addIntersection(valEdge[valNewIdx], leftEdge);
                 }
             }
         } while (extended);
-
+        Measurer.checkSCCTime += System.nanoTime() - startTime;
         return false;
     }
 
@@ -476,11 +480,6 @@ public class AlgoAllDiffAC_Fastbit2 {
         distinguish();
         filter |= filterFirstPart();
         filter |= filterSecondPart();
-//        out.println("after vars: ");
-//        for (IntVar x : vars) {
-//            System.out.println(x.toString());
-//        }
-        TimeCount.filterTime += System.nanoTime() - TimeCount.startTime;
         return filter;
     }
 }

@@ -11,7 +11,7 @@ package org.chocosolver.solver.constraints.nary.alldifferent;
 
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC_Fast;
+import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffACFast;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.ESat;
@@ -21,22 +21,22 @@ import org.chocosolver.util.ESat;
  * <p/>
  * Uses Zhang algorithm in the paper of IJCAI-18
  * "A Fast Algorithm for Generalized Arc Consistency of the Alldifferent Constraint"
+ *
  * Runs in O(m.n) worst case time for the initial propagation
  * but has a good average behavior in practice
  * <p/>
  * Runs incrementally for maintaining a matching
  * <p/>
  *
- * @author Jia'nan Chen
  */
 
-public class PropAllDiffAC_Fast extends Propagator<IntVar> {
+public class PropAllDiffACFast extends Propagator<IntVar> {
 
     //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
 
-    protected AlgoAllDiffAC_Fast filter;
+    protected AlgoAllDiffACFast filter;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -48,9 +48,9 @@ public class PropAllDiffAC_Fast extends Propagator<IntVar> {
      *
      * @param variables array of integer variables
      */
-    public PropAllDiffAC_Fast(IntVar[] variables) {
+    public PropAllDiffACFast(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-        this.filter = new AlgoAllDiffAC_Fast(variables, this);
+        this.filter = new AlgoAllDiffACFast(variables, this);
     }
 
     //***********************************************************************************

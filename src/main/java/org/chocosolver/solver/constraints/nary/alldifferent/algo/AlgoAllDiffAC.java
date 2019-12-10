@@ -9,7 +9,7 @@
  */
 package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 
-import amtf.TimeCount;
+import amtf.Measurer;
 import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
@@ -30,7 +30,7 @@ import java.util.BitSet;
  * <p/>
  * Keeps track of previous matching for further calls
  * <p/>
- * 
+ *
  * @author Jean-Guillaume Fages
  */
 public class AlgoAllDiffAC {
@@ -100,12 +100,15 @@ public class AlgoAllDiffAC {
     //***********************************************************************************
 
     public boolean propagate() throws ContradictionException {
-        TimeCount.startTime = System.nanoTime();
+        Measurer.propNum++;
+        long startTime = System.nanoTime();
         findMaximumMatching();
-        TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
+        Measurer.matchingTime += System.nanoTime() - startTime;
 
-        TimeCount.startTime = System.nanoTime();
-        return filter();
+        startTime = System.nanoTime();
+        boolean filter = filter();
+        Measurer.filterTime += System.nanoTime() - startTime;
+        return filter;
     }
 
     //***********************************************************************************
@@ -234,31 +237,30 @@ public class AlgoAllDiffAC {
                         filter |= v.instantiateTo(k, aCause);
                     } else {
                         filter |= v.removeValue(k, aCause);
-//                        digraph.removeArc(i, j);
+                        digraph.removeArc(i, j);
                     }
                 }
             }
         }
-//        for (int i = 0; i < n; i++) {
-//            v = vars[i];
-//            if (!v.hasEnumeratedDomain()) {
-//                ub = v.getUB();
-//                for (int k = v.getLB(); k <= ub; k++) {
-//                    j = map.get(k);
-//                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
-//                        filter |= v.removeValue(k, aCause);
-//                    }
-//                }
-//                int lb = v.getLB();
-//                for (int k = v.getUB(); k >= lb; k--) {
-//                    j = map.get(k);
-//                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
-//                        filter |= v.removeValue(k, aCause);
-//                    }
-//                }
-//            }
-//        }
-        TimeCount.filterTime += System.nanoTime() - TimeCount.startTime;
+        for (int i = 0; i < n; i++) {
+            v = vars[i];
+            if (!v.hasEnumeratedDomain()) {
+                ub = v.getUB();
+                for (int k = v.getLB(); k <= ub; k++) {
+                    j = map.get(k);
+                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
+                        filter |= v.removeValue(k, aCause);
+                    }
+                }
+                int lb = v.getLB();
+                for (int k = v.getUB(); k >= lb; k--) {
+                    j = map.get(k);
+                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
+                        filter |= v.removeValue(k, aCause);
+                    }
+                }
+            }
+        }
         return filter;
     }
 }

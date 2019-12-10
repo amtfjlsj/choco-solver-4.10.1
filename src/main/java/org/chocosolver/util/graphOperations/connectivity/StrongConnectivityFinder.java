@@ -96,11 +96,10 @@ public class StrongConnectivityFinder  {
 	}
 
 	private void findSingletons(BitSet restriction) {
-		ISet nodes = graph.getNodes();
 		// 找不到下一个为1b的bit时，nextSetBit返回-1
 		for (int i = restriction.nextSetBit(0); i >= 0; i = restriction.nextSetBit(i + 1)) {
 		    // 按照我的想法，前面findAllSCC()中已经把restriction全部置为0，所以这里就不用再判断nodes.contain了
-			if (nodes.contains(i) && graph.getPredOf(i).size() * graph.getSuccOf(i).size() == 0) {
+			if (graph.getPredOf(i).size() == 0 || graph.getSuccOf(i).size() == 0) {
 				nodeSCC[i] = nbSCC;
 				sccFirstNode[nbSCC++] = i;
 				restriction.clear(i);
