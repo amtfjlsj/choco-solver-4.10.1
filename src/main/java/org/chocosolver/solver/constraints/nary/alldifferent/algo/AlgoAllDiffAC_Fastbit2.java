@@ -84,6 +84,8 @@ public class AlgoAllDiffAC_Fastbit2 {
     //***********************************************************************************
 
     public AlgoAllDiffAC_Fastbit2(IntVar[] variables, ICause cause) {
+
+
         this.vars = variables;
         aCause = cause;
         n = vars.length;
@@ -168,6 +170,7 @@ public class AlgoAllDiffAC_Fastbit2 {
 //        for (IntVar v : vars) {
 //            out.println(v.toString());
 //        }
+        System.out.println("----------------propagate----------------");
         TimeCount.startTime = System.nanoTime();
         findMaximumMatching();
         TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
@@ -365,6 +368,7 @@ public class AlgoAllDiffAC_Fastbit2 {
                 varIdx = notGamma.next();
                 v = vars[varIdx];
                 k = idToVal.get(valIdx + n);
+                                System.out.println("first delete:" + v + ", " + k);
                 filter |= v.removeValue(k, aCause);
                 leftEdge.clear(varIdx * numValue + valIdx);
             }
@@ -422,6 +426,8 @@ public class AlgoAllDiffAC_Fastbit2 {
                         // 从leftEdge中去掉被删的边
                         leftEdge.clear(varEdge[varIdx]);
                     } else { // 如果edge是非匹配边
+
+                        System.out.println("second delete:" + v + ", " + k);
                         filter |= v.removeValue(k, aCause);
 //                        out.println(v.getName() + " remove " + k);
                         // 从leftEdge中去掉被删的边
