@@ -173,26 +173,23 @@ public class AlgoAllDiffAC_Fastbit2 {
 //            out.println(v.toString());
 //        }
 
-        out.println("-----------propagate-----------");
-        TimeCount.startTime = System.nanoTime();
-        for (int i = 0; i < n; ++i) {
-            var2Val[i] = matching[i] - n;
-        }
-        System.out.println("-----prematching-----");
-        System.out.println(Arrays.toString(var2Val));
-        System.out.println("---------------------");
+//        out.println("-----------propagate-----------");
+//        TimeCount.startTime = System.nanoTime();
+//        for (int i = 0; i < n; ++i) {
+//            var2Val[i] = matching[i] - n;
+//        }
+//        System.out.println("-----prematching-----");
+//        System.out.println(Arrays.toString(var2Val));
+//        System.out.println("---------------------");
         findMaximumMatching();
 
-        for (int i = 0; i < n; ++i) {
-            var2Val[i] = matching[i] - n;
-        }
-        System.out.println("-----prematching-----");
-        System.out.println(Arrays.toString(var2Val));
-        System.out.println("---------------------");
+//        for (int i = 0; i < n; ++i) {
+//            var2Val[i] = matching[i] - n;
+//        }
+//        System.out.println("-----matching-----");
+//        System.out.println(Arrays.toString(var2Val));
+//        System.out.println("------------------");
         TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
-
-        out.println(Arrays.toString(matching));
-
         TimeCount.startTime = System.nanoTime();
         return filter();
     }
@@ -384,6 +381,7 @@ public class AlgoAllDiffAC_Fastbit2 {
                 varIdx = notGamma.next();
                 v = vars[varIdx];
                 k = idToVal.get(valIdx + n);
+//                System.out.println("first delete:" + v.getName() + ", " + k);
                 filter |= v.removeValue(k, aCause);
                 leftEdge.clear(varIdx * numValue + valIdx);
             }
@@ -441,6 +439,7 @@ public class AlgoAllDiffAC_Fastbit2 {
                         // 从leftEdge中去掉被删的边
                         leftEdge.clear(varEdge[varIdx]);
                     } else { // 如果edge是非匹配边
+//                        System.out.println("second delete:" + v.getName() + ", " + k);
                         filter |= v.removeValue(k, aCause);
 //                        out.println(v.getName() + " remove " + k);
                         // 从leftEdge中去掉被删的边
