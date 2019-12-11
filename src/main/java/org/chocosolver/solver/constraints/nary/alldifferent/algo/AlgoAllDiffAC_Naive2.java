@@ -13,6 +13,8 @@ import org.chocosolver.util.objects.SparseSet;
 
 import java.util.Arrays;
 
+import static java.lang.System.out;
+
 /**
  * Algorithm of Alldifferent with AC
  * <p>
@@ -301,6 +303,7 @@ public class AlgoAllDiffAC_Naive2 {
 
     public boolean propagate() throws ContradictionException {
         TimeCount.startTime = System.nanoTime();
+        out.println("-----------propagate-----------");
         freeNode.set();
 
         // !! 可做增量
@@ -321,31 +324,72 @@ public class AlgoAllDiffAC_Naive2 {
         // !! 可以增量修改值
         // 这里先统计一下sVal和sSup
         IntVar v;
-        int oldValIdx;
+        int oldValIdx, oldVarIdx;
         for (int x = 0; x < arity; x++) {
             v = vars[x];
             // !! 这里可以修改一下 已赋值 就不参与修改了
             // 绑定
             if (v.getDomainSize() == 1) {
-
+                // 取出变量的唯一值
                 int valueIndex = val2Idx.get(v.getValue());
-                varMask[x].clear();
-                varMask[x].set(valueIndex);
+//                varMask[x].clear();
+//                varMask[x].set(valueIndex);
                 oldValIdx = var2Val[x];
-                if (val2Var[valueIndex] == -1) {
-                    // 释出旧匹配值
-//                    int oldValIdx = var2Val[x];
-                    val2Var[oldValIdx] = -1;
+                oldVarIdx = val2Var[valueIndex];
+
+                if (oldValIdx == valueIndex && oldVarIdx == x) {
+                    // 变量值早已匹配好，跳出
+                    break;
+//                } else if (var2Val[x] != valueIndex) {
+                } else {
+                    // 若上轮匹配值不是当前唯一有效值，更新一番，
+                    // 获取上轮匹配值，
+                    // 若上次的匹配值是-1说明上论没匹配上，可能适用于第一次匹配，或上轮匹配失败的情况
+                    if (oldValIdx != -1 && oldVarIdx != -1) {
+                        // 若之前各有各的匹配
+                        // 相当于各自有各自的家庭
+                        // 拆散两个家庭
+                        // 将值的匹配变量设置为无效
+                        val2Var[oldValIdx] = -1;
+                        // 将变量的匹配值设置为无效
+                        var2Val[oldVarIdx] = -1;
+
+                        break;
+                    } else if (oldValIdx == -1 && oldVarIdx != -1) {
+                        // x的原配失效，唯一值的原配未失效
+                        // 将变量的匹配值设置为无效
+                        var2Val[oldVarIdx] = -1;
+                    } else if (oldValIdx != -1 && oldVarIdx == -1) {
+                        // x的原配未失效，唯一值的原配失效
+                        // 将其原配的匹配变量设置为无效
+                        val2Var[oldValIdx] = -1;
+                    }
+                    //若两个都失效了，直接修改就可以了
+
+                    // 建立新的匹配
                     val2Var[valueIndex] = x;
                     var2Val[x] = valueIndex;
+
                 }
+//                else if (val2Var[valueIndex] != x){}
+
+
+//                // 打断唯一值到其它变量的
+//                oldValIdx = var2Val[x];
+//                if (val2Var[valueIndex] == -1) {
+//                    // 释出旧匹配值
+////                    int oldValIdx = var2Val[x];
+//                    val2Var[oldValIdx] = -1;
+//                    val2Var[valueIndex] = x;
+//                    var2Val[x] = valueIndex;
+//                }
 
                 // 对于已经绑定的值，不再纳入A和gamma，SCC查找
                 notGamma.remove(x);
+                notGammaMask.clear(x);
                 notA.remove(valueIndex);
                 freeNode.clear(valueIndex);
                 // 记录
-                notGammaMask.clear(x);
             } else {
                 // 生成VarMask和valMask
 
@@ -357,19 +401,33 @@ public class AlgoAllDiffAC_Naive2 {
 //                }
 
 //                prev_matching_[x] = variable_to_value_[x];
-                varMask[x].clear();
+
+                // 重新统计一下各种值
+//                oldValIdx = var2Val[x];
+//                oldVarIdx = val2Var[valueIndex];
+
 
                 // 检查原匹配是否失效
+                // 拿到变量原配
                 int oldMatchingIndex = var2Val[x];
+//                 // 若变量原配失效，
+//                 // 什么都不用改
+                // 若oldMatchingIndex == -1则!v.contains(idx2Val[oldMatchingIndex])
+//                if (oldMatchingIndex == -1) {
+//
+//                }
+
+                // 若匹配值已被删除了,但仍记录着原匹配值
+                // 即：如果oldMatchingValue无效，并且不为-1
                 if (oldMatchingIndex != -1 && !v.contains(idx2Val[oldMatchingIndex])) {
-                    // 如果oldMatchingValue无效，并且不为-1
-                    //
                     val2Var[oldMatchingIndex] = -1;
                     var2Val[x] = -1;
                     freeNode.set(oldMatchingIndex);
 //                    System.out.println(oldMatchingIndex + " is free");
                 }
 
+                // !! 这里最好拿到论域delta，这样就不用varMask.clear()
+                varMask[x].clear();
                 for (int value = v.getLB(), ub = v.getUB(); value <= ub; value = v.nextValue(value)) {
 //                int offset_value = map.get(value) - n;
 //                System.out.println("___________________________");
@@ -418,6 +476,7 @@ public class AlgoAllDiffAC_Naive2 {
         // Compute max matching.
         for (int x = 0; x < arity; x++) {
             if (var2Val[x] == -1) {
+                // !! 这可用稀疏集
                 value_visited_.clear();
                 variable_visited_.clear();
                 MakeAugmentingPath(x);

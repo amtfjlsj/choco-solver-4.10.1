@@ -59,6 +59,9 @@ public class AlgoAllDiffAC_Fastbit2 {
     // 需要新增一个取值编号到取值的映射，也是一对一
     private TIntIntHashMap idToVal;
 
+    // 记录匹配
+    private int[] var2Val;
+
     // 保留边
     private NaiveBitSet leftEdge;
     // 匹配边
@@ -89,6 +92,7 @@ public class AlgoAllDiffAC_Fastbit2 {
         n = vars.length;
         // 存储匹配
         matching = new int[n];
+        var2Val = new int[n];
         for (int i = 0; i < n; i++) {
             matching[i] = -1;
         }
@@ -168,8 +172,23 @@ public class AlgoAllDiffAC_Fastbit2 {
 //        for (IntVar v : vars) {
 //            out.println(v.toString());
 //        }
+
+        out.println("-----------propagate-----------");
         TimeCount.startTime = System.nanoTime();
+        for (int i = 0; i < n; ++i) {
+            var2Val[i] = matching[i] - n;
+        }
+        System.out.println("-----prematching-----");
+        System.out.println(Arrays.toString(var2Val));
+        System.out.println("---------------------");
         findMaximumMatching();
+
+        for (int i = 0; i < n; ++i) {
+            var2Val[i] = matching[i] - n;
+        }
+        System.out.println("-----prematching-----");
+        System.out.println(Arrays.toString(var2Val));
+        System.out.println("---------------------");
         TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
 
         out.println(Arrays.toString(matching));
