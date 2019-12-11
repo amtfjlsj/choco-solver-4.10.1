@@ -113,11 +113,11 @@ public class AlgoAllDiffAC_Naive2 {
     // 记录排除gamma和bind的变量，即notGamma的变量
     private NaiveBitSet notGammaMask;
 
-    // 两个数据结构
-    // 改变的变量
-    private SparseSet sVal;
-    // 需要过滤的变量，未绑定的变量
-    private SparseSet sSup;
+//    // 两个数据结构
+//    // 改变的变量
+//    private SparseSet sVal;
+//    // 需要过滤的变量，未绑定的变量
+//    private SparseSet sSup;
 
     //
     private int[] lastSize;
@@ -215,8 +215,8 @@ public class AlgoAllDiffAC_Naive2 {
 
         notGamma = new SparseSet(arity);
         notA = new SparseSet(numValue);
-        sSup = new SparseSet(arity);
-        sVal = new SparseSet(arity);
+//        sSup = new SparseSet(arity);
+//        sVal = new SparseSet(arity);
         lastSize = new int[arity];
 
     }
@@ -285,7 +285,7 @@ public class AlgoAllDiffAC_Naive2 {
                     // 先拿到这个值的匹配变量
                     int next_node = val2Var[value];
                     variable_visited_.set(next_node);
-                    System.out.println(num_to_visit + "," + next_node);
+//                    System.out.println(num_to_visit + "," + next_node);
                     // 把这个变量加入队列中
                     visiting_[num_to_visit++] = next_node;
                     variable_visited_from_[next_node] = node;
@@ -301,9 +301,11 @@ public class AlgoAllDiffAC_Naive2 {
     // PROPAGATION
     //***********************************************************************************
 
+
     public boolean propagate() throws ContradictionException {
+
+        System.out.println("----------------propagate----------------");
         TimeCount.startTime = System.nanoTime();
-        out.println("-----------propagate-----------");
         freeNode.set();
 
         // !! 可做增量
@@ -316,8 +318,8 @@ public class AlgoAllDiffAC_Naive2 {
         notGammaMask.set();
         notA.fill();
 
-        sSup.clear();
-        sVal.clear();
+//        sSup.clear();
+//        sVal.clear();
 
         // 增量检查
         // matching 有效性检查
@@ -634,6 +636,7 @@ public class AlgoAllDiffAC_Naive2 {
 ////            System.out.println(a.toString());
 ////        }
 
+        boolean res = true;
         // 这里判断一下，如果notGamma为空则不用进行如下步骤
         if (!notGamma.empty()) {
             // 重置两个矩阵
@@ -650,12 +653,10 @@ public class AlgoAllDiffAC_Naive2 {
             }
 
             // 过滤论域
-            filterDomains();
+            res = filterDomains();
         }
 
-
-        return true;
-
+        return res;
     }
 
     private void updateGraph() {
@@ -770,6 +771,309 @@ public class AlgoAllDiffAC_Naive2 {
 
         return false;
     }
+
+
+    // 旧函数
+//    public boolean propagate() throws ContradictionException {
+//
+//        System.out.println("----------------propagate----------------");
+//        TimeCount.startTime = System.nanoTime();
+//        freeNode.set();
+//
+//        // !! 可做增量
+//        for (int i = 0; i < numValue; ++i) {
+//            valMask[i].clear();
+//        }
+//
+//        // 初始化两个not集合
+//        notGamma.fill();
+//        notGammaMask.set();
+//        notA.fill();
+//
+//        sSup.clear();
+//        sVal.clear();
+//
+//        // 增量检查
+//        // matching 有效性检查
+//        // !! 可以增量修改值
+//        // 这里先统计一下sVal和sSup
+//        IntVar v;
+//        int oldValIdx;
+//        for (int x = 0; x < arity; x++) {
+//            v = vars[x];
+//            // !! 这里可以修改一下 已赋值 就不参与修改了
+//            // 绑定
+//            if (v.getDomainSize() == 1) {
+//
+//                int valueIndex = val2Idx.get(v.getValue());
+//                varMask[x].clear();
+//                varMask[x].set(valueIndex);
+//                oldValIdx = var2Val[x];
+//                if (val2Var[valueIndex] == -1) {
+//                    // 释出旧匹配值
+////                    int oldValIdx = var2Val[x];
+//                    val2Var[oldValIdx] = -1;
+//                    val2Var[valueIndex] = x;
+//                    var2Val[x] = valueIndex;
+//                }
+//
+//                // 对于已经绑定的值，不再纳入A和gamma，SCC查找
+//                notGamma.remove(x);
+//                notA.remove(valueIndex);
+//                freeNode.clear(valueIndex);
+//                // 记录
+//                notGammaMask.clear(x);
+//            } else {
+//                // 生成VarMask和valMask
+//
+//                // !! 利用一下lastSize
+////                sSup.add(x);
+////                if (lastSize[x] != v.getDomainSize()) {
+////                    lastSize[x] = v.getDomainSize();
+////                    sVal.add(x);
+////                }
+//
+////                prev_matching_[x] = variable_to_value_[x];
+//                varMask[x].clear();
+//
+//                // 检查原匹配是否失效
+//                int oldMatchingIndex = var2Val[x];
+//                if (oldMatchingIndex != -1 && !v.contains(idx2Val[oldMatchingIndex])) {
+//                    // 如果oldMatchingValue无效，并且不为-1
+//                    //
+//                    val2Var[oldMatchingIndex] = -1;
+//                    var2Val[x] = -1;
+//                    freeNode.set(oldMatchingIndex);
+////                    System.out.println(oldMatchingIndex + " is free");
+//                }
+//
+//                for (int value = v.getLB(), ub = v.getUB(); value <= ub; value = v.nextValue(value)) {
+////                int offset_value = map.get(value) - n;
+////                System.out.println("___________________________");
+////                System.out.println("valid value: (" + v.getName() + ", " + (map.get(value) - n) + ")");
+////                System.out.println("valid value: (" + v.getName() + ", " + val2Idx.get(value) + ")");
+//                    int valueIndex = val2Idx.get(value);
+//
+//                    // Forward-checking should propagate xsu != value.
+////                successor_[x].add(offset_value);
+//                    varMask[x].set(valueIndex);
+//
+//                    // !! 可以增量修改值
+////                    varMask[x].set(valueIndex);
+//                    valMask[valueIndex].set(x);
+//                }
+////                if (successor_[x].size() == 1) {
+//////                int offsetIndex = successor_[x].get(0);
+////                    int offsetIndex = successor_[x].nextSetBit(0);
+////
+////                }
+//            }
+//
+//        }
+//
+////        // Seed with previous matching.
+////        for (int x = 0; x < arity; x++) {
+////            if (variable_to_value_[x] != -1) continue;
+////
+////            // 先前匹配
+////            int prev_value = prev_matching_[x];
+////            if (prev_value == -1 || value_to_variable_[prev_value] != -1) continue;
+////            v = vars[x];
+//////            if (VariableHasPossibleValue(x, prev_matching_[x] + min_all_values_)) {
+//////            if (v.contains(idToVal.get(prev_matching_[x] + n))) {
+////            if (v.contains(idx2Val[prev_matching_[x]])) {
+////                variable_to_value_[x] = prev_matching_[x];
+////                value_to_variable_[prev_matching_[x]] = x;
+////            }
+////        }
+//
+////        System.out.println("-----prematching-----");
+////        System.out.println(Arrays.toString(var2Val));
+////        System.out.println(Arrays.toString(val2Var));
+////        System.out.println("---------------------");
+//
+//        // Compute max matching.
+//        for (int x = 0; x < arity; x++) {
+//            if (var2Val[x] == -1) {
+//                value_visited_.clear();
+//                variable_visited_.clear();
+//                MakeAugmentingPath(x);
+//            }
+//            if (var2Val[x] == -1) return false;  // No augmenting path exists.
+//        }
+//
+//
+////        System.out.println("-----matching-----");
+////        System.out.println(Arrays.toString(var2Val));
+////        System.out.println(Arrays.toString(val2Var));
+////        System.out.println("------------------");
+////        System.out.println(freeNode);
+//
+//        //
+//        /////////////////////////////////////////////////////////
+//        //      out.println("-----matching-----");
+////        for (int i = 0; i < n; i++) {
+//////            matching[i] = digraph.getPredOf(i).isEmpty() ? -1 : digraph.getPredOf(i).iterator().next();
+////            // 初始化matchedEdge、varMatchedEdge、valMatchedEdge
+////            matching[i] = variable_to_value_[i] + n;
+////            int valIdx = matching[i] - n; // 因为构造函数中建立map时是从n开始的，所以这里需要减去n
+//////          out.println(i + " matching " + valIdx);
+////            int edgeIdx = i * numValue + valIdx;
+////            matchedEdge.set(edgeIdx);
+////            varMatchedEdge[i] = edgeIdx;
+////            valMatchedEdge[valIdx] = edgeIdx;
+////        }
+//
+////        searchEdge.clear();
+////
+////        ////////////////////////////////////////////////
+////        // 变量和值合在一起
+//////        for (int i = 0; i < n; ++i) {
+//////            SCCMatrix[i] = new NaiveBitSet(n);
+//////            SCCKnown[i] = new NaiveBitSet(n);
+//////        }
+////
+////
+////        /////////////////////////////////////////////////////////
+////        // 寻找从自由值出发的所有交替路
+////        // 首先将与自由值相连的边并入允许边
+////        gammaExtended.clear();
+//        // freeNode转变量
+//        gammaMask.clear();
+//        gammaFrontier.clear();
+//        for (int i = freeNode.nextSetBit(0); i != -1; i = freeNode.nextSetBit(i + 1)) {
+//            // 每个freeNode的值拿出来
+////            System.out.println(i);
+//            notA.remove(i);
+//            gammaMask.or(valMask[i]);
+//            notGammaMask.clear(valMask[i]);
+//            gammaFrontier.or(valMask[i]);
+//
+//        }
+//
+////
+////        // 从gamma向外BFS
+////        // visiting_ 用来记录BFS前沿
+////        // 也可以记录本次和上次的mask通过位运算算出delta
+////        for (int i = gamma.nextSetBit(0); i != -1; i = gamma.nextSetBit(i + 1)) {
+////
+////            // Enqueue start.
+////            // visit 里存的是变量
+////            visiting_[num_to_visit++] = i;
+//////            gamma.or(valMask[i]);
+//////            notA.remove(i);
+//////            gamma.or(valMask[i]);
+//////            notA.remove(i);
+////        }
+////
+////
+//////        for (int i = NaiveBitSet.NextSetBitAfterMinus(gamma, gammaExtended, 0);
+//////             i != -1; NaiveBitSet.NextSetBitAfterMinus(gamma, gammaExtended, 0)) {
+//////            // !! 这里可以将Extended改成Frontier，只记录前沿，记录方法是三个BitSet比较，
+//////            gamma.or(valMask[i]);
+//////            gammaExtended.set(i);
+//////        }
+////
+////
+//        // !! 这里可以再优化一下
+//        // !! Frontier应该用SparseBitSet(largeBitSet)
+//
+//        for (int i = gammaFrontier.nextSetBit(0);
+//             i != -1; i = gammaFrontier.nextSetBit(0)) {
+//            // !! 这里可以将Extended改成Frontier，只记录前沿，记录方法是三个BitSet比较，
+//            // frontier 扩展，从valMask中去掉gammaMask已记录的变量
+//            gammaFrontier.orAfterMinus(valMask[var2Val[i]], gammaMask);
+//            // 除去第i个变量
+//            gammaFrontier.clear(i);
+//            // gamma 扩展
+//            gammaMask.or(valMask[var2Val[i]]);
+//        }
+////
+////        // 到这里时 gamma 和gammaExtended都一样了。这时候统计一下notgamma 和notA
+////        for (int i = gamma.nextSetBit(0); i != -1; i = gamma.nextSetBit(i + 1)) {
+////            notGamma.remove(i);
+////            notA.remove(variable_to_value_[i]);
+////            notGammaMask.clear(i);
+////        }
+//
+//        // 到这里时 frontier全部遍历完。这时候统计一下notGamma 和notA
+//        for (int i = gammaMask.nextSetBit(0); i != -1; i = gammaMask.nextSetBit(i + 1)) {
+//            notGamma.remove(i);
+//            notGammaMask.clear(i);
+//            notA.remove(var2Val[i]);
+//        }
+//
+//
+////        System.out.println("------------notGammaMask------------");
+////        System.out.println(notGammaMask);
+//
+////
+////        // 重置两个矩阵
+////        // 只重置notGamma的变量
+////        // !! 重置的内容也除去gamma的中的变量
+////        notGamma.iterateValid();
+////        while (notGamma.hasNextValid()) {
+////            int varIdx = notGamma.next();
+////            graphLinkedMatrix[varIdx].setAfterMinus(valMask[variable_to_value_[varIdx]], notGammaMask);
+////            graphLinkedFrontier[varIdx].set(valMask[variable_to_value_[varIdx]]);
+////        }
+//
+//
+////
+////        TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
+////
+////        TimeCount.startTime = System.nanoTime();
+////
+////
+////        System.out.println("-----matching-----");
+////        System.out.println(Arrays.toString(variable_to_value_));
+////        System.out.println(Arrays.toString(value_to_variable_));
+////        System.out.println(Arrays.toString(matching));
+//////        System.out.println("-----matching-----");
+//////        System.out.println(Arrays.toString(matching));
+//////        System.out.println("-----leftEdge-----");
+//////        System.out.println(leftEdge.toString());
+//////        System.out.println("-----matchedEdge-----");
+//////        System.out.println(matchedEdge.toString());
+//////        System.out.println("---varMatchedEdge---");
+//////        for (int a : varMatchedEdge) {
+//////            System.out.println(a);
+//////        }
+//////        System.out.println("---valMatchedEdge---");
+//////        for (int a : valMatchedEdge) {
+//////            System.out.println(a);
+//////        }
+//////        System.out.println("---varEdge---");
+//////        for (NaiveSparseBitSet a : varEdge) {
+//////            System.out.println(a.toString());
+//////        }
+//////        System.out.println("---valEdge---");
+//////        for (NaiveSparseBitSet a : valEdge) {
+//////            System.out.println(a.toString());
+//////        }
+//
+//        boolean  res = true;
+//        // 这里判断一下，如果notGamma为空则不用进行如下步骤
+//        if (!notGamma.empty()) {
+//            // 重置两个矩阵
+//            // 只重置notGamma的变量
+//            // !! 重置的内容也除去gamma的中的变量
+//            notGamma.iterateValid();
+//            while (notGamma.hasNextValid()) {
+//                // 拿到变量id
+//                int varIdx = notGamma.next();
+//                // 从变量id拿到匹配值再拿到该值所能到达的变量mask，但只加入gamma中的变量，即mask&gamma
+//                graphLinkedMatrix[varIdx].setAfterAnd(valMask[var2Val[varIdx]], notGammaMask);
+//                // 记录前沿
+//                graphLinkedFrontier[varIdx].setAfterAnd(valMask[var2Val[varIdx]], notGammaMask);
+//            }
+//
+//            // 过滤论域
+//            res = filterDomains();
+//        }
+//
+//        return res;
+//    }
 
 
 }

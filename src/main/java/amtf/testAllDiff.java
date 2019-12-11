@@ -26,7 +26,7 @@ public class testAllDiff {
 //                "E:/X3Benchmarks/alldiff/Langford/Langford-m1-k2/Langford-2-08.xml",
 //                "E:/X3Benchmarks/alldiff/Langford/Langford-m1-k4/Langford-4-07.xml",
 //                "E:/X3Benchmarks/alldiff/Queens/Queens-m1-s1/Queens-0100-m1.xml",
-                "E:\\X3Benchmarks\\alldiff\\Queens\\Queens-m1-s1\\Queens-0004-m1.xml",
+                "G:\\X3Benchmarks\\alldiff\\Queens\\Queens-m1-s1\\Queens-0004-m1.xml",
 //                "E:/X3Benchmarks/alldiff/LatinSquare/LatinSquare-xcsp2-bqwh15-106/bqwh-15-106-01_X2.xml",
 //                "E:/X3Benchmarks/alldiff/LatinSquare/LatinSquare-xcsp2-bqwh15-106/bqwh-15-106-02_X2.xml",
 //                "E:/X3Benchmarks/alldiff/LatinSquare/LatinSquare-xcsp2-bqwh15-106/bqwh-15-106-03_X2.xml",
@@ -116,40 +116,40 @@ public class testAllDiff {
                 out.println("filter time: " + TimeCount.filterTime / IN_SEC + "s");
             }
 //
-//            allDiffConsistency = "ACFastbit2";
-//            for (int i = 0; i < runNum; i++) {
-//                TimeCount.initial();
-//                out.println(ins);
-//                out.println(allDiffConsistency + "====>");
-//                Model model = new Model();
-//                try {
-//                    parser.model(model, ins, allDiffConsistency);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//                IntVar[] decVars = (IntVar[]) model.getHook("decisions");
-//                ;
-//                if (decVars == null) {
-//                    decVars = parser.mvars.values().toArray(new IntVar[parser.mvars.size()]);
-//                }
-//                Arrays.sort(decVars, Comparator.comparingInt(IntVar::getId));
-//                Solver solver = model.getSolver();
-//                solver.setSearch(activityBasedSearch(decVars));
-////                solver.setSearch(Search.defaultSearch(model));
-////                solver.setSearch(intVarSearch(new FirstFail(model), new IntDomainMin(), decVars));
-//
-//                if (solver.solve()) {
-//                    out.printf("solution: ");
-//                    for (IntVar v : decVars) {
-//                        out.printf("%d ", v.getValue());
-//                    }
-//                    out.println();
-//                }
-//                out.println("node: " + solver.getNodeCount());
-//                out.println("time: " + solver.getTimeCount() + "s");
-//                out.println("find matching time: " + TimeCount.matchingTime / IN_SEC + "s");
-//                out.println("filter time: " + TimeCount.filterTime / IN_SEC + "s");
-//            }
+            allDiffConsistency = "ACFastbit2";
+            for (int i = 0; i < runNum; i++) {
+                TimeCount.initial();
+                out.println(ins);
+                out.println(allDiffConsistency + "====>");
+                Model model = new Model();
+                try {
+                    parser.model(model, ins, allDiffConsistency);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                IntVar[] decVars = (IntVar[]) model.getHook("decisions");
+                ;
+                if (decVars == null) {
+                    decVars = parser.mvars.values().toArray(new IntVar[parser.mvars.size()]);
+                }
+                Arrays.sort(decVars, Comparator.comparingInt(IntVar::getId));
+                Solver solver = model.getSolver();
+                solver.setSearch(activityBasedSearch(decVars));
+//                solver.setSearch(Search.defaultSearch(model));
+//                solver.setSearch(intVarSearch(new FirstFail(model), new IntDomainMin(), decVars));
+
+                if (solver.solve()) {
+                    out.printf("solution: ");
+                    for (IntVar v : decVars) {
+                        out.printf("%d ", v.getValue());
+                    }
+                    out.println();
+                }
+                out.println("node: " + solver.getNodeCount());
+                out.println("time: " + solver.getTimeCount() + "s");
+                out.println("find matching time: " + TimeCount.matchingTime / IN_SEC + "s");
+                out.println("filter time: " + TimeCount.filterTime / IN_SEC + "s");
+            }
 //
             allDiffConsistency = "ACNaive";
             for (int i = 0; i < runNum; i++) {
