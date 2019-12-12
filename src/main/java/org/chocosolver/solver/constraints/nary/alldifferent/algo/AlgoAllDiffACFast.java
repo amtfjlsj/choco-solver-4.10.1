@@ -270,7 +270,7 @@ public class AlgoAllDiffACFast {
                     } else if (!distinction.get(i) && !distinction.get(j)) { // 删除第二类边，变量在Xc-Γ(A)中，值在Dc-A中
                         if (nodeSCC[i] != nodeSCC[j]) {
                             if (matching[i] == j) {
-//                                filter |= v.instantiateTo(k, aCause);
+                                filter |= v.instantiateTo(k, aCause);
 //                            out.println(v.getName() + " instantiate to " + k);
                             } else {
                                 filter |= v.removeValue(k, aCause);

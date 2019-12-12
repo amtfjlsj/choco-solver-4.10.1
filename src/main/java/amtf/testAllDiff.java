@@ -29,12 +29,12 @@ public class testAllDiff {
 //                "F:\\chenj\\data\\XCSP3\\Queens-m1-s1\\Queens-0080-m1.xml",
 //                "G:\\X3Benchmarks\\alldiff\\Queens\\Queens-m1-s1\\Queens-0200-m1.xml",
                 "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh15-106\\bqwh-15-106-01_X2.xml",
-                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh15-106\\bqwh-15-106-02_X2.xml",
-                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh15-106\\bqwh-15-106-03_X2.xml",
-                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh18-141\\bqwh-18-141-01_X2.xml",
-                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh18-141\\bqwh-18-141-02_X2.xml",
-                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh18-141\\bqwh-18-141-03_X2.xml",
-//                "G:/X3Benchmarks/alldiff/ColouredQueens/ColouredQueens-m1-s1/ColouredQueens-08.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh15-106\\bqwh-15-106-02_X2.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh15-106\\bqwh-15-106-03_X2.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh18-141\\bqwh-18-141-01_X2.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh18-141\\bqwh-18-141-02_X2.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh18-141\\bqwh-18-141-03_X2.xml",
+                "F:\\chenj\\data\\XCSP3\\AllDiff/ColouredQueens-m1-s1/ColouredQueens-04.xml",
 //                "G:/X3Benchmarks/alldiff/ColouredQueens/ColouredQueens-m1-s1/ColouredQueens-09.xml",
 //                "G:/X3Benchmarks/alldiff/DistinctVectors/DistinctVectors-m1-s1/DistinctVectors-30-010-02.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-012-9-mod.xml",
@@ -46,7 +46,7 @@ public class testAllDiff {
         String[] algorithms = new String[]{
                 "ACFast",
                 "ACNaive",
-                "BC"
+//                "BC"
         };
         int runNum = 1;
 

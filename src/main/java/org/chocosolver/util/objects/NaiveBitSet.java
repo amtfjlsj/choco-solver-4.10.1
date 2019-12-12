@@ -152,12 +152,10 @@ public class NaiveBitSet {
     }
 
     public void set() {
-        int i = 0;
         int len = longSize - 1;
-        for (; i < len; ++i) {
+        for (int i = 0; i < len; ++i) {
             this.words[i] = WORD_MASK;
         }
-
         this.words[len] = lastMask;
     }
 
@@ -476,7 +474,8 @@ public class NaiveBitSet {
             this.words[i] = a.words[i] & ~b.words[i];
         }
     }
-    // 从a中除去b
+
+    // a和b共同部分
     public void setAfterAnd(NaiveBitSet a, NaiveBitSet b) {
         for (int i = 0; i < longSize; ++i) {
             this.words[i] = a.words[i] & b.words[i];
