@@ -318,15 +318,15 @@ public class AlgoAllDiffAC_Fastbit2 {
                 int varIdx = notGamma.next();
                 int fromIdx = varIdx * numValue;
                 int endIdx = fromIdx + numValue - 1;
-                if (searchEdge.isIntersect(varEdge[varIdx], fromIdx, endIdx) != -1) {
-                    extended = true;
-                    searchEdge.set(varMatchedEdge[varIdx]);
-                    notGamma.remove();
-                    // 把与匹配值相连的边并入
-                    int valNewIdx = matching[varIdx] - n;
-                    searchEdge.addIntersection(valEdge[valNewIdx], leftEdge);
-                    notA.remove(valNewIdx);
-                }
+//                if (searchEdge.isIntersect(varEdge[varIdx], fromIdx, endIdx) != -1) {
+//                    extended = true;
+//                    searchEdge.set(varMatchedEdge[varIdx]);
+//                    notGamma.remove();
+//                    // 把与匹配值相连的边并入
+//                    int valNewIdx = matching[varIdx] - n;
+//                    searchEdge.addIntersection(valEdge[valNewIdx], leftEdge);
+//                    notA.remove(valNewIdx);
+//                }
             }
         } while (extended);
 
@@ -435,7 +435,7 @@ public class AlgoAllDiffAC_Fastbit2 {
         searchEdge.clear();
         if (matchedEdge.get(edgeIdx)) { // 如果edge是匹配边
             matchedEdgeIdx = edgeIdx;
-            searchEdge.addIntersection(valEdge[valNewIdx], leftEdge);
+//            searchEdge.addIntersection(valEdge[valNewIdx], leftEdge);
             searchEdge.clear(edgeIdx);
         } else { // 如果edge是非匹配边
             matchedEdgeIdx = valMatchedEdge[valNewIdx];
@@ -455,20 +455,20 @@ public class AlgoAllDiffAC_Fastbit2 {
                 int varIdx = notGamma.next();
                 int fromIdx = varIdx * numValue;
                 int endIdx = fromIdx + numValue - 1;
-                int intersectEdgeIdx = searchEdge.isIntersect(varEdge[varIdx], fromIdx, endIdx);
-                if (intersectEdgeIdx != -1) {
-                    extended = true;
-                    // 记录路径, 变量的一条入边
-                    father[varIdx] = intersectEdgeIdx;
-                    notGamma.remove();
-                    if (varMatchedEdge[varIdx] == matchedEdgeIdx) {
-                        Measurer.checkSCCTime += System.nanoTime() - startTime;
-                        return true;
-                    }
-                    // 把与匹配值相连的边并入
-                    valNewIdx = matching[varIdx] - n;
-                    searchEdge.addIntersection(valEdge[valNewIdx], leftEdge);
-                }
+//                int intersectEdgeIdx = searchEdge.isIntersect(varEdge[varIdx], fromIdx, endIdx);
+//                if (intersectEdgeIdx != -1) {
+//                    extended = true;
+//                    // 记录路径, 变量的一条入边
+//                    father[varIdx] = intersectEdgeIdx;
+//                    notGamma.remove();
+//                    if (varMatchedEdge[varIdx] == matchedEdgeIdx) {
+//                        Measurer.checkSCCTime += System.nanoTime() - startTime;
+//                        return true;
+//                    }
+//                    // 把与匹配值相连的边并入
+//                    valNewIdx = matching[varIdx] - n;
+////                    searchEdge.addIntersection(valEdge[valNewIdx], leftEdge);
+//                }
             }
         } while (extended);
         Measurer.checkSCCTime += System.nanoTime() - startTime;

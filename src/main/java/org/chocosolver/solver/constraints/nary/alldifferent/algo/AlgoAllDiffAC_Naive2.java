@@ -1,13 +1,12 @@
 package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 
-import amtf.TimeCount;
+import amtf.Measurer;
 import gnu.trove.iterator.TIntIntIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.objects.NaiveBitSet;
-//import org.chocosolver.util.objects.NaiveSparseBitSet;
 import org.chocosolver.util.objects.SparseSet;
 
 import java.util.Arrays;
@@ -118,6 +117,8 @@ public class AlgoAllDiffAC_Naive2 {
 
     //
     private int[] lastSize;
+
+    private long startTime = 0L;
 
 
     //***********************************************************************************
@@ -300,7 +301,7 @@ public class AlgoAllDiffAC_Naive2 {
 
     public boolean propagate() throws ContradictionException {
 //        System.out.println("----------------propagate----------------");
-        TimeCount.startTime = System.nanoTime();
+        startTime = System.nanoTime();
         freeNode.set();
 
         // !! 可做增量
@@ -489,7 +490,7 @@ public class AlgoAllDiffAC_Naive2 {
             if (var2Val[x] == -1) return false;  // No augmenting path exists.
         }
 
-
+        Measurer.matchingTime += System.nanoTime() - startTime;
 //        System.out.println("-----matching-----");
 //        System.out.println(Arrays.toString(var2Val));
 //        System.out.println(Arrays.toString(val2Var));
@@ -525,6 +526,7 @@ public class AlgoAllDiffAC_Naive2 {
 //        // 寻找从自由值出发的所有交替路
 //        // 首先将与自由值相连的边并入允许边
 //        gammaExtended.clear();
+        startTime = System.nanoTime();
 
         for (int i = freeNode.nextSetBit(0); i != -1; i = freeNode.nextSetBit(i + 1)) {
             // 每个freeNode的值拿出来
@@ -601,14 +603,7 @@ public class AlgoAllDiffAC_Naive2 {
 //            graphLinkedMatrix[varIdx].setAfterMinus(valMask[variable_to_value_[varIdx]], notGammaMask);
 //            graphLinkedFrontier[varIdx].set(valMask[variable_to_value_[varIdx]]);
 //        }
-
-
-//
-//        TimeCount.matchingTime += System.nanoTime() - TimeCount.startTime;
-//
-//        TimeCount.startTime = System.nanoTime();
-//
-////        }
+//        }
 
         // 这里判断一下，如果notGamma为空则不用进行如下步骤
         boolean res = true;
@@ -633,35 +628,14 @@ public class AlgoAllDiffAC_Naive2 {
             // 过滤论域
             res = filterDomains();
         }
-
+        Measurer.filterTime += System.nanoTime() - startTime;
         return res;
-
-    }
-
-    private void updateGraph() {
-
-        updateDataStucture();
-
-        match();
-
-        propagateFree();
-
-    }
-
-    private void propagateFree() {
-    }
-
-    private void match() {
-    }
-
-    private void updateDataStucture() {
     }
 
     private boolean filterDomains() throws ContradictionException {
         boolean filter = false;
         filter |= filterFirstEdges();
         filter |= filterSecondEdges();
-        TimeCount.filterTime += System.nanoTime() - TimeCount.startTime;
         return filter;
     }
 
