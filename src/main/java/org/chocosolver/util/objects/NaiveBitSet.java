@@ -4,32 +4,32 @@ package org.chocosolver.util.objects;
 public class NaiveBitSet {
 
     protected long[] words;
-    private int longSize;
-    private int bitSize;
-    private int limit;
-    private long lastMask;
+    protected int longSize;
+    protected int bitSize;
+    protected int limit;
+    protected long lastMask;
 
-    private final static int ADDRESS_BITS_PER_WORD = 6;
-    private final static int BITS_PER_WORD = 1 << ADDRESS_BITS_PER_WORD;
-    private final static int BIT_INDEX_MASK = BITS_PER_WORD - 1;
+    protected final static int ADDRESS_BITS_PER_WORD = 6;
+    protected final static int BITS_PER_WORD = 1 << ADDRESS_BITS_PER_WORD;
+    protected final static int BIT_INDEX_MASK = BITS_PER_WORD - 1;
     /* Used to shift left or right for a partial word mask */
-    private static final long WORD_MASK = 0xffffffffffffffffL;
-    private static final long MOD_MASK = 0x3fL;
-    private static final int MOD_MASK_INT = 0x3f;
+    protected static final long WORD_MASK = 0xffffffffffffffffL;
+    protected static final long MOD_MASK = 0x3fL;
+    protected static final int MOD_MASK_INT = 0x3f;
 
     public NaiveBitSet(int nbits) {
         this.bitSize = nbits;
         longSize = wordIndex(nbits - 1) + 1;
         this.limit = nbits % BITS_PER_WORD;
-        this.lastMask = WORD_MASK >> (BITS_PER_WORD - limit);
+        this.lastMask = WORD_MASK >>> (BITS_PER_WORD - limit);
         this.words = new long[longSize];
     }
 
-    private static int wordIndex(int bitIndex) {
+    protected static int wordIndex(int bitIndex) {
         return bitIndex >> ADDRESS_BITS_PER_WORD;
     }
 
-    private static int wordOffset(int bitIndex) {
+    protected static int wordOffset(int bitIndex) {
         return bitIndex & MOD_MASK_INT;
     }
 
@@ -151,6 +151,16 @@ public class NaiveBitSet {
         }
     }
 
+    public void set() {
+        int i = 0;
+        int len = longSize - 1;
+        for (; i < len; ++i) {
+            this.words[i] = WORD_MASK;
+        }
+
+        this.words[len] = lastMask;
+    }
+
     public void clear(int bitIndex) {
         this.words[wordIndex(bitIndex)] &= ~(1L << bitIndex);
     }
@@ -159,6 +169,20 @@ public class NaiveBitSet {
     public void clear(NaiveBitSet s) {
         for (int i = 0; i < longSize; ++i) {
             this.words[i] &= ~s.words[i];
+        }
+    }
+
+    // 从本集合中移除s中的元素
+    public void clear(NaiveSparseBitSet s) {
+        for (int i = 0, len = s.longSize; i < len; ++i) {
+            this.words[s.index[i]] &= ~s.words[i];
+        }
+    }
+
+    public void clearAfterAnd(NaiveSparseBitSet a, NaiveBitSet b) {
+        for (int i = 0, len = a.longSize; i < len; ++i) {
+            int offset = a.index[i];
+            this.words[offset] &= ~(a.words[i] & b.words[offset]);
         }
     }
 
@@ -189,6 +213,21 @@ public class NaiveBitSet {
         }
     }
 
+
+    public void setThenAnd(NaiveSparseBitSet a, NaiveBitSet b) {
+        for (int i = 0, len = a.longSize; i < len; ++i) {
+            int offset = a.index[i];
+            this.words[offset] |= a.words[i] & b.words[offset];
+        }
+    }
+
+    public void setThenAnd(LargeBitSet a, NaiveBitSet b) {
+        for (int i = 0, len = a.limit; i < len; ++i) {
+            int offset = a.dense[i];
+            this.words[offset] |= a.words[i] & b.words[offset];
+        }
+    }
+
     // 判断两个集合是否有交集
     // 如果有，返回第一个相交的值
     // 如果没有，返回-1
@@ -196,32 +235,35 @@ public class NaiveBitSet {
         long word;
         for (int i = 0; i < longSize; ++i) {
             word = this.words[i] & s.words[i];
-            if(word != 0L){
+            if (word != 0L) {
                 return i * 64 + Long.numberOfTrailingZeros(word);
             }
         }
         return -1;
     }
 
-    // 判断两个集合在指定范围内是否有交集
+    // 判断两个集合是否有交集
     // 如果有，返回第一个相交的值
     // 如果没有，返回-1
-    public int isIntersect(NaiveBitSet s, int fromIndex, int endIndex) {
+    public boolean isIntersect(LargeBitSet s) {
         long word;
-        for (int i = wordIndex(fromIndex); i <= wordIndex(endIndex); ++i) {
-            word = this.words[i] & s.words[i];
-            if(word != 0L){
-                return i * 64 + Long.numberOfTrailingZeros(word);
+        for (int i = 0; i < s.limit; ++i) {
+            int offset = s.dense[i];
+            if ((this.words[offset] & s.words[i]) != 0L) {
+                return true;
             }
         }
-        return -1;
+        return false;
     }
 
-    // 添加两个集合的交集
-    public void addIntersection(NaiveBitSet s1, NaiveBitSet s2) {
-        for (int i = 0; i < longSize; ++i) {
-            this.words[i] |= (s1.words[i] & s2.words[i]);
+    // 判断两个集合是否有交集
+    public boolean isIntersect(NaiveSparseBitSet s) {
+        for (int i = 0, len = s.longSize; i < len; ++i) {
+            if ((this.words[s.index[i]] & s.words[i]) != 0L) {
+                return true;
+            }
         }
+        return false;
     }
 
     public int nextSetBit(int fromIndex) {
@@ -265,6 +307,20 @@ public class NaiveBitSet {
                 return longSize * BITS_PER_WORD;
             word = ~words[u];
         }
+    }
+
+    public int capacity() {
+        int sum = 0;
+        for (int i = 0; i < longSize; ++i)
+            sum += Long.bitCount(words[i]);
+        return sum;
+    }
+
+    public int size() {
+        int sum = 0;
+        for (int i = 0; i < longSize; ++i)
+            sum += Long.bitCount(words[i]);
+        return sum;
     }
 
     @Override
@@ -385,12 +441,54 @@ public class NaiveBitSet {
         return true;
     }
 
-    public void orAfterAnd(NaiveSparseBitSet a, NaiveSparseBitSet b) {
-        int min;
-        //以短
-        if(a.longSize>b.longSize){
+    public final static int NextSetBitAfterMinus(NaiveBitSet a, NaiveBitSet b, int fromIndex) {
+        if (fromIndex < 0) {
+            throw new IndexOutOfBoundsException("fromIndex < 0: " + fromIndex);
+        } else {
+            int u = a.wordIndex(fromIndex);
+            if (u >= a.longSize) {
+                return -1;
+            } else {
+                long word;
+                for (word = a.words[u] & (~b.words[u]) & -1L << fromIndex; word == 0L; word = (a.words[u] & (~b.words[u]))) {
+                    ++u;
+                    if (u == a.longSize) {
+                        return -1;
+                    }
+                }
 
+                return u * 64 + Long.numberOfTrailingZeros(word);
+            }
         }
-
     }
+
+
+    // 从a中除去b，再加入现在的值
+    public void orAfterMinus(NaiveBitSet a, NaiveBitSet b) {
+        for (int i = 0; i < longSize; ++i) {
+            this.words[i] |= a.words[i] & ~b.words[i];
+        }
+    }
+
+    // 从a中除去b
+    public void setAfterMinus(NaiveBitSet a, NaiveBitSet b) {
+        for (int i = 0; i < longSize; ++i) {
+            this.words[i] = a.words[i] & ~b.words[i];
+        }
+    }
+    // 从a中除去b
+    public void setAfterAnd(NaiveBitSet a, NaiveBitSet b) {
+        for (int i = 0; i < longSize; ++i) {
+            this.words[i] = a.words[i] & b.words[i];
+        }
+    }
+
+//    public void orAfterAnd(NaiveSparseBitSet a, NaiveSparseBitSet b) {
+//        int min;
+//        //以短
+//        if (a.longSize > b.longSize) {
+//
+//        }
+//
+//    }
 }
