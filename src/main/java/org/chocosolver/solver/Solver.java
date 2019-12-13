@@ -295,8 +295,17 @@ public class Solver implements ISolver, IMeasures, IOutputFactory {
         stop = !canBeRepaired;
         if (action == initialize) {
             searchMonitors.beforeInitialize();
+//            System.out.println("before initialize---------------");
+//            for (Variable v : getModel().getVars()) {
+//                System.out.println(v.toString());
+//            }
             boolean ok = initialize();
             searchMonitors.afterInitialize(ok);
+//            System.out.println("after initialize---------------");
+//            for (Variable v : getModel().getVars()) {
+//                System.out.println(v.toString());
+//            }
+//            stop = true;
         }
         // solve
         boolean newSolutionFound = searchLoop();

@@ -34,7 +34,10 @@ public class expAllDiff {
         };
 
         XCSPParser parser = new XCSPParser();
-        String[] algorithms = new String[]{"ACFast", "AC"};
+        String[] algorithms = new String[]{
+                "ACFast",
+                "AC",
+        };
         int runNum = 1;
         long node = 0, propNum = 0;
         float time, matchingTime, filterTime;

@@ -35,6 +35,10 @@ public class AlgoAllDiffACFast {
     //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
+    // 约束的个数
+    static public int num = 0;
+    // 约束的编号
+    private int id;
 
     private int n, n2;
     private IntVar[] vars;
@@ -59,6 +63,8 @@ public class AlgoAllDiffACFast {
     //***********************************************************************************
 
     public AlgoAllDiffACFast(IntVar[] variables, ICause cause) {
+        id = num++;
+
         this.vars = variables;
         aCause = cause;
         n = vars.length;
@@ -104,6 +110,7 @@ public class AlgoAllDiffACFast {
 //        for (IntVar v : vars) {
 //            System.out.println(v.toString());
 //        }
+//        System.out.println("----------------" + id + " propagate----------------");
         Measurer.propNum++;
         long startTime = System.nanoTime();
         findMaximumMatching();
@@ -259,22 +266,22 @@ public class AlgoAllDiffACFast {
         // 根据变量和取值的所在集合来确定删除方式
         for (int i = 0; i < n; i++) {
             v = vars[i];
-            if (v.getDomainSize() > 1) {
+            if (!v.isInstantiated()) {
                 ub = v.getUB();
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     j = map.get(k);
                     if (distinction.get(i) && !distinction.get(j)) { // 删除第一类边，变量在Γ(A)中，值在Dc-A中
                         filter |= v.removeValue(k, aCause);
-//                    out.println(v.getName() + " remove " + k);
+//                        System.out.println("first delete: " + v.getName() + ", " + k);
 //                    digraph.removeArc(i, j);
                     } else if (!distinction.get(i) && !distinction.get(j)) { // 删除第二类边，变量在Xc-Γ(A)中，值在Dc-A中
                         if (nodeSCC[i] != nodeSCC[j]) {
                             if (matching[i] == j) {
                                 filter |= v.instantiateTo(k, aCause);
-//                            out.println(v.getName() + " instantiate to " + k);
+//                                System.out.println("instantiate  : " + v.getName() + ", " + k);
                             } else {
                                 filter |= v.removeValue(k, aCause);
-//                            out.println(v.getName() + " remove " + k);
+//                                System.out.println("second delete: " + v.getName() + ", " + k);
                                 // 我觉得不用更新digraph，因为每次调用propagate时都会更新digraph
 //                            digraph.removeArc(i, j);
                             }
