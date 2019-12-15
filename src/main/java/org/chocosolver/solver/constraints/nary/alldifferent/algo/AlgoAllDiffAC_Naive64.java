@@ -24,7 +24,7 @@ import java.util.Arrays;
  *
  * @author Jean-Guillaume Fages, Zhe Li, Jia'nan Chen
  */
-public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
+public class AlgoAllDiffAC_Naive64 extends AlgoAllDiffAC_Naive {
 
     //***********************************************************************************
     // VARIABLES
@@ -71,36 +71,36 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
 
     // 变量到变量的连通性
     // 对于惰性算法，记录是否知道-变量到变量的连通性
-    private int[] graphLinkedMatrix;
-    private int[] graphLinkedFrontier;
+    private long[] graphLinkedMatrix;
+    private long[] graphLinkedFrontier;
 
     // !! 记录gamma的前沿
-    private int gammaFrontier;
+    private long gammaFrontier;
     // 记录gamma的bitset
-    private int gammaMask;
+    private long gammaMask;
 
     // 变量的论域
 //    private NaiveBitSet[] varMask;
-    private int[] valMask;
+    private long[] valMask;
 
     // 记录排除gamma和bind的变量，即notGamma的变量
-    private int notGammaMask;
+    private long notGammaMask;
 
     // 内置的bit方法专用的常量
-    protected int lastMask;
+    protected long lastMask;
 
-    protected final static int ADDRESS_BITS_PER_WORD = 5;
+    protected final static int ADDRESS_BITS_PER_WORD = 6;
     protected final static int BITS_PER_WORD = 1 << ADDRESS_BITS_PER_WORD;
 //    protected final static int BIT_INDEX_MASK = BITS_PER_WORD - 1;
     /* Used to shift left or right for a partial word mask */
-    protected static final int WORD_MASK = 0xffffffff;
+    protected static final long WORD_MASK = 0xffffffffffffffffL;
 //    protected static final long MOD_MASK = 0x3fL;
 //    protected static final int MOD_MASK_INT = 0x3f;
 
     //***********************************************************************************
     // CONSTRUCTORS
     //***********************************************************************************
-    public AlgoAllDiffAC_Naive32(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffAC_Naive64(IntVar[] variables, ICause cause) {
         super(variables, cause);
         id = num++;
 
@@ -132,7 +132,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
 
 //        varMask = new NaiveBitSet[arity];
 //        valMask = new NaiveBitSet[numValue];
-        valMask = new int[numValue];
+        valMask = new long[numValue];
 //        for (int i = 0; i < arity; ++i) {
 //            varMask[i] = new NaiveBitSet(numValue);
 //        }
@@ -143,7 +143,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
         // 记录访问过的变量
         visiting_ = new int[arity];
 //        variable_visited_ = new NaiveBitSet(arity);
-        variable_visited_ = 0;
+        variable_visited_ = 0L;
         // 变量的前驱变量，若前驱变量是-1，则表示无前驱变量，就是第一个变量
         variable_visited_from_ = new int[arity];
         value_visited_ = new NaiveBitSet(numValue);
@@ -159,20 +159,20 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
 
         notGamma = new SparseSet(arity);
 //        notGammaMask = new NaiveBitSet(arity);
-        notGammaMask = 0;
+        notGammaMask = 0L;
         notA = new SparseSet(numValue);
         // freeNode区分匹配点和非匹配点（true表示非匹配点，false表示匹配点）
 //        freeNode = new NaiveBitSet(numValue);
         freeNode = new SparseSet(numValue);
 //        gammaFrontier = new NaiveBitSet(arity);
-        gammaFrontier = 0;
+        gammaFrontier = 0L;
 //        gammaMask = new NaiveBitSet(arity);
-        gammaMask = 0;
+        gammaMask = 0L;
 
 //        graphLinkedMatrix = new NaiveBitSet[arity];
-        graphLinkedMatrix = new int[arity];
+        graphLinkedMatrix = new long[arity];
 //        graphLinkedFrontier = new NaiveBitSet[arity];
-        graphLinkedFrontier = new int[arity];
+        graphLinkedFrontier = new long[arity];
 //        for (int i = 0; i < arity; ++i) {
 //            graphLinkedMatrix[i] = new NaiveBitSet(arity);
 //            graphLinkedFrontier[i] = new NaiveBitSet(arity);
@@ -223,7 +223,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
         visiting_[num_to_visit++] = start;
 //        variable_visited_[start] = true;
 //        variable_visited_.set(start);
-        variable_visited_ |= 1 << start;
+        variable_visited_ |= 1L << start;
         variable_visited_from_[start] = -1;
         IntVar v;
         while (num_visited < num_to_visit) {
@@ -233,8 +233,8 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
 //            for (int value = varMask[node].nextSetBit(0); value != -1; value = varMask[node].nextSetBit(value + 1)) {
             for (int val = v.getLB(), ub = v.getUB(); val <= ub; val = v.nextValue(val)) {
                 int value = val2Idx.get(val);
-                valMask[value] |= 1 << node;
-//                valMask[value] |= 1 << varIdx;
+                valMask[value] |= 1L << node;
+//                valMask[value] |= 1L << varIdx;
                 if (value_visited_.get(value)) continue;
                 value_visited_.set(value);
                 if (val2Var[value] == -1) {
@@ -275,7 +275,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
                     // 先拿到这个值的匹配变量
                     int next_node = val2Var[value];
 //                    variable_visited_.set(next_node);
-                    variable_visited_ |= 1 << next_node;
+                    variable_visited_ |= 1L << next_node;
 //                    System.out.println(num_to_visit + "," + next_node);
                     // 把这个变量加入队列中
                     visiting_[num_to_visit++] = next_node;
@@ -290,7 +290,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
     private void findMaximumMatching() throws ContradictionException {
         // !! 可做增量
         for (int i = 0; i < numValue; ++i) {
-            valMask[i] = 0;
+            valMask[i] = 0L;
         }
 
 //        freeNode.set();
@@ -300,8 +300,8 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
 //        gammaMask.clear();
 //        gammaFrontier.clear();
         notGammaMask = WORD_MASK;
-        gammaMask = 0;
-        gammaFrontier = 0;
+        gammaMask = 0L;
+        gammaFrontier = 0L;
         notA.fill();
 
         // 增量检查
@@ -325,7 +325,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
                 int valIdx = val2Idx.get(v.getValue());
 //                varMask[varIdx].set(valIdx);
 //                valMask[valIdx].set(varIdx);
-//                valMask[valIdx] |= 1 << varIdx;
+//                valMask[valIdx] |= 1L << varIdx;
 //                System.out.println(v.getName() + " : " + varIdx + " is singleton = " + v.getValue() + " : " + valIdx);
 
                 int oldValIdx = var2Val[varIdx];
@@ -369,7 +369,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
 //                    varMask[varIdx].set(valIdx);
                     // !! 可以增量修改值
 //                    valMask[valIdx].set(varIdx);
-                    valMask[valIdx] |= 1 << varIdx;
+                    valMask[valIdx] |= 1L << varIdx;
                 }
             }
         }
@@ -389,7 +389,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
             if (var2Val[varIdx] == -1) {
                 value_visited_.clear();
 //                variable_visited_.clear();
-                variable_visited_ = 0;
+                variable_visited_ = 0L;
                 MakeAugmentingPath(varIdx);
             }
             if (var2Val[varIdx] == -1) {
@@ -454,7 +454,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
             gammaFrontier |= valMask[var2Val[i]] & ~gammaMask;
             // 除去第i个变量
 //            gammaFrontier.clear(i);
-            gammaFrontier &= ~(1 << i);
+            gammaFrontier &= ~(1L << i);
             // gamma 扩展
 //            gammaMask.or(valMask[var2Val[i]]);
             gammaMask |= valMask[var2Val[i]];
@@ -467,7 +467,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
         for (int i = nextSetBit(gammaMask, 0); i != BITS_PER_WORD; i = nextSetBit(gammaMask, i + 1)) {
             notGamma.remove(i);
 //            notGammaMask.clear(i);
-            notGammaMask &= ~(1 << i);
+            notGammaMask &= ~(1L << i);
             notA.remove(var2Val[i]);
         }
         //        System.out.println("------------notGammaMask------------");
@@ -487,7 +487,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
 //                graphLinkedMatrix[varIdx].clear(varIdx);
 //                graphLinkedFrontier[varIdx].set(graphLinkedMatrix[varIdx]);
                 graphLinkedMatrix[varIdx] = valMask[var2Val[varIdx]] & notGammaMask;
-                graphLinkedMatrix[varIdx] &= ~(1 << varIdx);
+                graphLinkedMatrix[varIdx] &= ~(1L << varIdx);
                 graphLinkedFrontier[varIdx] = graphLinkedMatrix[varIdx];
             }
 //                System.out.println("------graphLinkedMatrix[" + varIdx + "]------");
@@ -531,7 +531,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
 //        System.out.println("check:" + varIdx + ", " + valIdx);
         // 如果已经有记录了
 //        if (graphLinkedMatrix[varIdx].get(val2Var[valIdx])) {
-        if ((graphLinkedMatrix[varIdx] & 1 << val2Var[valIdx]) != 0) {
+        if ((graphLinkedMatrix[varIdx] & 1L << val2Var[valIdx]) != 0L) {
             return true;
         }
 
@@ -549,12 +549,12 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
 //            graphLinkedFrontier[varIdx].clear(i);
 //            graphLinkedMatrix[varIdx].or(graphLinkedMatrix[i]);
             graphLinkedFrontier[varIdx] |= graphLinkedMatrix[i] & ~graphLinkedMatrix[varIdx];
-            graphLinkedFrontier[varIdx] &= ~(1 << i);
+            graphLinkedFrontier[varIdx] &= ~(1L << i);
             graphLinkedMatrix[varIdx] |= graphLinkedMatrix[i];
 //            if (graphLinkedMatrix[varIdx].get(val2Var[valIdx])) {
 //                return true;
 //            }
-            if ((graphLinkedMatrix[varIdx] & 1 << val2Var[valIdx]) != 0) {
+            if ((graphLinkedMatrix[varIdx] & 1L << val2Var[valIdx]) != 0L) {
                 return true;
             }
         }
@@ -562,8 +562,8 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
         return false;
     }
 
-    private int nextSetBit(int word, int pos) {
-        return Integer.numberOfTrailingZeros(word & -1 << pos);
+    private int nextSetBit(long word, int pos) {
+        return Long.numberOfTrailingZeros(word & -1L << pos);
     }
 
 }

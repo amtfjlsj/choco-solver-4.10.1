@@ -23,7 +23,7 @@ import java.util.Arrays;
  *
  * @author Jean-Guillaume Fages, Zhe Li, Jia'nan Chen
  */
-public class AlgoAllDiffAC_Naive4 {
+public class AlgoAllDiffAC_Naive4 extends AlgoAllDiffAC_Naive {
 
     //***********************************************************************************
     // VARIABLES
@@ -38,7 +38,7 @@ public class AlgoAllDiffAC_Naive4 {
     private ICause aCause;
 
     // 自由值集合
-    private NaiveBitSet freeNode;
+    private SparseSet freeNode;
 
     // 以下是bit版本所需数据结构========================
     // numValue是二部图中取值编号的个数，numBit是二部图的最大边数
@@ -89,6 +89,7 @@ public class AlgoAllDiffAC_Naive4 {
     // CONSTRUCTORS
     //***********************************************************************************
     public AlgoAllDiffAC_Naive4(IntVar[] variables, ICause cause) {
+        super(variables, cause);
         id = num++;
 
         this.vars = variables;
@@ -146,7 +147,8 @@ public class AlgoAllDiffAC_Naive4 {
         notGammaMask = new NaiveBitSet(arity);
         notA = new SparseSet(numValue);
         // freeNode区分匹配点和非匹配点（true表示非匹配点，false表示匹配点）
-        freeNode = new NaiveBitSet(numValue);
+//        freeNode = new NaiveBitSet(numValue);
+        freeNode = new SparseSet(numValue);
         gammaFrontier = new NaiveBitSet(arity);
         gammaMask = new NaiveBitSet(arity);
 
@@ -238,7 +240,8 @@ public class AlgoAllDiffAC_Naive4 {
                         path_value = old_value;
                     }
 
-                    freeNode.clear(value);
+//                    freeNode.clear(value);
+                    freeNode.remove(value);
 //                    System.out.println(value + " is not free");
                     return;
                 } else {
@@ -252,7 +255,8 @@ public class AlgoAllDiffAC_Naive4 {
                     // 把这个变量加入队列中
                     visiting_[num_to_visit++] = next_node;
                     variable_visited_from_[next_node] = node;
-                    freeNode.clear(value);
+//                    freeNode.clear(value);
+                    freeNode.remove(value);
                 }
             }
         }
@@ -264,7 +268,8 @@ public class AlgoAllDiffAC_Naive4 {
             valMask[i].clear();
         }
 
-        freeNode.set();
+//        freeNode.set();
+        freeNode.fill();
         notGamma.fill();
         notGammaMask.set();
         gammaMask.clear();
@@ -311,7 +316,8 @@ public class AlgoAllDiffAC_Naive4 {
 //                notGamma.remove(varIdx);
 //                notGammaMask.clear(varIdx);
 //                notA.remove(valIdx);
-                freeNode.clear(valIdx);
+//                freeNode.clear(valIdx);
+                freeNode.remove(valIdx);
 
             } else {
                 // 检查原匹配是否失效
@@ -322,7 +328,8 @@ public class AlgoAllDiffAC_Naive4 {
                         val2Var[oldMatchingIndex] = -1;
                         var2Val[varIdx] = -1;
                     } else {
-                        freeNode.clear(oldMatchingIndex);
+//                        freeNode.clear(oldMatchingIndex);
+                        freeNode.remove(oldMatchingIndex);
 //                    System.out.println(oldMatchingIndex + " is free");
                     }
                 }
@@ -376,15 +383,26 @@ public class AlgoAllDiffAC_Naive4 {
     //***********************************************************************************
 
     private void distinguish() {
-        for (int i = freeNode.nextSetBit(0); i != -1; i = freeNode.nextSetBit(i + 1)) {
+//        for (int i = freeNode.nextSetBit(0); i != -1; i = freeNode.nextSetBit(i + 1)) {
+//            // 每个freeNode的值拿出来
+////            System.out.println(i);
+//            notA.remove(i);
+//            notGammaMask.clear(valMask[i]);
+//            gammaMask.or(valMask[i]);
+//            gammaFrontier.or(valMask[i]);
+//        }
+
+        freeNode.iterateValid();
+//        for (int i = freeNode.nextSetBit(0); i != -1; i = freeNode.nextSetBit(i + 1)) {
+        while (freeNode.hasNextValid()) {
             // 每个freeNode的值拿出来
 //            System.out.println(i);
+            int i = freeNode.next();
             notA.remove(i);
             notGammaMask.clear(valMask[i]);
             gammaMask.or(valMask[i]);
             gammaFrontier.or(valMask[i]);
         }
-
         // !! 这里可以再优化一下
         // !! Frontier应该用SparseBitSet(largeBitSet)
         for (int i = gammaFrontier.nextSetBit(0);
@@ -397,6 +415,7 @@ public class AlgoAllDiffAC_Naive4 {
             // gamma 扩展
             gammaMask.or(valMask[var2Val[i]]);
         }
+
 
         // 到这里时 frontier全部遍历完。这时候统计一下notGamma和notA
         for (int i = gammaMask.nextSetBit(0); i != -1; i = gammaMask.nextSetBit(i + 1)) {
