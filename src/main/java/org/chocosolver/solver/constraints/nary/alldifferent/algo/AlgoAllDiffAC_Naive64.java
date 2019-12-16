@@ -439,8 +439,6 @@ public class AlgoAllDiffAC_Naive64 extends AlgoAllDiffAC_Naive {
             gammaMask |= valMask[i];
             gammaFrontier |= valMask[i];
         }
-//        System.out.println("gammaMask: " + Long.toBinaryString(gammaMask));
-//        System.out.println("gammaFrontier: " + Long.toBinaryString(gammaFrontier));
 
         // !! 这里可以再优化一下
         // !! Frontier应该用SparseBitSet(largeBitSet)
@@ -458,8 +456,6 @@ public class AlgoAllDiffAC_Naive64 extends AlgoAllDiffAC_Naive {
             // gamma 扩展
 //            gammaMask.or(valMask[var2Val[i]]);
             gammaMask |= valMask[var2Val[i]];
-//            System.out.println("gammaMask" + Long.toBinaryString(gammaMask));
-//            System.out.println("gammaFrontier" + Long.toBinaryString(gammaFrontier));
         }
 
         // 到这里时 frontier全部遍历完。这时候统计一下notGamma和notA
@@ -508,6 +504,7 @@ public class AlgoAllDiffAC_Naive64 extends AlgoAllDiffAC_Naive {
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     int valIdx = val2Idx.get(k);
                     if (!notGamma.contain(varIdx) && notA.contain(valIdx)) {
+                        ++Measurer.numDelValuesP1;
                         filter |= v.removeValue(k, aCause);
                         //                System.out.println("first delete: " + v.getName() + ", " + k);
                     } else if (notGamma.contain(varIdx) && notA.contain(valIdx)) {
@@ -516,6 +513,7 @@ public class AlgoAllDiffAC_Naive64 extends AlgoAllDiffAC_Naive {
                                 filter |= v.instantiateTo(k, aCause);
 //                            System.out.println("instantiate  : " + v.getName() + ", " + k);
                             } else {
+                                ++Measurer.numDelValuesP2;
                                 filter |= v.removeValue(k, aCause);
 //                            System.out.println("second delete: " + v.getName() + ", " + k);
                             }
