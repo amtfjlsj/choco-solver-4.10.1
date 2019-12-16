@@ -19,18 +19,18 @@ public class expAllDiff {
     public static void main(String[] args) {
 
         String inputFolder = "F:\\chenj\\data\\XCSP3\\AllDiff\\";
-        String outputFolder = "F:\\chenj\\Experiment\\allDiff\\series\\";
+        String outputFolder = "F:\\chenj\\Experiment\\allDiff\\newResult\\";
         String[] series = new String[]{
 //                "Langford-m1-k2",
 //                "Langford-m1-k3",
 //                "Langford-m1-k4",
 //                "Queens-m1-s1",
-                "ColouredQueens-m1-s1",
-//                "SchurrLemma-mod-s1",
+//                "ColouredQueens-m1-s1",
 //                "LatinSquare-m1-gp",
 //                "LatinSquare-m1-gs",
-//                "LatinSquare-xcsp2-bqwh15-106",
-//                "LatinSquare-xcsp2-bqwh18-141",
+                "LatinSquare-xcsp2-bqwh15-106",
+                "LatinSquare-xcsp2-bqwh18-141",
+//                "SchurrLemma-mod-s1",
         };
 
         XCSPParser parser = new XCSPParser();
@@ -79,7 +79,7 @@ public class expAllDiff {
                             }
                             Arrays.sort(decVars, Comparator.comparingInt(IntVar::getId));
                             Solver solver = model.getSolver();
-                            solver.limitTime("180s");
+                            solver.limitTime("120s");
 //                            solver.setSearch(activityBasedSearch(decVars));
                             solver.setSearch(Search.defaultSearch(model));
 

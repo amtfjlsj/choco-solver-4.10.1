@@ -56,7 +56,7 @@ public class AllDifferent extends Constraint {
             case ACFast:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFast(VARS)};
             case ACFastbit2:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Fastbit2(VARS)};
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Fastbit(VARS)};
             case ACNaive:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Naive(VARS)};
             case DEFAULT:

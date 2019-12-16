@@ -31,7 +31,7 @@ import java.util.BitSet;
  *
  * @author Jean-Guillaume Fages, Zhe Li, Jia'nan Chen
  */
-public class AlgoAllDiffAC_Fastbit2 {
+public class AlgoAllDiffAC_Fastbit {
 
     //***********************************************************************************
     // VARIABLES
@@ -80,7 +80,7 @@ public class AlgoAllDiffAC_Fastbit2 {
     // CONSTRUCTORS
     //***********************************************************************************
 
-    public AlgoAllDiffAC_Fastbit2(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffAC_Fastbit(IntVar[] variables, ICause cause) {
         this.vars = variables;
         aCause = cause;
         n = vars.length;

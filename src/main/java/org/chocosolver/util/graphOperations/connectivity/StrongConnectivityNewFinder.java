@@ -9,6 +9,7 @@
  */
 package org.chocosolver.util.graphOperations.connectivity;
 
+import amtf.Measurer;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISet;
 
@@ -26,11 +27,12 @@ public class StrongConnectivityNewFinder {
     private BitSet restriction;
     private int n;
     // output
-    private int[] sccFirstNode, nextNode, nodeSCC;
+//    private int[] sccFirstNode, nextNode, nodeSCC;
+    private int[] nodeSCC;
     private int nbSCC;
 
     // util
-    private int[] stack, p, inf, nodeOfDfsNum, dfsNumOfNode;
+    private int[] stack, p, inf, dfsNumOfNode;
     private Iterator<Integer>[] iterator;
     private BitSet inStack;
 
@@ -45,12 +47,11 @@ public class StrongConnectivityNewFinder {
         stack = new int[n];
         p = new int[n];
         inf = new int[n];
-        nodeOfDfsNum = new int[n];
         dfsNumOfNode = new int[n];
         inStack = new BitSet(n);
         restriction = new BitSet(n);
-        sccFirstNode = new int[n];
-        nextNode = new int[n];
+//        sccFirstNode = new int[n];
+//        nextNode = new int[n];
         nodeSCC = new int[n];
         nbSCC = 0;
         //noinspection unchecked
@@ -67,7 +68,7 @@ public class StrongConnectivityNewFinder {
         for (int i = 0; i < n; i++) {
             restriction.set(i, nodes.contains(i));
         }
-        findAllSCCOf(restriction);
+        findAllSCCOf();
     }
 
     // 重载函数findAllSCC, exception是不需要寻找强联通分量的点集
@@ -83,111 +84,96 @@ public class StrongConnectivityNewFinder {
             restriction.set(i, nodes.contains(i));
         }
 //        System.out.println("restriction: " + restriction.toString());
-        findAllSCCOf(restriction);
+        findAllSCCOf();
     }
 
-    public void findAllSCCOf(BitSet restriction) {
+    public void findAllSCCOf() {
         inStack.clear();
         for (int i = 0; i < n; i++) {
             dfsNumOfNode[i] = 0;
             inf[i] = n + 2;
-            nextNode[i] = -1;
-            sccFirstNode[i] = -1;
+//            nextNode[i] = -1;
+//            sccFirstNode[i] = -1;
             nodeSCC[i] = -1;
         }
         nbSCC = 0;
-        findSingletons(restriction);
+        findSingletons();
         int first = restriction.nextSetBit(0);
         while (first >= 0) {
-            findSCC(first, restriction, stack, p, inf, nodeOfDfsNum, dfsNumOfNode, inStack);
+            findSCC(first);
             first = restriction.nextSetBit(first);
         }
     }
 
-    private void findSingletons(BitSet restriction) {
+    private void findSingletons() {
         for (int i = restriction.nextSetBit(0); i >= 0; i = restriction.nextSetBit(i + 1)) {
             if (graph.getPredOf(i).size() == 0 || graph.getSuccOf(i).size() == 0) {
                 nodeSCC[i] = nbSCC;
-                sccFirstNode[nbSCC++] = i;
+//                sccFirstNode[nbSCC++] = i;
                 restriction.clear(i);
             }
         }
     }
 
-    private void findSCC(int start, BitSet restriction, int[] stack, int[] p, int[] inf, int[] nodeOfDfsNum, int[] dfsNumOfNode, BitSet inStack) {
+    private void findSCC(int start) {
         int nb = restriction.cardinality();
         // trivial case
         if (nb == 1) {
             nodeSCC[start] = nbSCC;
-            sccFirstNode[nbSCC++] = start;
+//            sccFirstNode[nbSCC++] = start;
             restriction.clear(start);
             return;
         }
         //initialization
         int stackIdx = 0;
+        // k是index
         int k = 0;
-        int i = k;
-        dfsNumOfNode[start] = k;
-        nodeOfDfsNum[k] = start;
+        // i和j是点号，i是j的前驱
+        int i = start, j;
+        dfsNumOfNode[i] = k;
+        p[i] = i;
+        iterator[i] = graph.getSuccOf(i).iterator();
         stack[stackIdx++] = i;
         inStack.set(i);
-        p[k] = k;
-        iterator[k] = graph.getSuccOf(start).iterator();
-        int j;
         // algo
-        while (true) {
+        while (stackIdx != 0) {
             if (iterator[i].hasNext()) {
                 j = iterator[i].next();
-//                System.out.println("scc node: " + j);
                 if (restriction.get(j)) {
-                    if (dfsNumOfNode[j] == 0 && j != start) {
+                    if (!inStack.get(j)) {
                         k++;
-                        nodeOfDfsNum[k] = j;
                         dfsNumOfNode[j] = k;
-                        p[k] = i;
-                        i = k;
-                        iterator[i] = graph.getSuccOf(j).iterator();
+                        inf[j] = k;
+                        p[j] = i;
+                        i = j;
+                        iterator[i] = graph.getSuccOf(i).iterator();
                         stack[stackIdx++] = i;
                         inStack.set(i);
-                        inf[i] = i;
-                    } else if (inStack.get(dfsNumOfNode[j])) {
+                    } else {
                         inf[i] = Math.min(inf[i], dfsNumOfNode[j]);
                     }
                 }
             } else {
-                if (i == 0) {
-                    break;
-                }
-                if (inf[i] >= i) {
-                    int y, z;
+                if (inf[i] >= dfsNumOfNode[i]) {
+                    int y;
                     do {
-                        z = stack[--stackIdx];
-                        inStack.clear(z);
-                        y = nodeOfDfsNum[z];
+                        y = stack[--stackIdx];
+                        inStack.clear(y);
                         restriction.clear(y);
                         sccAdd(y);
-                    } while (z != i);
+                    } while (y != i);
                     nbSCC++;
                 }
                 inf[p[i]] = Math.min(inf[p[i]], inf[i]);
                 i = p[i];
             }
         }
-        if (inStack.cardinality() > 0) {
-            int y;
-            do {
-                y = nodeOfDfsNum[stack[--stackIdx]];
-                restriction.clear(y);
-                sccAdd(y);
-            } while (y != start);
-            nbSCC++;
-        }
     }
 
     private void sccAdd(int y) {
         nodeSCC[y] = nbSCC;
-        nextNode[y] = sccFirstNode[nbSCC];
-        sccFirstNode[nbSCC] = y;
+//        nextNode[y] = sccFirstNode[nbSCC];
+//        sccFirstNode[nbSCC] = y;
     }
 
     //***********************************************************************************
@@ -202,12 +188,12 @@ public class StrongConnectivityNewFinder {
         return nodeSCC;
     }
 
-    public int getSCCFirstNode(int i) {
-        return sccFirstNode[i];
-    }
+//    public int getSCCFirstNode(int i) {
+//        return sccFirstNode[i];
+//    }
 
-    public int getNextNode(int j) {
-        return nextNode[j];
-    }
+//    public int getNextNode(int j) {
+//        return nextNode[j];
+//    }
 
 }

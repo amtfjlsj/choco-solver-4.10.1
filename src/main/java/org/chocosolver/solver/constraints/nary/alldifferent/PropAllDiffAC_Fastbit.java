@@ -11,7 +11,7 @@ package org.chocosolver.solver.constraints.nary.alldifferent;
 
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC_Fastbit2;
+import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC_Fastbit;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.ESat;
@@ -33,13 +33,13 @@ import org.chocosolver.util.ESat;
  * @author Jia'nan Chen
  */
 
-public class PropAllDiffAC_Fastbit2 extends Propagator<IntVar> {
+public class PropAllDiffAC_Fastbit extends Propagator<IntVar> {
 
     //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
 
-    protected AlgoAllDiffAC_Fastbit2 filter;
+    protected AlgoAllDiffAC_Fastbit filter;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -51,9 +51,9 @@ public class PropAllDiffAC_Fastbit2 extends Propagator<IntVar> {
      *
      * @param variables array of integer variables
      */
-    public PropAllDiffAC_Fastbit2(IntVar[] variables) {
+    public PropAllDiffAC_Fastbit(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-        this.filter = new AlgoAllDiffAC_Fastbit2(variables, this);
+        this.filter = new AlgoAllDiffAC_Fastbit(variables, this);
     }
 
     //***********************************************************************************

@@ -75,16 +75,14 @@ public class AlgoAllDiffAC_Naive {
 
     // !! 记录gamma的前沿
     private NaiveBitSet gammaFrontier;
+    // 记录gamma的bitset
+    private NaiveBitSet gammaMask;
+    // 记录排除gamma和bind的变量，即notGamma的变量
+    private NaiveBitSet notGammaMask;
 
     // 变量的论域
     private NaiveBitSet[] varMask;
     private NaiveBitSet[] valMask;
-
-    // 记录gamma的bitset
-    private NaiveBitSet gammaMask;
-
-    // 记录排除gamma和bind的变量，即notGamma的变量
-    private NaiveBitSet notGammaMask;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -409,43 +407,7 @@ public class AlgoAllDiffAC_Naive {
 //        System.out.println(notGammaMask);
     }
 
-    private boolean filter() throws ContradictionException {
-        distinguish();
-        // 这里判断一下，如果notGamma为空则不用进行如下步骤
-        boolean filter = false;
-        if (!notGamma.empty()) {
-            filter |= filterFirstEdges();
-            filter |= filterSecondEdges();
-        }
-        return filter;
-    }
-
-    //!! 此处可以优化
-    // 1 现在这个集合中gamma有一部分是bind的变量，应该在循环中去掉这部分变量
-    // 2 有的情况下没有gamma,如果notA做为外层循环，会浪费。
-    // 3 一般而言notA要多于gamma，应小循环套大循环
-    private boolean filterFirstEdges() throws ContradictionException {
-        boolean filter = false;
-        int varIdx, valIdx;
-        IntVar v;
-        int k;
-        notGamma.iterateInvalid();
-        while (notGamma.hasNextInvalid()) {
-            varIdx = notGamma.next();
-            v = vars[varIdx];
-            notA.iterateValid();
-            while (notA.hasNextValid()) {
-                valIdx = notA.next();
-                k = idx2Val[valIdx];
-//                System.out.println("first delete: " + v.getName() + ", " + k);
-                filter |= v.removeValue(k, aCause);
-            }
-        }
-        return filter;
-    }
-
-    private boolean filterSecondEdges() throws ContradictionException {
-        boolean filter = false;
+    private void initiateMatrix() {
         // 重置两个矩阵
         // 只重置notGamma的变量
         // !! 重置的内容也除去gamma的中的变量
@@ -462,22 +424,31 @@ public class AlgoAllDiffAC_Naive {
 //                System.out.println(graphLinkedMatrix[varIdx]);
 //                System.out.println(graphLinkedFrontier[varIdx]);
         }
+    }
 
-        notGamma.iterateValid();
-        while (notGamma.hasNextValid()) {
-            int varIdx = notGamma.next();
+    private boolean filter() throws ContradictionException {
+        distinguish();
+        initiateMatrix();
+        // 这里判断一下，如果notGamma为空则不用进行如下步骤
+        boolean filter = false;
+        for (int varIdx = 0; varIdx < arity; varIdx++) {
             IntVar v = vars[varIdx];
             if (!v.isInstantiated()) {
                 int ub = v.getUB();
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     int valIdx = val2Idx.get(k);
-                    if (!checkSCC(varIdx, valIdx)) {
-                        if (valIdx == var2Val[varIdx]) {
-                            filter |= v.instantiateTo(k, aCause);
+                    if (!notGamma.contain(varIdx) && notA.contain(valIdx)) {
+                        filter |= v.removeValue(k, aCause);
+                        //                System.out.println("first delete: " + v.getName() + ", " + k);
+                    } else if (notGamma.contain(varIdx) && notA.contain(valIdx)) {
+                        if (!checkSCC(varIdx, valIdx)) {
+                            if (valIdx == var2Val[varIdx]) {
+                                filter |= v.instantiateTo(k, aCause);
 //                            System.out.println("instantiate  : " + v.getName() + ", " + k);
-                        } else {
-                            filter |= v.removeValue(k, aCause);
+                            } else {
+                                filter |= v.removeValue(k, aCause);
 //                            System.out.println("second delete: " + v.getName() + ", " + k);
+                            }
                         }
                     }
                 }

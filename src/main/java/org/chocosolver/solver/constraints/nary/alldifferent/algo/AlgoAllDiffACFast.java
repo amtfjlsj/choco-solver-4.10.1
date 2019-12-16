@@ -111,7 +111,6 @@ public class AlgoAllDiffACFast {
 //            System.out.println(v.toString());
 //        }
 //        System.out.println("----------------" + id + " propagate----------------");
-        Measurer.propNum++;
         long startTime = System.nanoTime();
         findMaximumMatching();
         Measurer.matchingTime += System.nanoTime() - startTime;

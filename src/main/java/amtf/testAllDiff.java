@@ -35,9 +35,9 @@ public class testAllDiff {
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh18-141\\bqwh-18-141-02_X2.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh18-141\\bqwh-18-141-03_X2.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-m1-gp\\qwh-o30-h374-01.xml",
-                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-m1-gp\\qwh-o30-h374-02.xml",
-                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-m1-gp\\qwh-o30-h374-03.xml",
-                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-m1-gp\\qwh-o30-h374-04.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-m1-gp\\qwh-o30-h374-02.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-m1-gp\\qwh-o30-h374-03.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-m1-gp\\qwh-o30-h374-04.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff/ColouredQueens-m1-s1/ColouredQueens-04.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff/ColouredQueens-m1-s1/ColouredQueens-05.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff/ColouredQueens-m1-s1/ColouredQueens-06.xml",
@@ -47,15 +47,16 @@ public class testAllDiff {
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-012-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-015-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-020-9-mod.xml",
-//                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-030-9-mod.xml",
+                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-030-9-mod.xml",
         };
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
+//                "AC",
                 "ACFast",
                 "ACNaive",
-//                "BC"
+                "BC"
         };
-        int runNum = 2;
+        int runNum = 1;
 
         for (String ins : instances) {
             out.println(ins);
@@ -94,6 +95,7 @@ public class testAllDiff {
                         out.println("time: " + solver.getTimeCount() + "s");
                         out.println("find matching time: " + Measurer.matchingTime / IN_SEC + "s");
                         out.println("filter time: " + Measurer.filterTime / IN_SEC + "s");
+                        out.println("scc time: " + Measurer.checkSCCTime / IN_SEC + "s");
                     }
                 }
             }
