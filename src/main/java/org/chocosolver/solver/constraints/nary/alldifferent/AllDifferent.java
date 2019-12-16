@@ -23,7 +23,7 @@ public class AllDifferent extends Constraint {
 
     public static final String AC= "AC";
     public static final String ACFast= "ACFast";
-    public static final String ACFastbit2= "ACFastbit2";
+    public static final String ACFastNaive= "ACFastNaive";
     public static final String ACNaive= "ACNaive";
     public static final String BC= "BC";
     public static final String FC= "FC";
@@ -55,8 +55,8 @@ public class AllDifferent extends Constraint {
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS)};
             case ACFast:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFast(VARS)};
-            case ACFastbit2:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Fastbit(VARS)};
+            case ACFastNaive:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFast_Naive(VARS)};
             case ACNaive:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Naive(VARS)};
             case DEFAULT:

@@ -373,9 +373,9 @@ public class AllDifferentTest {
 
         Model model = new Model();
         IntVar[] X = new IntVar[3];
-        X[0] = model.intVar(new int[]{3, 4});
-        X[1] = model.intVar(new int[]{3, 4});
-        X[2] = model.intVar(new int[]{3, 4, 5});
+        X[0] = model.intVar(new int[]{1});
+        X[1] = model.intVar(new int[]{1, 2});
+        X[2] = model.intVar(new int[]{2, 3});
 //
         model.allDifferent(X, "ACFast").post();
         model.getSolver().propagate();
@@ -384,13 +384,13 @@ public class AllDifferentTest {
             out.println(x.toString());
         }
 
-//        out.println("ACNaive============>");
-//
-//        model = new Model();
-//        X = new IntVar[7];
-////        X[0] = model.intVar(new int[]{1, 2});
-////        X[1] = model.intVar(new int[]{1, 2});
-////        X[2] = model.intVar(new int[]{0, 1, 2});
+        out.println("ACFastNaive============>");
+
+        model = new Model();
+        X = new IntVar[3];
+        X[0] = model.intVar(new int[]{1});
+        X[1] = model.intVar(new int[]{1, 2});
+        X[2] = model.intVar(new int[]{2, 3});
 //        X[0] = model.intVar("x14", new int[]{2, 8});
 //        X[1] = model.intVar("x15", new int[]{2, 8, 10, 11, 14});
 //        X[2] = model.intVar("x16", new int[]{2, 7, 10, 11});
@@ -398,12 +398,12 @@ public class AllDifferentTest {
 //        X[4] = model.intVar("x18", new int[]{2});
 //        X[5] = model.intVar("x19", new int[]{9});
 //        X[6] = model.intVar("x20", new int[]{8, 11});
-//
-//        model.allDifferent(X, "ACNaive").post();
-//        model.getSolver().propagate();
-//
-//        for (IntVar x : X) {
-//            out.println(x.toString());
-//        }
+
+        model.allDifferent(X, "ACFastNaive").post();
+        model.getSolver().propagate();
+
+        for (IntVar x : X) {
+            out.println(x.toString());
+        }
     }
 }

@@ -278,16 +278,6 @@ public class AlgoAllDiffAC_Naive4 extends AlgoAllDiffAC_Naive {
 
         // 增量检查
         // matching 有效性检查
-        // !! 可以增量修改值
-//        if (id == 2) {
-//            System.out.println("-----begin matching-----");
-//            for (int i = 0; i < arity; i++) {
-//                if (var2Val[i] != -1) {
-//                    System.out.println(vars[i].getName() + " match " + idx2Val[var2Val[i]]);
-//                }
-//            }
-//            System.out.println("------------------");
-//        }
         for (int varIdx = 0; varIdx < arity; varIdx++) {
             varMask[varIdx].clear();
             IntVar v = vars[varIdx];
@@ -311,12 +301,6 @@ public class AlgoAllDiffAC_Naive4 extends AlgoAllDiffAC_Naive {
 
                 val2Var[valIdx] = varIdx;
                 var2Val[varIdx] = valIdx;
-
-                // 对于已经绑定的值，不再纳入A和gamma，SCC查找
-//                notGamma.remove(varIdx);
-//                notGammaMask.clear(varIdx);
-//                notA.remove(valIdx);
-//                freeNode.clear(valIdx);
                 freeNode.remove(valIdx);
 
             } else {
@@ -343,16 +327,6 @@ public class AlgoAllDiffAC_Naive4 extends AlgoAllDiffAC_Naive {
                 }
             }
         }
-
-//        if (id == 2) {
-//            System.out.println("-----intermediate matching-----");
-//            for (int i = 0; i < arity; i++) {
-//                if (var2Val[i] != -1) {
-//                    System.out.println(vars[i].getName() + " match " + idx2Val[var2Val[i]]);
-//                }
-//            }
-//            System.out.println("------------------");
-//        }
 
         // Compute max matching.
         for (int varIdx = 0; varIdx < arity; varIdx++) {
@@ -383,17 +357,8 @@ public class AlgoAllDiffAC_Naive4 extends AlgoAllDiffAC_Naive {
     //***********************************************************************************
 
     private void distinguish() {
-//        for (int i = freeNode.nextSetBit(0); i != -1; i = freeNode.nextSetBit(i + 1)) {
-//            // 每个freeNode的值拿出来
-////            System.out.println(i);
-//            notA.remove(i);
-//            notGammaMask.clear(valMask[i]);
-//            gammaMask.or(valMask[i]);
-//            gammaFrontier.or(valMask[i]);
-//        }
 
         freeNode.iterateValid();
-//        for (int i = freeNode.nextSetBit(0); i != -1; i = freeNode.nextSetBit(i + 1)) {
         while (freeNode.hasNextValid()) {
             // 每个freeNode的值拿出来
 //            System.out.println(i);

@@ -44,19 +44,20 @@ public class testAllDiff {
 //                "F:\\chenj\\data\\XCSP3\\AllDiff/ColouredQueens-m1-s1/ColouredQueens-07.xml",
 //                "G:/X3Benchmarks/alldiff/ColouredQueens/ColouredQueens-m1-s1/ColouredQueens-09.xml",
 //                "G:/X3Benchmarks/alldiff/DistinctVectors/DistinctVectors-m1-s1/DistinctVectors-30-010-02.xml",
-                "G:\\X3Benchmarks\\alldiff\\SchurrLemma\\SchurrLemma-mod-s1\\SchurrLemma-012-9-mod.xml",
-//                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-015-9-mod.xml",
-//                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-020-9-mod.xml",
-                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-030-9-mod.xml",
+                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-012-9-mod.xml",
+                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-015-9-mod.xml",
+                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-020-9-mod.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-030-9-mod.xml",
         };
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
 //                "AC",
                 "ACFast",
+                "ACFastNaive",
                 "ACNaive",
-                "BC"
+//                "BC"
         };
-        int runNum = 1;
+        int runNum = 2;
 
         for (String ins : instances) {
             out.println(ins);

@@ -31,13 +31,13 @@ import org.chocosolver.util.ESat;
  *
  */
 
-public class PropAllDiffACFast extends Propagator<IntVar> {
+public class PropAllDiffACFast_Naive extends Propagator<IntVar> {
 
     //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
 
-    protected AlgoAllDiffACFast filter;
+    protected AlgoAllDiffACFast_Naive filter;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -49,9 +49,9 @@ public class PropAllDiffACFast extends Propagator<IntVar> {
      *
      * @param variables array of integer variables
      */
-    public PropAllDiffACFast(IntVar[] variables) {
+    public PropAllDiffACFast_Naive(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-        this.filter = new AlgoAllDiffACFast(variables, this);
+        this.filter = new AlgoAllDiffACFast_Naive(variables, this);
     }
 
     //***********************************************************************************
@@ -69,3 +69,4 @@ public class PropAllDiffACFast extends Propagator<IntVar> {
     }
 
 }
+

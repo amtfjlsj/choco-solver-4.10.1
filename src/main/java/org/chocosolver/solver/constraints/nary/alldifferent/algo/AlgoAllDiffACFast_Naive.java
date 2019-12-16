@@ -9,8 +9,6 @@ import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.objects.NaiveBitSet;
 import org.chocosolver.util.objects.SparseSet;
 
-import java.util.Arrays;
-
 /**
  * Algorithm of Alldifferent with AC
  * <p>
@@ -37,15 +35,12 @@ public class AlgoAllDiffACFast_Naive {
     private IntVar[] vars;
     private ICause aCause;
 
-    // 自由值集合
-    private NaiveBitSet freeNode;
-
-    // 以下是bit版本所需数据结构========================
-    // numValue是二部图中取值编号的个数，numBit是二部图的最大边数
+    // numValue是二部图中取值编号的个数
     private int numValue;
-    // 值到索引
-    private int[] idx2Val;
+
     // 索引到值
+    private int[] idx2Val;
+    // 值到索引
     private TIntIntHashMap val2Idx;
 
     // 已访问过的变量和值
@@ -60,9 +55,15 @@ public class AlgoAllDiffACFast_Naive {
     private int[] visiting_;
     private int[] variable_visited_from_;
 
-    // 变量的论域
-    private NaiveBitSet[] varMask;
-    private NaiveBitSet[] valMask;
+    // 值编号对应的变量（不包括匹配变量）
+    private SparseSet[] valUnmatchedVar;
+
+    // 自由值集合
+    private SparseSet freeNode;
+    // Xc-Γ(A)
+    private SparseSet notGamma;
+    // Dc-A
+    private SparseSet notA;
 
     private int[] fifo;
 
@@ -72,7 +73,7 @@ public class AlgoAllDiffACFast_Naive {
 
     // util
     private int[] stack, p, inf, dfn;
-    private NaiveBitSet inStack, distinction, restriction;
+    private NaiveBitSet inStack, restriction;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -102,16 +103,9 @@ public class AlgoAllDiffACFast_Naive {
             idx2Val[it.value()] = it.key();
         }
 
-//        System.out.println("-----------idx2Val-----------");
-//        System.out.println(Arrays.toString(idx2Val));
-
-        varMask = new NaiveBitSet[arity];
-        valMask = new NaiveBitSet[numValue];
-        for (int i = 0; i < arity; ++i) {
-            varMask[i] = new NaiveBitSet(numValue);
-        }
+        valUnmatchedVar = new SparseSet[numValue];
         for (int i = 0; i < numValue; ++i) {
-            valMask[i] = new NaiveBitSet(arity);
+            valUnmatchedVar[i] = new SparseSet(arity);
         }
 
         // 记录访问过的变量
@@ -130,8 +124,10 @@ public class AlgoAllDiffACFast_Naive {
             val2Var[i] = -1;
         }
 
-        // freeNode区分匹配点和非匹配点（true表示非匹配点，false表示匹配点）
-        freeNode = new NaiveBitSet(numValue);
+        // freeNode区分匹配点和非匹配点
+        freeNode = new SparseSet(numValue);
+        notGamma = new SparseSet(arity);
+        notA = new SparseSet(numValue);
 
         fifo = new int[arity];
 
@@ -144,8 +140,7 @@ public class AlgoAllDiffACFast_Naive {
         inf = new int[n];
         dfn = new int[n];
         inStack = new NaiveBitSet(n);
-        distinction = new NaiveBitSet(n);
-        restriction = new NaiveBitSet(n);
+        restriction = new NaiveBitSet(arity);
     }
 
     //***********************************************************************************
@@ -190,31 +185,32 @@ public class AlgoAllDiffACFast_Naive {
         // Enqueue start.
         // visit 里存的是变量
         visiting_[num_to_visit++] = start;
-//        variable_visited_[start] = true;
         variable_visited_.set(start);
         variable_visited_from_[start] = -1;
 
         while (num_visited < num_to_visit) {
             // Dequeue node to visit.
             int node = visiting_[num_visited++];
+            IntVar v = vars[node];
 
-            for (int value = varMask[node].nextSetBit(0); value != -1; value = varMask[node].nextSetBit(value + 1)) {
-                if (value_visited_.get(value)) continue;
-                value_visited_.set(value);
-                if (val2Var[value] == -1) {
-                    // value_to_variable_[value] ， value这个值未分配到变量，即是一个free
+            for (int value = v.getLB(), ub = v.getUB(); value <= ub; value = v.nextValue(value)) {
+                int valIdx = val2Idx.get(value);
+                if (value_visited_.get(valIdx)) continue;
+                value_visited_.set(valIdx);
+                if (val2Var[valIdx] == -1) {
+                    // value_to_variable_[valIdx] ， value这个值未分配到变量，即是一个free
                     // !! 这里可以改用bitSet 求原数据bitDom (successor_)
                     // 与matching的余集(matching_bitVector[a]，表示a是否已matching出去了) 再按1取未匹配值，
                     // 可以惰性取值，即先算两个集合的在特定位置的交：以matching_bv为长度foreach
                     // （一般不会特别长两个数据结构可以用NaiveBitSet，如400皇后，|D|=400，只需要7个，
                     // 做&后会得到一个或NaiveBitSet, LargeBitSet）
-                    // value is not matched: change path from node to start, and return.
+                    // valIdx is not matched: change path from node to start, and return.
                     // 未匹配值
 
                     // !! 路线回溯怎么用bit表示。
                     // !! 这里可以提前记一些scc或是路径
                     int path_node = node;
-                    int path_value = value;
+                    int path_value = valIdx;
                     while (path_node != -1) {
                         // 旧变量拿到旧匹配值
                         int old_value = var2Val[path_node];
@@ -228,21 +224,21 @@ public class AlgoAllDiffACFast_Naive {
                         path_value = old_value;
                     }
 
-                    freeNode.clear(value);
-//                    System.out.println(value + " is not free");
+                    freeNode.remove(valIdx);
+//                    System.out.println(valIdx + " is not free");
                     return;
                 } else {
-                    // Enqueue node matched to value.
+                    // Enqueue node matched to valIdx.
                     // 若没有该值已经有匹配，但变量没有匹配
 
                     // 先拿到这个值的匹配变量
-                    int next_node = val2Var[value];
+                    int next_node = val2Var[valIdx];
                     variable_visited_.set(next_node);
 //                    System.out.println(num_to_visit + "," + next_node);
                     // 把这个变量加入队列中
                     visiting_[num_to_visit++] = next_node;
                     variable_visited_from_[next_node] = node;
-                    freeNode.clear(value);
+                    freeNode.remove(valIdx);
                 }
             }
         }
@@ -250,19 +246,17 @@ public class AlgoAllDiffACFast_Naive {
 
     private void findMaximumMatching() throws ContradictionException {
         for (int i = 0; i < numValue; ++i) {
-            valMask[i].clear();
+            valUnmatchedVar[i].clear();
         }
-        freeNode.set();
+        freeNode.fill();
         // 增量检查
         // matching 有效性检查
         for (int varIdx = 0; varIdx < arity; varIdx++) {
-            varMask[varIdx].clear();
             IntVar v = vars[varIdx];
             if (v.getDomainSize() == 1) {
                 // 取出变量的唯一值
                 int valIdx = val2Idx.get(v.getValue());
-                varMask[varIdx].set(valIdx);
-                valMask[valIdx].set(varIdx);
+                valUnmatchedVar[valIdx].add(varIdx);
 //                System.out.println(v.getName() + " : " + varIdx + " is singleton = " + v.getValue() + " : " + valIdx);
 
                 int oldValIdx = var2Val[varIdx];
@@ -277,7 +271,7 @@ public class AlgoAllDiffACFast_Naive {
 
                 val2Var[valIdx] = varIdx;
                 var2Val[varIdx] = valIdx;
-                freeNode.clear(valIdx);
+                freeNode.remove(valIdx);
             } else {
                 // 检查原匹配是否失效
                 int oldMatchingIndex = var2Val[varIdx];
@@ -287,7 +281,7 @@ public class AlgoAllDiffACFast_Naive {
                         val2Var[oldMatchingIndex] = -1;
                         var2Val[varIdx] = -1;
                     } else {
-                        freeNode.clear(oldMatchingIndex);
+                        freeNode.remove(oldMatchingIndex);
 //                    System.out.println(oldMatchingIndex + " is free");
                     }
                 }
@@ -295,8 +289,7 @@ public class AlgoAllDiffACFast_Naive {
                 for (int value = v.getLB(), ub = v.getUB(); value <= ub; value = v.nextValue(value)) {
                     int valIdx = val2Idx.get(value);
                     // Forward-checking should propagate xsu != value.
-                    varMask[varIdx].set(valIdx);
-                    valMask[valIdx].set(varIdx);
+                    valUnmatchedVar[valIdx].add(varIdx);
                 }
             }
         }
@@ -315,7 +308,7 @@ public class AlgoAllDiffACFast_Naive {
         }
 
         for (int varIdx = 0; varIdx < arity; varIdx++) {
-            valMask[var2Val[varIdx]].clear(varIdx);
+            valUnmatchedVar[var2Val[varIdx]].remove(varIdx);
         }
 
 //        if (id == 2) {
@@ -335,27 +328,38 @@ public class AlgoAllDiffACFast_Naive {
     //***********************************************************************************
 
     private void distinguish() {
-        distinction.clear();
+        notGamma.fill();
+        notA.fill();
+        // restriction记录寻找SCC的过程中未访问的变量
+        restriction.set();
         int valIdx, varIdx;
         int indexFirst = 0, indexLast = 0;
-        for (valIdx = freeNode.nextSetBit(0); valIdx != -1; valIdx = freeNode.nextSetBit(valIdx + 1)) {
-            distinction.set(valIdx + arity);
+        freeNode.iterateValid();
+        while (freeNode.hasNextValid()) {
+            valIdx = freeNode.next();
+            notA.remove(valIdx);
             // 首先把与自由值相连的变量入队列
-            for (varIdx = valMask[valIdx].nextSetBit(0); varIdx != -1; varIdx = valMask[valIdx].nextSetBit(varIdx + 1)) {
-                if (!distinction.get(varIdx)) {
+            valUnmatchedVar[valIdx].iterateValid();
+            while (valUnmatchedVar[valIdx].hasNextValid()) {
+                varIdx = valUnmatchedVar[valIdx].next();
+                if (notGamma.contain(varIdx)) {
                     fifo[indexLast++] = varIdx;
-                    distinction.set(varIdx);
+                    notGamma.remove(varIdx);
+                    restriction.clear(varIdx);
                 }
             }
             // 然后，对队列中每个变量的匹配值，把与该值相连的非匹配变量入队
             while (indexFirst != indexLast) {
                 varIdx = fifo[indexFirst++];
                 valIdx = var2Val[varIdx];
-                distinction.set(valIdx + arity);
-                for (varIdx = valMask[valIdx].nextSetBit(0); varIdx != -1; varIdx = valMask[valIdx].nextSetBit(varIdx + 1)) {
-                    if (!distinction.get(varIdx)) {
+                notA.remove(valIdx);
+                valUnmatchedVar[valIdx].iterateValid();
+                while (valUnmatchedVar[valIdx].hasNextValid()) {
+                    varIdx = valUnmatchedVar[valIdx].next();
+                    if (notGamma.contain(varIdx)) {
                         fifo[indexLast++] = varIdx;
-                        distinction.set(varIdx);
+                        notGamma.remove(varIdx);
+                        restriction.clear(varIdx);
                     }
                 }
             }
@@ -363,21 +367,94 @@ public class AlgoAllDiffACFast_Naive {
     }
 
     private void buildSCC() {
-        restriction.set(distinction);
-        restriction.flip();
+        // 初始化
         inStack.clear();
-        for (int i = 0; i < n; i++) {
-            dfn[i] = 0;
-            inf[i] = n + 2;
-            nodeSCC[i] = -1;
+        notGamma.iterateValid();
+        while (notGamma.hasNextValid()) {
+            int varIdx = notGamma.next();
+            nodeSCC[varIdx] = -1;
+            int valIdx = var2Val[varIdx];
+            nodeSCC[valIdx + arity] = -1;
+            valUnmatchedVar[valIdx].iterateValid();
         }
         nbSCC = 0;
+        // 开始
+        int first = restriction.nextSetBit(0);
+        while (first >= 0) {
+            findSCC(first);
+            first = restriction.nextSetBit(first);
+        }
+    }
+
+    private void findSCC(int start) {
+        //initialization
+        int stackIdx = 0;
+        // k是index
+        int k = 0;
+        // i和j是点号，i是j的前驱
+        int i = start, j = i;
+        // 变量
+        dfn[j] = k;
+        inf[j] = k;
+        p[j] = i;
+        stack[stackIdx++] = j;
+        inStack.set(j);
+        // 变量的匹配值
+        k++;
+        j = var2Val[i] + arity;
+        dfn[j] = k;
+        inf[j] = k;
+        p[j] = i;
+        stack[stackIdx++] = j;
+        inStack.set(j);
+        i = j;
+        // algo
+        while (stackIdx != 0) {
+            if (i >= arity && valUnmatchedVar[i - arity].hasNextValid()) {
+                j = valUnmatchedVar[i - arity].next();
+                if (restriction.get(j)) {
+                    if (!inStack.get(j)) {
+                        // 变量
+                        k++;
+                        dfn[j] = k;
+                        inf[j] = k;
+                        p[j] = i;
+                        stack[stackIdx++] = j;
+                        inStack.set(j);
+                        i = j;
+                        // 变量的匹配值
+                        k++;
+                        j = var2Val[i] + arity;
+                        dfn[j] = k;
+                        inf[j] = k;
+                        p[j] = i;
+                        stack[stackIdx++] = j;
+                        inStack.set(j);
+                        i = j;
+                    } else {
+                        inf[i] = Math.min(inf[i], dfn[j]);
+                    }
+                }
+            } else {
+                if (inf[i] == dfn[i]) {
+                    int y;
+                    do {
+                        y = stack[--stackIdx];
+                        inStack.clear(y);
+                        restriction.clear(y);
+                        nodeSCC[y] = nbSCC;
+                    } while (y != i);
+                    nbSCC++;
+                }
+                inf[p[i]] = Math.min(inf[p[i]], inf[i]);
+                i = p[i];
+            }
+        }
     }
 
     private boolean filter() throws ContradictionException {
         distinguish();
         buildSCC();
-        // 这里判断一下，如果notGamma为空则不用进行如下步骤
         boolean filter = false;
         for (int varIdx = 0; varIdx < arity; varIdx++) {
             IntVar v = vars[varIdx];
@@ -385,12 +462,11 @@ public class AlgoAllDiffACFast_Naive {
                 int ub = v.getUB();
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     int valIdx = val2Idx.get(k);
-                    int valNewIdx = valIdx + arity;
-                    if (distinction.get(varIdx) && !distinction.get(valNewIdx)) {
+                    if (!notGamma.contain(varIdx) && notA.contain(valIdx)) {
                         filter |= v.removeValue(k, aCause);
                         //                System.out.println("first delete: " + v.getName() + ", " + k);
-                    } else if (!distinction.get(varIdx) && !distinction.get(valNewIdx)) {
-                        if (nodeSCC[varIdx] != nodeSCC[valNewIdx]) {
+                    } else if (notGamma.contain(varIdx) && notA.contain(valIdx)) {
+                        if (nodeSCC[varIdx] != nodeSCC[valIdx + arity]) {
                             if (valIdx == var2Val[varIdx]) {
                                 filter |= v.instantiateTo(k, aCause);
 //                            System.out.println("instantiate  : " + v.getName() + ", " + k);
