@@ -23,7 +23,7 @@ import java.util.Arrays;
  *
  * @author Jean-Guillaume Fages, Zhe Li, Jia'nan Chen
  */
-public class AlgoAllDiffAC_Naive {
+public class AlgoAllDiffAC_Naive2 {
 
     //***********************************************************************************
     // VARIABLES
@@ -87,7 +87,7 @@ public class AlgoAllDiffAC_Naive {
     //***********************************************************************************
     // CONSTRUCTORS
     //***********************************************************************************
-    public AlgoAllDiffAC_Naive(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffAC_Naive2(IntVar[] variables, ICause cause) {
         id = num++;
 
         this.vars = variables;
