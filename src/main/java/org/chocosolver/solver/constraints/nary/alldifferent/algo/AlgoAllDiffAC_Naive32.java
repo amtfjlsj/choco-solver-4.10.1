@@ -420,6 +420,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     int valIdx = val2Idx.get(k);
                     if (!notGamma.contain(varIdx) && notA.contain(valIdx)) {
+                        ++Measurer.numDelValuesP1;
                         filter |= v.removeValue(k, aCause);
                         //                System.out.println("first delete: " + v.getName() + ", " + k);
                     } else if (notGamma.contain(varIdx) && notA.contain(valIdx)) {
@@ -428,6 +429,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
                                 filter |= v.instantiateTo(k, aCause);
 //                            System.out.println("instantiate  : " + v.getName() + ", " + k);
                             } else {
+                                ++Measurer.numDelValuesP2;
                                 filter |= v.removeValue(k, aCause);
 //                            System.out.println("second delete: " + v.getName() + ", " + k);
                             }

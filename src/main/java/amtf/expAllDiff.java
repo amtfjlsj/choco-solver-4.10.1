@@ -18,29 +18,32 @@ public class expAllDiff {
 
     public static void main(String[] args) {
 
-        String inputFolder = "F:\\chenj\\data\\XCSP3\\AllDiff\\";
-        String outputFolder = "F:\\chenj\\Experiment\\allDiff\\newResult\\";
+        String inputFolder = "G:\\X3Benchmarks\\alldiff\\";
+        String outputFolder = "G:\\X3Benchmarks\\alldiff-result\\";
         String[] series = new String[]{
-//                "Langford-m1-k2",
-//                "Langford-m1-k3",
-//                "Langford-m1-k4",
+                "Langford-m1-k2",
+                "Langford-m1-k3",
+                "Langford-m1-k4",
 //                "Queens-m1-s1",
-//                "ColouredQueens-m1-s1",
+                "ColouredQueens-m1-s1",
+//                "SchurrLemma-mod-s1",
 //                "LatinSquare-m1-gp",
 //                "LatinSquare-m1-gs",
-                "LatinSquare-xcsp2-bqwh15-106",
-                "LatinSquare-xcsp2-bqwh18-141",
-//                "SchurrLemma-mod-s1",
+//                "LatinSquare-xcsp2-bqwh15-106",
+//                "LatinSquare-xcsp2-bqwh18-141",
         };
 
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
-                "ACFast",
                 "AC",
+                "ACFast",
+                "ACFastNaive",
+                "ACNaive",
+                "BC"
         };
-        int runNum = 1;
+        int runNum = 2;
         long node = 0, propNum = 0;
-        float time, matchingTime, filterTime;
+        float time, matchingTime, filterTime, numDelValuesP1, numDelValuesP2;
         float IN_SEC = 1000 * 1000 * 1000f;
 
 
@@ -50,8 +53,8 @@ public class expAllDiff {
                 BufferedWriter bw = new BufferedWriter(new FileWriter(csv, false));
                 bw.write("instance");
                 for (int i = 0; i < algorithms.length; i++) {
-//                    bw.write(",algorithm,node,propNum,time,matchingTime,filterTime");
-                    bw.write(",node,time");
+                    bw.write(",algorithm,node,time,matchingTime,filterTime,numDelValuesP1,numDelValuesP2");
+//                    bw.write(",node,time");
                 }
                 bw.newLine();
                 // 读取实例集s下的所有实例文件名
@@ -63,6 +66,8 @@ public class expAllDiff {
                         time = 0f;
                         matchingTime = 0f;
                         filterTime = 0f;
+                        numDelValuesP1 = 0f;
+                        numDelValuesP2 = 0f;
                         out.println(algorithm + "======>");
                         for (int i = 0; i < runNum; i++) {
                             Measurer.initial();
@@ -79,7 +84,7 @@ public class expAllDiff {
                             }
                             Arrays.sort(decVars, Comparator.comparingInt(IntVar::getId));
                             Solver solver = model.getSolver();
-                            solver.limitTime("120s");
+                            solver.limitTime("900s");
 //                            solver.setSearch(activityBasedSearch(decVars));
                             solver.setSearch(Search.defaultSearch(model));
 
@@ -93,11 +98,13 @@ public class expAllDiff {
                             node = solver.getNodeCount();
 //                            propNum = Measurer.propNum;
                             time += solver.getTimeCount() / runNum;
-//                            matchingTime += Measurer.matchingTime / IN_SEC / runNum;
-//                            filterTime += Measurer.filterTime / IN_SEC / runNum;
+                            matchingTime += Measurer.matchingTime / IN_SEC / runNum;
+                            filterTime += Measurer.filterTime / IN_SEC / runNum;
+                            numDelValuesP1 += Measurer.numDelValuesP1 / IN_SEC / runNum;
+                            numDelValuesP2 += Measurer.numDelValuesP2 / IN_SEC / runNum;
                         }
-//                        bw.write("," + algorithm + "," + node + "," + propNum + "," + time + "," + matchingTime + "," + filterTime);
-                        bw.write("," + node + "," + time);
+                        bw.write("," + algorithm + "," + node + "," + time + "," + matchingTime + "," + filterTime + "," + numDelValuesP1 + "," + numDelValuesP2);
+//                        bw.write("," + node + "," + time);
                         bw.flush();
                     }
                     bw.newLine();

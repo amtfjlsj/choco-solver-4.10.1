@@ -270,6 +270,7 @@ public class AlgoAllDiffACFast {
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     j = map.get(k);
                     if (distinction.get(i) && !distinction.get(j)) { // 删除第一类边，变量在Γ(A)中，值在Dc-A中
+                        ++Measurer.numDelValuesP1;
                         filter |= v.removeValue(k, aCause);
 //                        System.out.println("first delete: " + v.getName() + ", " + k);
 //                    digraph.removeArc(i, j);
@@ -279,6 +280,7 @@ public class AlgoAllDiffACFast {
                                 filter |= v.instantiateTo(k, aCause);
 //                                System.out.println("instantiate  : " + v.getName() + ", " + k);
                             } else {
+                                ++Measurer.numDelValuesP2;
                                 filter |= v.removeValue(k, aCause);
 //                                System.out.println("second delete: " + v.getName() + ", " + k);
                                 // 我觉得不用更新digraph，因为每次调用propagate时都会更新digraph
