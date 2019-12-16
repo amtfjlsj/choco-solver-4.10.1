@@ -21,9 +21,9 @@ import org.chocosolver.util.ESat;
  * <p/>
  * Uses Zhang algorithm in the paper of IJCAI-18
  * "A Fast Algorithm for Generalized Arc Consistency of the Alldifferent Constraint"
- * <p>
+ *
  * We try to use the bit to speed up.
- * <p>
+ *
  * Runs in O(m.n) worst case time for the initial propagation
  * but has a good average behavior in practice
  * <p/>
@@ -33,13 +33,13 @@ import org.chocosolver.util.ESat;
  * @author Jia'nan Chen
  */
 
-public class PropAllDiffAC_Naive extends Propagator<IntVar> {
+public class PropAllDiffAC_Simple extends Propagator<IntVar> {
 
     //***********************************************************************************0
     // VARIABLES
     //***********************************************************************************
 
-    protected AlgoAllDiffAC_Naive filter;
+    protected AlgoAllDiffAC_Naive32 filter;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -51,15 +51,9 @@ public class PropAllDiffAC_Naive extends Propagator<IntVar> {
      *
      * @param variables array of integer variables
      */
-    public PropAllDiffAC_Naive(IntVar[] variables) {
+    public PropAllDiffAC_Simple(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-        if (variables.length <= 32) {
-            this.filter = new AlgoAllDiffAC_Naive32(variables, this);
-        } else if (variables.length <= 64) {
-            this.filter = new AlgoAllDiffAC_Naive64(variables, this);
-        } else {
-            this.filter = new AlgoAllDiffAC_Naive4(variables, this);
-        }
+        this.filter = new AlgoAllDiffAC_Naive32(variables, this);
     }
 
     //***********************************************************************************
