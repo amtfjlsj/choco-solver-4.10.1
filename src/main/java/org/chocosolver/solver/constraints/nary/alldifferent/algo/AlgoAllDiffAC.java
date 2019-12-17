@@ -38,6 +38,10 @@ public class AlgoAllDiffAC {
     //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
+    // 约束的个数
+    static public int num = 0;
+    // 约束的编号
+    private int id;
 
     private int n, n2;
     private DirectedGraph digraph;
@@ -58,6 +62,8 @@ public class AlgoAllDiffAC {
     //***********************************************************************************
 
     public AlgoAllDiffAC(IntVar[] variables, ICause cause) {
+        id = num++;
+
         this.vars = variables;
 		aCause = cause;
         n = vars.length;
@@ -100,7 +106,8 @@ public class AlgoAllDiffAC {
     //***********************************************************************************
 
     public boolean propagate() throws ContradictionException {
-        Measurer.propNum++;
+//        System.out.println("----------------" + id + " propagate----------------");
+
         long startTime = System.nanoTime();
         findMaximumMatching();
         Measurer.matchingTime += System.nanoTime() - startTime;
@@ -235,32 +242,34 @@ public class AlgoAllDiffAC {
                 if (nodeSCC[i] != nodeSCC[j]) {
                     if (matching[i] == j) {
                         filter |= v.instantiateTo(k, aCause);
+//                        System.out.println("instantiate  : " + v.getName() + ", " + k);
                     } else {
                         filter |= v.removeValue(k, aCause);
-                        digraph.removeArc(i, j);
+//                        System.out.println("second delete: " + v.getName() + ", " + k);
+//                        digraph.removeArc(i, j);
                     }
                 }
             }
         }
-        for (int i = 0; i < n; i++) {
-            v = vars[i];
-            if (!v.hasEnumeratedDomain()) {
-                ub = v.getUB();
-                for (int k = v.getLB(); k <= ub; k++) {
-                    j = map.get(k);
-                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
-                        filter |= v.removeValue(k, aCause);
-                    }
-                }
-                int lb = v.getLB();
-                for (int k = v.getUB(); k >= lb; k--) {
-                    j = map.get(k);
-                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
-                        filter |= v.removeValue(k, aCause);
-                    }
-                }
-            }
-        }
+//        for (int i = 0; i < n; i++) {
+//            v = vars[i];
+//            if (!v.hasEnumeratedDomain()) {
+//                ub = v.getUB();
+//                for (int k = v.getLB(); k <= ub; k++) {
+//                    j = map.get(k);
+//                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
+//                        filter |= v.removeValue(k, aCause);
+//                    }
+//                }
+//                int lb = v.getLB();
+//                for (int k = v.getUB(); k >= lb; k--) {
+//                    j = map.get(k);
+//                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
+//                        filter |= v.removeValue(k, aCause);
+//                    }
+//                }
+//            }
+//        }
         return filter;
     }
 }

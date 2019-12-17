@@ -11,37 +11,30 @@ package org.chocosolver.solver.constraints.nary.alldifferent;
 
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.*;
+import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC2;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.ESat;
 
-import static java.lang.System.out;
-
 /**
  * Propagator for AllDifferent AC constraint for integer variables
  * <p/>
- * Uses Zhang algorithm in the paper of IJCAI-18
- * "A Fast Algorithm for Generalized Arc Consistency of the Alldifferent Constraint"
- * <p>
- * We try to use the bit to speed up.
- * <p>
+ * Uses Regin algorithm
  * Runs in O(m.n) worst case time for the initial propagation
  * but has a good average behavior in practice
  * <p/>
  * Runs incrementally for maintaining a matching
  * <p/>
  *
- * @author Jia'nan Chen
+ * @author Jean-Guillaume Fages
  */
+public class PropAllDiffAC2 extends Propagator<IntVar> {
 
-public class PropAllDiffAC_Naive extends Propagator<IntVar> {
-
-    //***********************************************************************************0
+    //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
 
-    protected AlgoAllDiffAC_Naive filter;
+    protected AlgoAllDiffAC2 filter;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -53,16 +46,9 @@ public class PropAllDiffAC_Naive extends Propagator<IntVar> {
      *
      * @param variables array of integer variables
      */
-    public PropAllDiffAC_Naive(IntVar[] variables) {
+    public PropAllDiffAC2(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-//        out.println("vars length: " + variables.length);
-        if (variables.length <= 32) {
-            this.filter = new AlgoAllDiffAC_Naive32(variables, this);
-        } else if (variables.length <= 64) {
-            this.filter = new AlgoAllDiffAC_Naive64(variables, this);
-        } else {
-            this.filter = new AlgoAllDiffAC_Naive2(variables, this);
-        }
+        this.filter = new AlgoAllDiffAC2(variables, this);
     }
 
     //***********************************************************************************

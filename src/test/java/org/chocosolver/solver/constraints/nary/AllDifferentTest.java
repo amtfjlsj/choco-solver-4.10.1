@@ -369,7 +369,7 @@ public class AllDifferentTest {
 
     @Test(groups = "1s", timeOut = 60000)
     public void testB3() throws ContradictionException {
-        out.println("ACFast============>");
+        out.println("ACFast2============>");
 
         Model model = new Model();
         IntVar[] X = new IntVar[3];
@@ -377,21 +377,21 @@ public class AllDifferentTest {
         X[1] = model.intVar(new int[]{1, 2});
         X[2] = model.intVar(new int[]{2, 3});
 //
-        model.allDifferent(X, "ACFast").post();
+        model.allDifferent(X, "ACFast2").post();
         model.getSolver().propagate();
 
         for (IntVar x : X) {
             out.println(x.toString());
         }
 
-        out.println("ACFastNaive============>");
+        out.println("AC2============>");
 
         model = new Model();
-        X = new IntVar[3];
-        X[0] = model.intVar(new int[]{1});
+        X = new IntVar[2];
+        X[0] = model.intVar(new int[]{1, 2});
         X[1] = model.intVar(new int[]{1, 2});
-        X[2] = model.intVar(new int[]{2, 3});
-//        X[0] = model.intVar("x14", new int[]{2, 8});
+//        X[2] = model.intVar(new int[]{1, 2, 3});
+//        X[3] = model.intVar(new int[]{1, 2, 4, 5});
 //        X[1] = model.intVar("x15", new int[]{2, 8, 10, 11, 14});
 //        X[2] = model.intVar("x16", new int[]{2, 7, 10, 11});
 //        X[3] = model.intVar("x17", new int[]{7, 14});
@@ -399,7 +399,7 @@ public class AllDifferentTest {
 //        X[5] = model.intVar("x19", new int[]{9});
 //        X[6] = model.intVar("x20", new int[]{8, 11});
 
-        model.allDifferent(X, "ACFastNaive").post();
+        model.allDifferent(X, "AC2").post();
         model.getSolver().propagate();
 
         for (IntVar x : X) {

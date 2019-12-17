@@ -277,7 +277,9 @@ public class AlgoAllDiffACFast {
                     } else if (!distinction.get(i) && !distinction.get(j)) { // 删除第二类边，变量在Xc-Γ(A)中，值在Dc-A中
                         if (nodeSCC[i] != nodeSCC[j]) {
                             if (matching[i] == j) {
+                                int valNum = v.getDomainSize();
                                 filter |= v.instantiateTo(k, aCause);
+                                Measurer.numDelValuesP2 += valNum - 1;
 //                                System.out.println("instantiate  : " + v.getName() + ", " + k);
                             } else {
                                 ++Measurer.numDelValuesP2;

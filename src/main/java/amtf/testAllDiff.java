@@ -26,7 +26,7 @@ public class testAllDiff {
 //                "G:/X3Benchmarks/alldiff/GracefulGraph/GracefulGraph-m1-s1/GracefulGraph-K03-P05.xml",
 //                "G:/X3Benchmarks/alldiff/Langford/Langford-m1-k2/Langford-2-08.xml",
 //                "G:/X3Benchmarks/alldiff/Langford/Langford-m1-k4/Langford-4-07.xml",
-//                "F:\\chenj\\data\\XCSP3\\Queens-m1-s1\\Queens-0004-m1.xml",
+                "F:\\chenj\\data\\XCSP3\\Queens-m1-s1\\Queens-0050-m1.xml",
 //                "G:\\X3Benchmarks\\alldiff\\Queens\\Queens-m1-s1\\Queens-0004-m1.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh15-106\\bqwh-15-106-01_X2.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh15-106\\bqwh-15-106-02_X2.xml",
@@ -38,26 +38,28 @@ public class testAllDiff {
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-m1-gp\\qwh-o30-h374-02.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-m1-gp\\qwh-o30-h374-03.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-m1-gp\\qwh-o30-h374-04.xml",
-//                "F:\\chenj\\data\\XCSP3\\AllDiff/ColouredQueens-m1-s1/ColouredQueens-04.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-m1-gs\\qwh-o010-h100.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff/ColouredQueens-m1-s1/ColouredQueens-03.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff/ColouredQueens-m1-s1/ColouredQueens-05.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff/ColouredQueens-m1-s1/ColouredQueens-06.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff/ColouredQueens-m1-s1/ColouredQueens-07.xml",
 //                "G:/X3Benchmarks/alldiff/ColouredQueens/ColouredQueens-m1-s1/ColouredQueens-09.xml",
 //                "G:/X3Benchmarks/alldiff/DistinctVectors/DistinctVectors-m1-s1/DistinctVectors-30-010-02.xml",
-                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-012-9-mod.xml",
-                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-015-9-mod.xml",
-                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-020-9-mod.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-012-9-mod.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-015-9-mod.xml",
+//                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-020-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-030-9-mod.xml",
         };
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
-//                "AC",
+                "AC",
+                "AC2",
                 "ACFast",
-                "ACFastNaive",
+                "ACFast2",
                 "ACNaive",
-//                "BC"
+                "BC",
         };
-        int runNum = 2;
+        int runNum = 1;
 
         for (String ins : instances) {
             out.println(ins);
@@ -72,7 +74,6 @@ public class testAllDiff {
                         e.printStackTrace();
                     }
                     IntVar[] decVars = (IntVar[]) model.getHook("decisions");
-                    ;
                     if (decVars == null) {
                         decVars = parser.mvars.values().toArray(new IntVar[0]);
                     }
@@ -83,13 +84,13 @@ public class testAllDiff {
 //                solver.setSearch(intVarSearch(new FirstFail(model), new IntDomainMin(), decVars));
 
                     if (solver.solve()) {
-                        if (i == runNum - 1) {
-                            out.print("solution: ");
-                            for (IntVar v : decVars) {
-                                out.printf("%d ", v.getValue());
-                            }
-                            out.println();
-                        }
+//                        if (i == runNum - 1) {
+//                            out.print("solution: ");
+//                            for (IntVar v : decVars) {
+//                                out.printf("%d ", v.getValue());
+//                            }
+//                            out.println();
+//                        }
                     }
                     if (i == runNum - 1) {
                         out.println("node: " + solver.getNodeCount());

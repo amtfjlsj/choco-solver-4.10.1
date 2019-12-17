@@ -36,13 +36,14 @@ public class expAllDiff {
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
                 "AC",
+                "AC2",
                 "ACFast",
-                "ACFastNaive",
+                "ACFast2",
                 "ACNaive",
                 "BC"
         };
         int runNum = 2;
-        long node = 0, propNum = 0;
+        long node = 0;
         float time, matchingTime, filterTime, numDelValuesP1, numDelValuesP2;
         float IN_SEC = 1000 * 1000 * 1000f;
 
@@ -96,12 +97,11 @@ public class expAllDiff {
                                 out.println();
                             }
                             node = solver.getNodeCount();
-//                            propNum = Measurer.propNum;
                             time += solver.getTimeCount() / runNum;
                             matchingTime += Measurer.matchingTime / IN_SEC / runNum;
                             filterTime += Measurer.filterTime / IN_SEC / runNum;
-                            numDelValuesP1 += Measurer.numDelValuesP1 / IN_SEC / runNum;
-                            numDelValuesP2 += Measurer.numDelValuesP2 / IN_SEC / runNum;
+                            numDelValuesP1 += Measurer.numDelValuesP1 / runNum;
+                            numDelValuesP2 += Measurer.numDelValuesP2 / runNum;
                         }
                         bw.write("," + algorithm + "," + node + "," + time + "," + matchingTime + "," + filterTime + "," + numDelValuesP1 + "," + numDelValuesP2);
 //                        bw.write("," + node + "," + time);

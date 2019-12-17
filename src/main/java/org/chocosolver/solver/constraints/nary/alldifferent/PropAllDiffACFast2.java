@@ -11,8 +11,7 @@ package org.chocosolver.solver.constraints.nary.alldifferent;
 
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffACFast;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffACFast_Naive;
+import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffACFast2;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.ESat;
@@ -31,13 +30,13 @@ import org.chocosolver.util.ESat;
  *
  */
 
-public class PropAllDiffACFast_Naive extends Propagator<IntVar> {
+public class PropAllDiffACFast2 extends Propagator<IntVar> {
 
     //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
 
-    protected AlgoAllDiffACFast_Naive filter;
+    protected AlgoAllDiffACFast2 filter;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -49,9 +48,9 @@ public class PropAllDiffACFast_Naive extends Propagator<IntVar> {
      *
      * @param variables array of integer variables
      */
-    public PropAllDiffACFast_Naive(IntVar[] variables) {
+    public PropAllDiffACFast2(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-        this.filter = new AlgoAllDiffACFast_Naive(variables, this);
+        this.filter = new AlgoAllDiffACFast2(variables, this);
     }
 
     //***********************************************************************************

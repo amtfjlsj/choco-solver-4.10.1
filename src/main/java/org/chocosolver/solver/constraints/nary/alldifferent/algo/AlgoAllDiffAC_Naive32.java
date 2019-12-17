@@ -80,15 +80,12 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
     // 变量的论域
     private int[] valMask;
 
-    // 记录排除gamma和bind的变量，即notGamma的变量
-    private int notGammaMask;
-
     // 内置的bit方法专用的常量
     protected int lastMask;
 
     protected final static int ADDRESS_BITS_PER_WORD = 5;
     protected final static int BITS_PER_WORD = 1 << ADDRESS_BITS_PER_WORD;
-//    protected final static int BIT_INDEX_MASK = BITS_PER_WORD - 1;
+    //    protected final static int BIT_INDEX_MASK = BITS_PER_WORD - 1;
     /* Used to shift left or right for a partial word mask */
     protected static final int WORD_MASK = 0xffffffff;
 //    protected static final long MOD_MASK = 0x3fL;
@@ -146,9 +143,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
         }
 
         notGamma = new SparseSet(arity);
-        notGammaMask = 0;
         notA = new SparseSet(numValue);
-        // freeNode区分匹配点和非匹配点（true表示非匹配点，false表示匹配点）
         freeNode = new SparseSet(numValue);
         gammaFrontier = 0;
         gammaMask = 0;
@@ -265,11 +260,6 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
         }
 
         freeNode.fill();
-        notGamma.fill();
-        notGammaMask = WORD_MASK;
-        gammaMask = 0;
-        gammaFrontier = 0;
-        notA.fill();
 
         // 增量检查
         for (int varIdx = 0; varIdx < arity; varIdx++) {
@@ -303,9 +293,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
                         val2Var[oldMatchingIndex] = -1;
                         var2Val[varIdx] = -1;
                     } else {
-//                        freeNode.clear(oldMatchingIndex);
                         freeNode.remove(oldMatchingIndex);
-//                    System.out.println(oldMatchingIndex + " is free");
                     }
                 }
 
@@ -347,64 +335,46 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
     //***********************************************************************************
 
     private void distinguish() {
-
-//        System.out.println("----------------" + id + " distinguish----------------");
+        notGamma.fill();
+        notA.fill();
+        gammaMask = 0;
 
         freeNode.iterateValid();
         while (freeNode.hasNextValid()) {
-            // 每个freeNode的值拿出来
-//            System.out.println(i);
             int i = freeNode.next();
             notA.remove(i);
-            notGammaMask = ~valMask[i];
             gammaMask |= valMask[i];
-            gammaFrontier |= valMask[i];
         }
+        gammaFrontier = gammaMask;
 //        System.out.println("gammaMask: " + Long.toBinaryString(gammaMask));
 //        System.out.println("gammaFrontier: " + Long.toBinaryString(gammaFrontier));
 
-        // !! 这里可以再优化一下
-        // !! Frontier应该用SparseBitSet(largeBitSet)
-        for (int i = nextSetBit(gammaFrontier, 0);
-             i != BITS_PER_WORD; i = nextSetBit(gammaFrontier, 0)) {
-            // !! 这里可以将Extended改成Frontier，只记录前沿，记录方法是三个BitSet比较，
+        for (int varIdx = nextSetBit(gammaFrontier, 0);
+             varIdx != BITS_PER_WORD; varIdx = nextSetBit(gammaFrontier, 0)) {
             // frontier 扩展，从valMask中去掉gammaMask已记录的变量
-            gammaFrontier |= valMask[var2Val[i]] & ~gammaMask;
+            int valIdx = var2Val[varIdx];
+            gammaFrontier |= valMask[valIdx] & ~gammaMask;
             // 除去第i个变量
-            gammaFrontier &= ~(1 << i);
+            gammaFrontier &= ~(1 << varIdx);
             // gamma 扩展
-            gammaMask |= valMask[var2Val[i]];
-//            System.out.println("gammaMask" + Long.toBinaryString(gammaMask));
-//            System.out.println("gammaFrontier" + Long.toBinaryString(gammaFrontier));
+            gammaMask |= valMask[valIdx];
+            notGamma.remove(varIdx);
+            notA.remove(valIdx);
         }
-
-        // 到这里时 frontier全部遍历完。这时候统计一下notGamma和notA
-        for (int i = nextSetBit(gammaMask, 0); i != BITS_PER_WORD; i = nextSetBit(gammaMask, i + 1)) {
-            notGamma.remove(i);
-//            notGammaMask.clear(i);
-            notGammaMask &= ~(1 << i);
-            notA.remove(var2Val[i]);
-        }
-        //        System.out.println("------------notGammaMask------------");
-//        System.out.println(notGammaMask);
     }
 
     private void initiateMatrix() {
         // 重置两个矩阵
         // 只重置notGamma的变量
-        // !! 重置的内容也除去gamma的中的变量
         notGamma.iterateValid();
         while (notGamma.hasNextValid()) {
             int varIdx = notGamma.next();
             // 从变量id拿到匹配值再拿到该值所能到达的变量mask
             if (!vars[varIdx].isInstantiated()) {
-                graphLinkedMatrix[varIdx] = valMask[var2Val[varIdx]] & notGammaMask;
+                graphLinkedMatrix[varIdx] = valMask[var2Val[varIdx]] & ~gammaMask;
                 graphLinkedMatrix[varIdx] &= ~(1 << varIdx);
                 graphLinkedFrontier[varIdx] = graphLinkedMatrix[varIdx];
             }
-//                System.out.println("------graphLinkedMatrix[" + varIdx + "]------");
-//                System.out.println(graphLinkedMatrix[varIdx]);
-//                System.out.println(graphLinkedFrontier[varIdx]);
         }
     }
 
@@ -424,9 +394,11 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
                         filter |= v.removeValue(k, aCause);
                         //                System.out.println("first delete: " + v.getName() + ", " + k);
                     } else if (notGamma.contain(varIdx) && notA.contain(valIdx)) {
-                        if (!checkSCC(varIdx, valIdx)) {
+                        if ((graphLinkedMatrix[varIdx] & 1 << val2Var[valIdx]) == 0 && !checkSCC(varIdx, valIdx)) {
                             if (valIdx == var2Val[varIdx]) {
+                                int valNum = v.getDomainSize();
                                 filter |= v.instantiateTo(k, aCause);
+                                Measurer.numDelValuesP2 += valNum - 1;
 //                            System.out.println("instantiate  : " + v.getName() + ", " + k);
                             } else {
                                 ++Measurer.numDelValuesP2;
@@ -442,20 +414,8 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
     }
 
     private boolean checkSCC(int varIdx, int valIdx) {
-//        System.out.println("check:" + varIdx + ", " + valIdx);
-        // 如果已经有记录了
-        if ((graphLinkedMatrix[varIdx] & 1 << val2Var[valIdx]) != 0) {
-            return true;
-        }
-
-        // 若没有 就需要BFS一下Frontier没有，就表示不用扩展了
-        // !! 这里可以优化成一直就记录着count
-        // 注意一下return退出时frontier正确
         for (int i = nextSetBit(graphLinkedFrontier[varIdx], 0);
              i != BITS_PER_WORD; i = nextSetBit(graphLinkedFrontier[varIdx], 0)) {
-            // !! 这里可以将Extended改成Frontier，只记录前沿，记录方法是三个BitSet比较，
-            // frontier扩张，除掉变量i 因为变量i已被扩展。
-            // 向frontier添加 varMask 但不属于
             graphLinkedFrontier[varIdx] |= graphLinkedMatrix[i] & ~graphLinkedMatrix[varIdx];
             graphLinkedFrontier[varIdx] &= ~(1 << i);
             graphLinkedMatrix[varIdx] |= graphLinkedMatrix[i];
@@ -463,7 +423,6 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
                 return true;
             }
         }
-
         return false;
     }
 

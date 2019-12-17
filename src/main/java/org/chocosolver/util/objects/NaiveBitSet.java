@@ -482,6 +482,13 @@ public class NaiveBitSet {
         }
     }
 
+    // 与a取反
+    public void andAfterNot(NaiveBitSet a) {
+        for (int i = 0; i < longSize; ++i) {
+            this.words[i] = ~a.words[i];
+        }
+    }
+
 //    public void orAfterAnd(NaiveSparseBitSet a, NaiveSparseBitSet b) {
 //        int min;
 //        //以短
