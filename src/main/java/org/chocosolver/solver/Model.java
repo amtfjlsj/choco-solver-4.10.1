@@ -547,7 +547,7 @@ public class Model implements IModel {
      *
      * @return the map of hooks.
      */
-    protected Map<String, Object> getHooks() {
+    public Map<String, Object> getHooks() {
         return hooks;
     }
 

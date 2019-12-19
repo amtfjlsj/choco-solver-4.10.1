@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<folders>
+    <inputRoot>D:\dataheu</inputRoot>
+
+
+
+    <!--<folder format="2">Sat-m1-aim050</folder>-->
+    <!--<folder format="2">Sat-m1-aim100</folder>-->
+
+    <!--<folder format="2">AllInterval</folder>-->
+    <!--<folder format="2">Bibd</folder>-->
+    <!--<folder format="2">Blackhole-m1-s04</folder>-->
+    <!--<folder format="2">CarSequencing-m1-jcr</folder>-->
+    <!--<folder format="2">ColouredQueens</folder>-->
+    <!--<folder format="2">CostasArray</folder>-->
+    <!--<folder format="2">CoveringArray</folder>-->
+    <!--<folder format="2">Crossword-m1-lex-herald</folder>-->
+    <!--<folder format="2">Crossword-m1-lex-puzzle</folder>-->
+    <!--<folder format="2">Crossword-m1-lex-vg</folder>-->
+    <!--<folder format="2">Crossword-m1-ogd2008-herald</folder>-->
+    <!--<folder format="2">Crossword-m1-ogd2008-puzzle</folder>-->
+    <!--<folder format="2">Crossword-m1-ogd2008-vg</folder>-->
+    <!--<folder format="2">Crossword-m1-ogd-herald</folder>-->
+    <!--<folder format="2">Crossword-m1-ogd-puzzle</folder>-->
+    <!--<folder format="2">Crossword-m1-ogd-vg</folder>-->
+    <!--<folder format="2">Crossword-m1-uk-herald</folder>-->
+    <!--<folder format="2">Crossword-m1-uk-puzzle</folder>-->
+    <!--<folder format="2">Crossword-m1-uk-vg</folder>-->
+    <!--<folder format="2">Crossword-m1-words-herald</folder>-->
+    <!--<folder format="2">Crossword-m1-words-puzzle</folder>-->
+    <!--<folder format="2">Crossword-m1-words-vg</folder>-->
+    <!--<folder format="2">DeBruijnSequence</folder>-->
+    <!--<folder format="2">DiamondFree</folder>-->
+    <!--<folder format="2">DistinctVectors</folder>-->
+    <!--<folder format="2">Dubois</folder>-->
+    <!--<folder format="2">GracefulGraph</folder>-->
+    <!--<folder format="2">Knights</folder>-->
+    <!--<folder format="2">KnightTour-ext-s1</folder>-->
+    <!--<folder format="2">Langford-m1-k2</folder>-->
+    <!--<folder format="2">Langford-m1-k3</folder>-->
+    <!--<folder format="2">Langford-m1-k4</folder>-->
+    <!--<folder format="2">Langford-m2-s1</folder>-->
+    <!--<folder format="2">MagicSequence</folder>-->
+    <!--<folder format="2">MagicSquare</folder>-->
+    <!--<folder format="2">MarketSplit</folder>-->
+    <!--<folder format="2">MultiKnapsack-m1-gp</folder>-->
+    <!--<folder format="2">NumberPartitioning</folder>-->
+    <!--<folder format="2">Ortholatin</folder>-->
+    <!--<folder format="2">PigeonsPlus</folder>-->
+    <!--<folder format="2">Primes</folder>-->
+    <!--<folder format="2">QRandom-bdd-15-21-2</folder>-->
+    <!--<folder format="2">QRandom-bdd-18-21-2</folder>-->
+    <!--<folder format="2">QRandom-mdd-7-25-5</folder>-->
+    <!--<folder format="2">QuasiGroups-elt-qg3</folder>-->
+    <!--<folder format="2">QueensKnights</folder>-->
+    <!--<folder format="2">RadarSurveillance-m1-s8-24</folder>-->
+    <!--<folder format="2">Random-RB-low</folder>-->
+    <!--<folder format="2">Rlfap-m1-graphs</folder>-->
+    <!--<folder format="2">RoomMate</folder>-->
+    <!--<folder format="2">SocialGolfers-cp-s1</folder>-->
+    <!--<folder format="2">StripPacking-m1-series1</folder>-->
+    <!--<folder format="2">Subisomorphism-m1-LV</folder>-->
+    <!--<folder format="2">TravellingSalesman</folder>-->
+    <!--<folder format="2">Wwtpp</folder>-->
+
+
+    <outputRoot>E:</outputRoot>
+</folders>

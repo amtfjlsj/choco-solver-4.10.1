@@ -58,11 +58,12 @@ public class testAllDiff {
                     e.printStackTrace();
                 }
                 IntVar[] decVars = (IntVar[]) model.getHook("decisions");
-                ;
                 if (decVars == null) {
                     decVars = parser.mvars.values().toArray(new IntVar[parser.mvars.size()]);
                 }
                 Arrays.sort(decVars, Comparator.comparingInt(IntVar::getId));
+
+
                 Solver solver = model.getSolver();
                 solver.setSearch(activityBasedSearch(decVars));
 //                solver.setSearch(Search.defaultSearch(model));

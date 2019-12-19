@@ -25,7 +25,7 @@ import org.xcsp.common.Condition;
 import org.xcsp.common.Types;
 import org.xcsp.common.predicates.XNode;
 import org.xcsp.common.predicates.XNodeParent;
-import org.xcsp.parser.XCallbacks2;
+import org.xcsp.parser.callbacks.XCallbacks2;
 import org.xcsp.parser.entries.XConstraints;
 import org.xcsp.parser.entries.XVariables;
 
@@ -76,6 +76,18 @@ public class XCSPParser implements XCallbacks2 {
     public void model(Model model, String instance, String allDiffConsistency) throws Exception {
         this.model = model;
         this.allDiffConsistency = allDiffConsistency;
+        this.mvars = new HashMap<>();
+        this.implem = new Implem(this);
+        File file = new File(instance);
+        if(file.exists()){
+            loadInstance(instance);
+        }else{
+            throw new RuntimeException("FILE DOES NOT EXIST");
+        }
+    }
+
+    public void model(Model model, String instance) throws Exception {
+        this.model = model;
         this.mvars = new HashMap<>();
         this.implem = new Implem(this);
         File file = new File(instance);

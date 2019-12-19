@@ -34,14 +34,7 @@ import org.chocosolver.solver.search.strategy.selectors.values.RealDomainMin;
 import org.chocosolver.solver.search.strategy.selectors.values.RealValueSelector;
 import org.chocosolver.solver.search.strategy.selectors.values.SetDomainMin;
 import org.chocosolver.solver.search.strategy.selectors.values.SetValueSelector;
-import org.chocosolver.solver.search.strategy.selectors.variables.ActivityBased;
-import org.chocosolver.solver.search.strategy.selectors.variables.Cyclic;
-import org.chocosolver.solver.search.strategy.selectors.variables.DomOverWDeg;
-import org.chocosolver.solver.search.strategy.selectors.variables.FirstFail;
-import org.chocosolver.solver.search.strategy.selectors.variables.GeneralizedMinDomVarSelector;
-import org.chocosolver.solver.search.strategy.selectors.variables.InputOrder;
-import org.chocosolver.solver.search.strategy.selectors.variables.Random;
-import org.chocosolver.solver.search.strategy.selectors.variables.VariableSelector;
+import org.chocosolver.solver.search.strategy.selectors.variables.*;
 import org.chocosolver.solver.search.strategy.strategy.AbstractStrategy;
 import org.chocosolver.solver.search.strategy.strategy.ConflictOrderingSearch;
 import org.chocosolver.solver.search.strategy.strategy.GreedyBranching;
@@ -323,6 +316,24 @@ public class Search {
     public static AbstractStrategy<IntVar> domOverWDegSearch(IntVar... vars) {
         return new DomOverWDeg(vars, 0, new IntDomainMin());
     }
+
+
+    public static AbstractStrategy<IntVar> dualSearch(IntVar... vars) {
+        return new DomOverWDegDual(vars, 0, new IntDomainMin());
+    }
+
+    public static AbstractStrategy<IntVar> dualSearch1(IntVar... vars) {
+        return new DomOverWDegDual1(vars, 0, new IntDomainMin());
+    }
+
+    public static AbstractStrategy<IntVar> AbsCondomOverWDegSearch(IntVar... vars) {
+        return new DomOverWDegAbsCon(vars, 0, new IntDomainMin());
+    }
+
+    public static AbstractStrategy<IntVar> CaCdOverWDegSearch(IntVar... vars) {
+        return new DomOverWDegCaCd(vars, 0, new IntDomainMin());
+    }
+
 
     /**
      * Create an Activity based search strategy.
