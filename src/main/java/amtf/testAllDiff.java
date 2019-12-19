@@ -26,7 +26,7 @@ public class testAllDiff {
 //                "G:/X3Benchmarks/alldiff/GracefulGraph/GracefulGraph-m1-s1/GracefulGraph-K03-P05.xml",
 //                "G:/X3Benchmarks/alldiff/Langford/Langford-m1-k2/Langford-2-08.xml",
 //                "G:/X3Benchmarks/alldiff/Langford/Langford-m1-k4/Langford-4-07.xml",
-                "F:\\chenj\\data\\XCSP3\\Queens-m1-s1\\Queens-0050-m1.xml",
+//                "F:\\chenj\\data\\XCSP3\\Queens-m1-s1\\Queens-0050-m1.xml",
 //                "G:\\X3Benchmarks\\alldiff\\Queens\\Queens-m1-s1\\Queens-0004-m1.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh15-106\\bqwh-15-106-01_X2.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\LatinSquare-xcsp2-bqwh15-106\\bqwh-15-106-02_X2.xml",
@@ -45,7 +45,7 @@ public class testAllDiff {
 //                "F:\\chenj\\data\\XCSP3\\AllDiff/ColouredQueens-m1-s1/ColouredQueens-07.xml",
 //                "G:/X3Benchmarks/alldiff/ColouredQueens/ColouredQueens-m1-s1/ColouredQueens-09.xml",
 //                "G:/X3Benchmarks/alldiff/DistinctVectors/DistinctVectors-m1-s1/DistinctVectors-30-010-02.xml",
-//                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-012-9-mod.xml",
+                "E:/X3Benchmarks/alldiff/SchurrLemma-mod-s1/SchurrLemma-012-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-015-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-020-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-030-9-mod.xml",
@@ -53,7 +53,7 @@ public class testAllDiff {
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
                 "AC",
-                "AC2",
+//                "AC2",
                 "ACFast",
                 "ACFast2",
                 "ACNaive",
