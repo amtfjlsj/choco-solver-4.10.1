@@ -8,6 +8,7 @@ import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.variables.IntVar;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -16,23 +17,29 @@ import static org.chocosolver.solver.search.strategy.Search.activityBasedSearch;
 
 public class expAllDiff {
 
+
     public static void main(String[] args) {
 
-        String inputFolder = "G:\\X3Benchmarks\\alldiff\\";
-        String outputFolder = "G:\\X3Benchmarks\\alldiff-result\\";
-        String[] series = new String[]{
-                "Langford-m1-k2",
-                "Langford-m1-k3",
-                "Langford-m1-k4",
-//                "Queens-m1-s1",
-                "ColouredQueens-m1-s1",
-//                "SchurrLemma-mod-s1",
-//                "LatinSquare-m1-gp",
-//                "LatinSquare-m1-gs",
-//                "LatinSquare-xcsp2-bqwh15-106",
-//                "LatinSquare-xcsp2-bqwh18-141",
-        };
-
+//        String inputFolder = "G:\\X3Benchmarks\\alldiff\\";
+//        String outputFolder = "G:\\X3Benchmarks\\alldiff-result\\";
+//        String[] series = new String[]{
+//                "Langford-m1-k2",
+//                "Langford-m1-k3",
+//                "Langford-m1-k4",
+////                "Queens-m1-s1",
+//                "ColouredQueens-m1-s1",
+////                "SchurrLemma-mod-s1",
+////                "LatinSquare-m1-gp",
+////                "LatinSquare-m1-gs",
+////                "LatinSquare-xcsp2-bqwh15-106",
+////                "LatinSquare-xcsp2-bqwh18-141",
+//        };
+        assert args.length == 1;
+        Bench_File File_Benchmark = new Bench_File(args[0]);
+//        File_Benchmark.Print();
+        String inputFolder = File_Benchmark.path_in;
+        String outputFolder = File_Benchmark.path_out;
+        ArrayList<String> series = File_Benchmark.all;
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
                 "AC",
@@ -42,11 +49,10 @@ public class expAllDiff {
                 "ACNaive",
                 "BC"
         };
-        int runNum = 2;
+        int runNum = 1;
         long node = 0;
         float time, matchingTime, filterTime, numDelValuesP1, numDelValuesP2;
         float IN_SEC = 1000 * 1000 * 1000f;
-
 
         for (String s : series) {
             try {
@@ -88,14 +94,14 @@ public class expAllDiff {
                             solver.limitTime("900s");
 //                            solver.setSearch(activityBasedSearch(decVars));
                             solver.setSearch(Search.defaultSearch(model));
-
-                            if (solver.solve()) {
-                                out.printf("solution: ");
-                                for (IntVar v : decVars) {
-                                    out.printf("%d ", v.getValue());
-                                }
-                                out.println();
-                            }
+                            solver.solve();
+                            // if (solver.solve()) {
+                            // out.printf("solution: ");
+                            // for (IntVar v : decVars) {
+                            //     out.printf("%d ", v.getValue());
+                            // }
+                            // out.println();
+                            // }
                             node = solver.getNodeCount();
                             time += solver.getTimeCount() / runNum;
                             matchingTime += Measurer.matchingTime / IN_SEC / runNum;
