@@ -10,10 +10,12 @@
 package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 
 import amtf.Measurer;
+import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
+import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityFinder;
 import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityNewFinder;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISetIterator;
@@ -30,7 +32,7 @@ import java.util.BitSet;
  *
  * @author Jean-Guillaume Fages, Jia'nan Chen
  */
-public class AlgoAllDiffACFast {
+public class AlgoAllDiffACFastM {
 
     //***********************************************************************************
     // VARIABLES
@@ -45,24 +47,28 @@ public class AlgoAllDiffACFast {
     private ICause aCause;
     private TIntIntHashMap map;
     private DirectedGraph digraph;
+    private DirectedGraph mergedDigragh;
     private int[] matching;
+    // matched val to var
+    private TIntIntMap matched;
     private BitSet free;
     // distinction为区分集，长度为n2
     // 变量部分（前n位），1b对应的变量属于Γ(A)，0b对应的变量属于Xc-Γ(A)
     // 值部分（后n2-n位），1b对应的值属于A，0b对应的值属于Dc-A
     private BitSet distinction;
     private int[] nodeSCC;
-    private StrongConnectivityNewFinder SCCfinder;
+    private StrongConnectivityFinder SCCfinder;
     // for augmenting matching (BFS)
     private int[] father;
     private int[] fifo;
     private BitSet in;
+
     int xixi;
     //***********************************************************************************
     // CONSTRUCTORS
     //***********************************************************************************
 
-    public AlgoAllDiffACFast(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffACFastM(IntVar[] variables, ICause cause) {
         id = num++;
 
         this.vars = variables;
@@ -89,16 +95,18 @@ public class AlgoAllDiffACFast {
         n2 = idx;
         // 用Bitset邻接矩阵的有向图，因为没有辅助点，所以是n2，非n2 + 1
         digraph = new DirectedGraph(n2, SetType.BITSET, false);
+        mergedDigragh = new DirectedGraph(n, SetType.BITSET, false);
         // free应该区分匹配点和非匹配点（true表示非匹配点，false表示匹配点）
         free = new BitSet(n2);
         distinction = new BitSet(n2);
-        SCCfinder = new StrongConnectivityNewFinder(digraph);
+        SCCfinder = new StrongConnectivityFinder(mergedDigragh);
         // 用于回溯增广路径
         father = new int[n2];
         // 使用队列实现非递归广度优先搜索
         fifo = new int[n2];
         // 哪些点在fifo队列中（true表示在，false表示不在）
         in = new BitSet(n2);
+        matched = new TIntIntHashMap();
     }
 
     //***********************************************************************************
@@ -126,6 +134,7 @@ public class AlgoAllDiffACFast {
     //***********************************************************************************
 
     private void findMaximumMatching() throws ContradictionException {
+        matched.clear();
         // 每次都重新建图
         for (int i = 0; i < n2; i++) {
             digraph.getSuccOf(i).clear();
@@ -158,7 +167,12 @@ public class AlgoAllDiffACFast {
         }
         // 匹配边是由值指向变量，非匹配边是由变量指向值
         for (int i = 0; i < n; i++) {
-            matching[i] = digraph.getPredOf(i).isEmpty() ? -1 : digraph.getPredOf(i).iterator().next();
+            if (digraph.getPredOf(i).isEmpty()) {
+                matching[i] = -1;
+            } else {
+                matching[i] = digraph.getPredOf(i).iterator().next();
+                matched.put(matching[i], i);
+            }
         }
 
 //        System.out.println("matching: " + Arrays.toString(matching));
@@ -264,6 +278,7 @@ public class AlgoAllDiffACFast {
         boolean filter = false;
         // 调用区分函数
         distinguish();
+        mergeNodes();
         buildSCC();
         int j, ub;
         IntVar v;
@@ -285,7 +300,8 @@ public class AlgoAllDiffACFast {
 //                    digraph.removeArc(i, j);
                     } else if (!distinction.get(i) && !distinction.get(j)) { // 删除第二类边，变量在Xc-Γ(A)中，值在Dc-A中
                         System.out.println(this.id + " p2 " + i + "，val = " + j);
-                        if (nodeSCC[i] != nodeSCC[j]) {
+                        int matchedVarIdx = matched.get(j);
+                        if (nodeSCC[i] != nodeSCC[matchedVarIdx]) {
                             if (matching[i] == j) {
                                 int valNum = v.getDomainSize();
                                 filter |= v.instantiateTo(k, aCause);
@@ -327,5 +343,22 @@ public class AlgoAllDiffACFast {
 //            System.out.println(x.toString());
 //        }
         return filter;
+    }
+
+    private void mergeNodes() {
+        // 每次都重新建图
+        for (int i = 0; i < n; i++) {
+            mergedDigragh.getSuccOf(i).clear();
+            mergedDigragh.getPredOf(i).clear();
+        }
+
+        for (int i = 0; i < n; ++i) {
+            int matchedVal = matching[i];
+            for (int j : digraph.getPredOf(matchedVal)) {
+//                System.out.println(i + "<-" + j);
+                mergedDigragh.addArc(j, i);
+            }
+        }
+
     }
 }

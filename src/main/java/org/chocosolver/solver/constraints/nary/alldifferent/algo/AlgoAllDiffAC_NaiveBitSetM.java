@@ -6,23 +6,22 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
+import org.chocosolver.util.objects.NaiveBitSet;
 import org.chocosolver.util.objects.SparseSet;
-
-import java.util.BitSet;
 
 /**
  * Algorithm of Alldifferent with AC
  * <p>
- * Uses Regin algorithm
- * Runs in O(m.n) worst case time for the initial propagation
- * but has a good average behavior in practice
- * <p/>
- * Keeps track of previous matching for further calls
- * <p/>
+ * Uses Zhang algorithm in the paper of IJCAI-18
+ * "A Fast Algorithm for Generalized Arc Consistency of the Alldifferent Constraint"
+ * <p>
+ * We try to use the bit to speed up.
+ * <p>
+ * <p>
  *
- * @author Jean-Guillaume Fages
+ * @author Jean-Guillaume Fages, Zhe Li, Jia'nan Chen
  */
-public class AlgoAllDiffAC2 {
+public class AlgoAllDiffAC_NaiveBitSetM extends AlgoAllDiffAC_Naive {
 
     //***********************************************************************************
     // VARIABLES
@@ -36,17 +35,28 @@ public class AlgoAllDiffAC2 {
     private IntVar[] vars;
     private ICause aCause;
 
-    // numValue是二部图中取值编号的个数
-    private int numValue;
+    // 自由值集合
+    private SparseSet freeNode;
 
-    // 索引到值
-    private int[] idx2Val;
+    // 以下是bit版本所需数据结构========================
+    // numValue是二部图中取值编号的个数，numBit是二部图的最大边数
+    private int numValue;
     // 值到索引
+    private int[] idx2Val;
+    // 索引到值
     private TIntIntHashMap val2Idx;
 
+    // Xc-Γ(A)
+    private SparseSet notGamma;
+    // Dc-A
+    private SparseSet notA;
+
+    // 与值相连的变量
+    private NaiveBitSet[] valMask;
+
     // 已访问过的变量和值
-    private BitSet variable_visited_;
-    private BitSet value_visited_;
+    private NaiveBitSet variable_visited_;
+    private NaiveBitSet value_visited_;
 
     // matching
     private int[] val2Var;
@@ -56,37 +66,31 @@ public class AlgoAllDiffAC2 {
     private int[] visiting_;
     private int[] variable_visited_from_;
 
-    // 值编号对应的变量（不包括匹配变量）
-    private SparseSet[] valUnmatchedVar;
+    // 变量到变量的连通性
+    // 对于惰性算法，记录是否知道-变量到变量的连通性
+    private NaiveBitSet[] graphLinkedMatrix;
+    private NaiveBitSet[] graphLinkedFrontier;
 
-    // 自由值集合
-    private SparseSet freeNode;
-
-    // 新增一点（视为变量）
-    private int addArity;
-
-    // SCC
-    private int n, nbSCC, stackIdx, searchIdx;
-    private int[] nodeSCC;
-
-    // util
-    private int[] stack, p, inf, dfn;
-    private BitSet inStack, restriction;
+    // !! 记录gamma的前沿
+    private NaiveBitSet gammaFrontier;
+    // 记录gamma的bitset
+    private NaiveBitSet gammaMask;
 
     //***********************************************************************************
     // CONSTRUCTORS
     //***********************************************************************************
-    public AlgoAllDiffAC2(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffAC_NaiveBitSetM(IntVar[] variables, ICause cause) {
+        super(variables, cause);
         id = num++;
 
         this.vars = variables;
         aCause = cause;
         arity = vars.length;
-        addArity = arity + 1;
         val2Idx = new TIntIntHashMap();
+        IntVar v;
         // 统计所有变量论域中不同值的个数
         for (int i = 0; i < arity; ++i) {
-            IntVar v = vars[i];
+            v = vars[i];
             for (int j = v.getLB(), ub = v.getUB(); j <= ub; j = v.nextValue(j)) {
                 if (!val2Idx.containsKey(j)) {
                     val2Idx.put(j, val2Idx.size());
@@ -102,40 +106,42 @@ public class AlgoAllDiffAC2 {
             idx2Val[it.value()] = it.key();
         }
 
-        valUnmatchedVar = new SparseSet[numValue];
+//        System.out.println("-----------idx2Val-----------");
+//        System.out.println(Arrays.toString(idx2Val));
+
+        valMask = new NaiveBitSet[numValue];
         for (int i = 0; i < numValue; ++i) {
-            valUnmatchedVar[i] = new SparseSet(addArity);
+            valMask[i] = new NaiveBitSet(arity);
         }
 
         // 记录访问过的变量
         visiting_ = new int[arity];
-        variable_visited_ = new BitSet(arity);
+        variable_visited_ = new NaiveBitSet(arity);
         // 变量的前驱变量，若前驱变量是-1，则表示无前驱变量，就是第一个变量
         variable_visited_from_ = new int[arity];
-        value_visited_ = new BitSet(numValue);
+        value_visited_ = new NaiveBitSet(numValue);
 
         var2Val = new int[arity];
+        val2Var = new int[numValue];
         for (int i = 0; i < arity; ++i) {
             var2Val[i] = -1;
         }
-        val2Var = new int[numValue];
         for (int i = 0; i < numValue; ++i) {
             val2Var[i] = -1;
         }
 
-        // freeNode区分匹配点和非匹配点(正好是新增变量的取值范围）
         freeNode = new SparseSet(numValue);
+        gammaFrontier = new NaiveBitSet(arity);
+        gammaMask = new NaiveBitSet(arity);
+        notGamma = new SparseSet(arity);
+        notA = new SparseSet(numValue);
 
-        // SCC
-        n = addArity + numValue;
-        nodeSCC = new int[n];
-
-        stack = new int[n];
-        p = new int[n];
-        inf = new int[n];
-        dfn = new int[n];
-        inStack = new BitSet(n);
-        restriction = new BitSet(addArity);
+        graphLinkedMatrix = new NaiveBitSet[arity];
+        graphLinkedFrontier = new NaiveBitSet[arity];
+        for (int i = 0; i < arity; ++i) {
+            graphLinkedMatrix[i] = new NaiveBitSet(arity);
+            graphLinkedFrontier[i] = new NaiveBitSet(arity);
+        }
     }
 
     //***********************************************************************************
@@ -144,7 +150,7 @@ public class AlgoAllDiffAC2 {
 
     public boolean propagate() throws ContradictionException {
 //        System.out.println("----------------" + id + " propagate----------------");
-//        if (id == 0) {
+//        if (id == 2) {
 //            System.out.println("vars: ");
 //            for (IntVar v : vars) {
 //                System.out.println(v.toString());
@@ -180,6 +186,7 @@ public class AlgoAllDiffAC2 {
         // Enqueue start.
         // visit 里存的是变量
         visiting_[num_to_visit++] = start;
+//        variable_visited_[start] = true;
         variable_visited_.set(start);
         variable_visited_from_[start] = -1;
 
@@ -219,6 +226,7 @@ public class AlgoAllDiffAC2 {
                         path_value = old_value;
                     }
 
+//                    freeNode.clear(valIdx);
                     freeNode.remove(valIdx);
 //                    System.out.println(valIdx + " is not free");
                     return;
@@ -233,6 +241,7 @@ public class AlgoAllDiffAC2 {
                     // 把这个变量加入队列中
                     visiting_[num_to_visit++] = next_node;
                     variable_visited_from_[next_node] = node;
+//                    freeNode.clear(valIdx);
                     freeNode.remove(valIdx);
                 }
             }
@@ -240,19 +249,23 @@ public class AlgoAllDiffAC2 {
     }
 
     private void findMaximumMatching() throws ContradictionException {
+        // !! 可做增量
         for (int i = 0; i < numValue; ++i) {
-            valUnmatchedVar[i].clear();
-            valUnmatchedVar[i].add(arity);
+            valMask[i].clear();
         }
+
+//        freeNode.set();
         freeNode.fill();
+
         // 增量检查
         // matching 有效性检查
         for (int varIdx = 0; varIdx < arity; varIdx++) {
             IntVar v = vars[varIdx];
+            // !! 这里可以修改一下 已赋值 就不参与修改了
             if (v.getDomainSize() == 1) {
                 // 取出变量的唯一值
                 int valIdx = val2Idx.get(v.getValue());
-                valUnmatchedVar[valIdx].add(varIdx);
+                valMask[valIdx].set(varIdx);
 //                System.out.println(v.getName() + " : " + varIdx + " is singleton = " + v.getValue() + " : " + valIdx);
 
                 int oldValIdx = var2Val[varIdx];
@@ -268,6 +281,7 @@ public class AlgoAllDiffAC2 {
                 val2Var[valIdx] = varIdx;
                 var2Val[varIdx] = valIdx;
                 freeNode.remove(valIdx);
+
             } else {
                 // 检查原匹配是否失效
                 int oldMatchingIndex = var2Val[varIdx];
@@ -277,6 +291,7 @@ public class AlgoAllDiffAC2 {
                         val2Var[oldMatchingIndex] = -1;
                         var2Val[varIdx] = -1;
                     } else {
+//                        freeNode.clear(oldMatchingIndex);
                         freeNode.remove(oldMatchingIndex);
 //                    System.out.println(oldMatchingIndex + " is free");
                     }
@@ -285,7 +300,8 @@ public class AlgoAllDiffAC2 {
                 for (int value = v.getLB(), ub = v.getUB(); value <= ub; value = v.nextValue(value)) {
                     int valIdx = val2Idx.get(value);
                     // Forward-checking should propagate xsu != value.
-                    valUnmatchedVar[valIdx].add(varIdx);
+                    // !! 可以增量修改值
+                    valMask[valIdx].set(varIdx);
                 }
             }
         }
@@ -302,11 +318,6 @@ public class AlgoAllDiffAC2 {
                 vars[0].instantiateTo(vars[0].getLB() - 1, aCause);
             }
         }
-
-        for (int varIdx = 0; varIdx < arity; varIdx++) {
-            valUnmatchedVar[var2Val[varIdx]].remove(varIdx);
-        }
-
 //        if (id == 2) {
 //            System.out.println("-----final matching-----");
 //            for (int i = 0; i < arity; i++) {
@@ -323,105 +334,59 @@ public class AlgoAllDiffAC2 {
     // PRUNING
     //***********************************************************************************
 
-    private void buildSCC() {
-        // 初始化
-        // restriction记录寻找SCC的过程中未访问的变量
-        restriction.clear();
-        restriction.flip(0, addArity);
-        // 除去自由值对新增变量的指向
+    private void distinguish() {
+        notGamma.fill();
+        notA.fill();
+        gammaMask.clear();
+
         freeNode.iterateValid();
         while (freeNode.hasNextValid()) {
+            // 每个freeNode的值拿出来
+//            System.out.println(i);
             int valIdx = freeNode.next();
-            valUnmatchedVar[valIdx].remove(arity);
-            valUnmatchedVar[valIdx].iterateValid();
-            nodeSCC[valIdx + addArity] = -1;
+            notA.remove(valIdx);
+            gammaMask.or(valMask[valIdx]);
         }
-        inStack.clear();
-        nbSCC = 0;
-        // 普通变量初始化
-        for (int varIdx = 0; varIdx < arity; varIdx++) {
-            nodeSCC[varIdx] = -1;
+        gammaFrontier.set(gammaMask);
+
+        for (int varIdx = gammaFrontier.nextSetBit(0);
+             varIdx != -1; varIdx = gammaFrontier.nextSetBit(0)) {
+            // !! 这里可以将Extended改成Frontier，只记录前沿，记录方法是三个BitSet比较，
+            // frontier 扩展，从valMask中去掉gammaMask已记录的变量
             int valIdx = var2Val[varIdx];
-            nodeSCC[valIdx + addArity] = -1;
-            valUnmatchedVar[valIdx].iterateValid();
+            gammaFrontier.orAfterMinus(valMask[valIdx], gammaMask);
+            // 除去第i个变量
+            gammaFrontier.clear(varIdx);
+            // gamma 扩展
+            gammaMask.or(valMask[valIdx]);
+            notGamma.remove(varIdx);
+            notA.remove(valIdx);
         }
-        // 新增变量初始化
-        nodeSCC[arity] = -1;
-        freeNode.iterateValid();
-        // 开始
-        int first = restriction.nextSetBit(0);
-        while (first >= 0) {
-            findSCC(first);
-            first = restriction.nextSetBit(first);
-        }
+
     }
 
-    // TarjanRemoveValues
-    private void findSCC(int start) {
-        //initialization
-        stackIdx = 0;
-        // k是index
-        searchIdx = -1;
-        // i和j是点号，i是j的前驱
-        int i = start, j = i;
-        // 变量
-        stepForward(i, j);
-        // 变量的匹配值
-        j = var2Val[i] + addArity;
-        stepForward(i, j);
-        i = j;
-        // algo
-        while (stackIdx != 0) {
-            if (i >= addArity && valUnmatchedVar[i - addArity].hasNextValid()) { // i代表的是值
-                j = valUnmatchedVar[i - addArity].next();
-                if (restriction.get(j)) {
-                    if (!inStack.get(j)) {
-                        // 变量
-                        stepForward(i, j);
-                        i = j;
-                        if (i == arity) {// 新增变量
-                            continue;
-                        }
-                        j = var2Val[i] + addArity;
-                        stepForward(i, j);
-                        i = j;
-                    } else {
-                        inf[i] = Math.min(inf[i], dfn[j]);
-                    }
-                }
-            } else if (i == arity && freeNode.hasNextValid()) {// i代表的是新增变量
-                // j是新增变量指向的自由值，必然不在栈中
-                j = freeNode.next() + addArity;
-                stepForward(i, j);
-                i = j;
-            } else {
-                if (inf[i] == dfn[i]) {
-                    int y;
-                    do {
-                        y = stack[--stackIdx];
-                        inStack.clear(y);
-                        restriction.clear(y);
-                        nodeSCC[y] = nbSCC;
-                    } while (y != i);
-                    nbSCC++;
-                }
-                inf[p[i]] = Math.min(inf[p[i]], inf[i]);
-                i = p[i];
+    private void initiateMatrix() {
+        // 重置两个矩阵
+        // 只重置notGamma的变量
+        notGamma.iterateValid();
+        while (notGamma.hasNextValid()) {
+            int varIdx = notGamma.next();
+            // 从变量id拿到匹配值再拿到该值所能到达的变量mask
+            if (!vars[varIdx].isInstantiated()) {
+                graphLinkedMatrix[varIdx].setAfterMinus(valMask[var2Val[varIdx]], gammaMask);
+                graphLinkedMatrix[varIdx].clear(varIdx);
+                graphLinkedFrontier[varIdx].set(graphLinkedMatrix[varIdx]);
             }
+//                System.out.println("------graphLinkedMatrix[" + varIdx + "]------");
+//                System.out.println(graphLinkedMatrix[varIdx]);
+//                System.out.println(graphLinkedFrontier[varIdx]);
         }
-    }
-
-    private void stepForward(int pre, int sub) {
-        searchIdx++;
-        dfn[sub] = searchIdx;
-        inf[sub] = searchIdx;
-        p[sub] = pre;
-        stack[stackIdx++] = sub;
-        inStack.set(sub);
     }
 
     private boolean filter() throws ContradictionException {
-        buildSCC();
+        distinguish();
+        initiateMatrix();
+        // 这里判断一下，如果notGamma为空则不用进行如下步骤
         boolean filter = false;
         for (int varIdx = 0; varIdx < arity; varIdx++) {
             IntVar v = vars[varIdx];
@@ -429,13 +394,22 @@ public class AlgoAllDiffAC2 {
                 int ub = v.getUB();
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     int valIdx = val2Idx.get(k);
-                    if (nodeSCC[varIdx] != nodeSCC[valIdx + addArity]) {
-                        if (valIdx == var2Val[varIdx]) {
-                            filter |= v.instantiateTo(k, aCause);
+                    if (!notGamma.contain(varIdx) && notA.contain(valIdx)) {
+                        ++Measurer.numDelValuesP1;
+                        filter |= v.removeValue(k, aCause);
+                        //                System.out.println("first delete: " + v.getName() + ", " + k);
+                    } else if (notGamma.contain(varIdx) && notA.contain(valIdx)) {
+                        if (!graphLinkedMatrix[varIdx].get(val2Var[valIdx]) && !checkSCC(varIdx, valIdx)) {
+                            if (valIdx == var2Val[varIdx]) {
+                                int valNum = v.getDomainSize();
+                                filter |= v.instantiateTo(k, aCause);
+                                Measurer.numDelValuesP2 += valNum - 1;
 //                            System.out.println("instantiate  : " + v.getName() + ", " + k);
-                        } else {
-                            filter |= v.removeValue(k, aCause);
+                            } else {
+                                ++Measurer.numDelValuesP2;
+                                filter |= v.removeValue(k, aCause);
 //                            System.out.println("second delete: " + v.getName() + ", " + k);
+                            }
                         }
                     }
                 }
@@ -443,4 +417,22 @@ public class AlgoAllDiffAC2 {
         }
         return filter;
     }
+
+    private boolean checkSCC(int varIdx, int valIdx) {
+//        System.out.println("check:" + varIdx + ", " + valIdx);
+        // 若没有 就需要BFS一下Frontier没有，就表示不用扩展了
+        // 注意一下return退出时frontier正确
+        for (int i = graphLinkedFrontier[varIdx].nextSetBit(0);
+             i != -1; i = graphLinkedFrontier[varIdx].nextSetBit(0)) {
+            // frontier扩张，除掉变量i 因为变量i已被扩展。
+            graphLinkedFrontier[varIdx].orAfterMinus(graphLinkedMatrix[i], graphLinkedMatrix[varIdx]);
+            graphLinkedFrontier[varIdx].clear(i);
+            graphLinkedMatrix[varIdx].or(graphLinkedMatrix[i]);
+            if (graphLinkedMatrix[varIdx].get(val2Var[valIdx])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

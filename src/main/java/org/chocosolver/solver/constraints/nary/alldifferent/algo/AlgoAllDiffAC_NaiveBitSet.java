@@ -21,7 +21,7 @@ import org.chocosolver.util.objects.SparseSet;
  *
  * @author Jean-Guillaume Fages, Zhe Li, Jia'nan Chen
  */
-public class AlgoAllDiffAC_Naive2 extends AlgoAllDiffAC_Naive {
+public class AlgoAllDiffAC_NaiveBitSet extends AlgoAllDiffAC_Naive {
 
     //***********************************************************************************
     // VARIABLES
@@ -79,7 +79,7 @@ public class AlgoAllDiffAC_Naive2 extends AlgoAllDiffAC_Naive {
     //***********************************************************************************
     // CONSTRUCTORS
     //***********************************************************************************
-    public AlgoAllDiffAC_Naive2(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffAC_NaiveBitSet(IntVar[] variables, ICause cause) {
         super(variables, cause);
         id = num++;
 

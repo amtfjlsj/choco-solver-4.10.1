@@ -97,8 +97,9 @@ public class AllDifferentTest {
         vars[2] = s.intVar("v_2", new int[]{3, 5});
         vars[3] = s.intVar("v_3", new int[]{1, 3, 5, 6});
 
-
-        s.allDifferent(vars, "BC").post();
+//        String algo = "ACFast";
+        String algo = "ACFastM";
+        s.allDifferent(vars, algo).post();
         for (int i = 0; i < n - 1; i++) {
             for (int j = i + 1; j < n; j++) {
                 int k = j - i;

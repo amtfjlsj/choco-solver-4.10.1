@@ -25,7 +25,12 @@ public class AllDifferent extends Constraint {
     public static final String AC2= "AC2";
     public static final String ACFast= "ACFast";
     public static final String ACFast2= "ACFast2";
+    public static final String ACFastM= "ACFastM";
+    public static final String ACFastE= "ACFastE";
     public static final String ACNaive= "ACNaive";
+    public static final String ACNaiveML= "ACNaiveML";
+    public static final String ACNaiveMLB= "ACNaiveMLB";
+    public static final String ACNaiveMLBE= "ACNaiveMLBE";
     public static final String BC= "BC";
     public static final String FC= "FC";
     public static final String NEQS= "NEQS";
@@ -60,7 +65,17 @@ public class AllDifferent extends Constraint {
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFast(VARS)};
             case ACFast2:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFast2(VARS)};
+            case ACFastE:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFast2(VARS)};
+            case ACFastM:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFastM(VARS)};
             case ACNaive:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Naive(VARS)};
+            case ACNaiveML:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Naive(VARS)};
+            case ACNaiveMLB:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Naive(VARS)};
+            case ACNaiveMLBE:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Naive(VARS)};
             case DEFAULT:
             default: {

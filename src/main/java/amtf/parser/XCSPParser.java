@@ -25,7 +25,8 @@ import org.xcsp.common.Condition;
 import org.xcsp.common.Types;
 import org.xcsp.common.predicates.XNode;
 import org.xcsp.common.predicates.XNodeParent;
-import org.xcsp.parser.XCallbacks2;
+//import org.xcsp.parser.XCallbacks2;
+import org.xcsp.parser.callbacks.XCallbacks2;
 import org.xcsp.parser.entries.XConstraints;
 import org.xcsp.parser.entries.XVariables;
 
