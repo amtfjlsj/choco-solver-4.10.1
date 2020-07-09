@@ -63,7 +63,7 @@ public class AlgoAllDiffACFastM {
     private int[] fifo;
     private BitSet in;
 
-    int xixi;
+//    int xixi;
     //***********************************************************************************
     // CONSTRUCTORS
     //***********************************************************************************
@@ -269,9 +269,9 @@ public class AlgoAllDiffACFastM {
     private void buildSCC() {
         // 调用重载函数
         SCCfinder.findAllSCC(distinction);
-        System.out.println(distinction.toString());
+//        System.out.println(distinction.toString());
         nodeSCC = SCCfinder.getNodesSCC();
-        System.out.println(Arrays.toString(nodeSCC));
+//        System.out.println(Arrays.toString(nodeSCC));
     }
 
     private boolean filter() throws ContradictionException {
@@ -287,19 +287,19 @@ public class AlgoAllDiffACFastM {
             v = vars[i];
             if (!v.isInstantiated()) {
                 ub = v.getUB();
-                xixi++;
-                System.out.println(this.id + " var: " + i + " in [ " + v.getLB() + "," + ub + " ], xixi = " + xixi);
+//                xixi++;
+//                System.out.println(this.id + " var: " + i + " in [ " + v.getLB() + "," + ub + " ], xixi = " + xixi);
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     j = map.get(k);
-                    System.out.println("i = " + i + " " + distinction.get(i) + ", j = " + j + " " + distinction.get(j));
+//                    System.out.println("i = " + i + " " + distinction.get(i) + ", j = " + j + " " + distinction.get(j));
                     if (distinction.get(i) && !distinction.get(j)) { // 删除第一类边，变量在Γ(A)中，值在Dc-A中
-                        System.out.println(this.id + " p1 " + i + "，val = " + j);
+//                        System.out.println(this.id + " p1 " + i + "，val = " + j);
                         ++Measurer.numDelValuesP1;
                         filter |= v.removeValue(k, aCause);
-                        System.out.println(this.id + " first delete: " + v.getName() + ", " + k);
+//                        System.out.println(this.id + " first delete: " + v.getName() + ", " + k);
 //                    digraph.removeArc(i, j);
                     } else if (!distinction.get(i) && !distinction.get(j)) { // 删除第二类边，变量在Xc-Γ(A)中，值在Dc-A中
-                        System.out.println(this.id + " p2 " + i + "，val = " + j);
+//                        System.out.println(this.id + " p2 " + i + "，val = " + j);
                         int matchedVarIdx = matched.get(j);
                         if (nodeSCC[i] != nodeSCC[matchedVarIdx]) {
                             if (matching[i] == j) {
@@ -310,7 +310,7 @@ public class AlgoAllDiffACFastM {
                             } else {
                                 ++Measurer.numDelValuesP2;
                                 filter |= v.removeValue(k, aCause);
-                                System.out.println(this.id + " second delete: " + v.getName() + ", " + k);
+//                                System.out.println(this.id + " second delete: " + v.getName() + ", " + k);
                                 // 我觉得不用更新digraph，因为每次调用propagate时都会更新digraph
 //                            digraph.removeArc(i, j);
                             }

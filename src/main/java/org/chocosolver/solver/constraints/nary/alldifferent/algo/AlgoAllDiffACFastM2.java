@@ -1,338 +1,327 @@
-/*
- * This file is part of choco-solver, http://choco-solver.org/
- *
- * Copyright (c) 2019, IMT Atlantique. All rights reserved.
- *
- * Licensed under the BSD 4-clause license.
- *
- * See LICENSE file in the project root for full license information.
- */
-package org.chocosolver.solver.constraints.nary.alldifferent.algo;
-
-import amtf.Measurer;
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.map.TIntIntMap;
-import gnu.trove.map.hash.TIntIntHashMap;
-import org.chocosolver.solver.ICause;
-import org.chocosolver.solver.exception.ContradictionException;
-import org.chocosolver.solver.variables.IntVar;
-import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityNewFinder;
-import org.chocosolver.util.objects.SparseSet;
-import org.chocosolver.util.objects.graphs.DirectedGraph;
-import org.chocosolver.util.objects.setDataStructures.ISetIterator;
-import org.chocosolver.util.objects.setDataStructures.SetType;
-
-import java.util.Arrays;
-import java.util.BitSet;
-
-/**
- * Algorithm of Alldifferent with AC
- * <p>
- * Uses Zhang algorithm in the paper of IJCAI-18
- * "A Fast Algorithm for Generalized Arc Consistency of the Alldifferent Constraint"
- *
- * @author Jean-Guillaume Fages, Jia'nan Chen
- */
-public class AlgoAllDiffACFastM2 {
-
-    //***********************************************************************************
-    // VARIABLES
-    //***********************************************************************************
-    // 约束的个数
-    static public int num = 0;
-    // 约束的编号
-    private int id;
-
-    // n = arity
-    private int arity, n2, numValue;
-    private IntVar[] vars;
-    private ICause aCause;
-    private TIntIntHashMap map;
-    private DirectedGraph digraph;
-    private DirectedGraph mergedDigragh;
-    //     值编号对应的变量（不包括匹配变量）
-//    private TIntArrayList[] valUnmatchedVar;
-    // matching var to val
-    private int[] matching;
-    // matched val to var
-    private TIntIntMap matched;
-    private BitSet free;
-    // distinction为区分集，长度为n2
-    // 变量部分（前n位），1b对应的变量属于Γ(A)，0b对应的变量属于Xc-Γ(A)
-    // 值部分（后n2-n位），1b对应的值属于A，0b对应的值属于Dc-A
-    private BitSet distinction;
-    // distinction2为变量区分集，长度为n
-    // 变量部分（前n位），1b对应的变量属于Γ(A)，0b对应的变量属于Xc-Γ(A)
-    private BitSet distinction2;
-    private int[] nodeSCC;
-    private StrongConnectivityNewFinder SCCfinder;
-    // for augmenting matching (BFS)
-    private int[] father;
-    private int[] fifo;
-    private BitSet in;
-
-    //***********************************************************************************
-    // CONSTRUCTORS
-    //***********************************************************************************
-
-    public AlgoAllDiffACFastM2(IntVar[] variables, ICause cause) {
-        id = num++;
-
-        this.vars = variables;
-        aCause = cause;
-        arity = vars.length;
-        // 存储匹配
-        matching = new int[arity];
-        matched = new TIntIntHashMap();
-        Arrays.fill(matching, -1);
-        map = new TIntIntHashMap();
-        IntVar v;
-        int ub;
-        int idx = arity;
-        // 统计所有变量论域中不同值的个数
-        for (int i = 0; i < arity; i++) {
-            v = vars[i];
-            ub = v.getUB();
-            for (int j = v.getLB(); j <= ub; j = v.nextValue(j)) {
-                if (!map.containsKey(j)) {
-                    map.put(j, idx);
-                    idx++;
-                    numValue++;
-                }
-            }
-        }
-        n2 = idx;
-        // 用Bitset邻接矩阵的有向图，因为没有辅助点，所以是n2，非n2 + 1
-        digraph = new DirectedGraph(n2, SetType.BITSET, false);
-        mergedDigragh = new DirectedGraph(arity, SetType.BITSET, false);
-        // free应该区分匹配点和非匹配点（true表示非匹配点，false表示匹配点）
-        free = new BitSet(n2);
-        distinction = new BitSet(n2);
-        distinction2 = new BitSet(arity);
-//        SCCfinder = new StrongConnectivityNewFinder(digraph);
-        SCCfinder = new StrongConnectivityNewFinder(mergedDigragh);
-        // 用于回溯增广路径
-        father = new int[n2];
-        // 使用队列实现非递归广度优先搜索
-        fifo = new int[n2];
-        // 哪些点在fifo队列中（true表示在，false表示不在）
-        in = new BitSet(n2);
-    }
-
-    //***********************************************************************************
-    // PROPAGATION
-    //***********************************************************************************
-
-    public boolean propagate() throws ContradictionException {
-//        out.println("vars: ");
-//        for (IntVar v : vars) {
-//            System.out.println(v.toString());
-//        }
-//        System.out.println("----------------" + id + " propagate----------------");
-        long startTime = System.nanoTime();
-        findMaximumMatching();
-        Measurer.matchingTime += System.nanoTime() - startTime;
-
-        startTime = System.nanoTime();
-        boolean filter = filter();
-        Measurer.filterTime += System.nanoTime() - startTime;
-        return filter;
-    }
-
-    //***********************************************************************************
-    // Initialization
-    //***********************************************************************************
-
-    private void findMaximumMatching() throws ContradictionException {
-        // 每次都重新建图
-        for (int i = 0; i < n2; i++) {
-            digraph.getSuccOf(i).clear();
-            digraph.getPredOf(i).clear();
-        }
-        free.set(0, n2);
-        int k, ub;
-        IntVar v;
-        for (int i = 0; i < arity; i++) {
-            v = vars[i];
-            ub = v.getUB();
-            int mate = matching[i];
-            for (k = v.getLB(); k <= ub; k = v.nextValue(k)) {
-                int j = map.get(k);
-                // 利用之前已经找到的匹配
-                if (mate == j) {
-                    // 找到匹配，val->var
-                    assert free.get(i) && free.get(j);
-                    digraph.addArc(j, i);
-                    free.clear(i);
-                    free.clear(j);
-                } else {
-                    // var -> val
-                    digraph.addArc(i, j);
-                }
-            }
-        }
-        // 尝试为每个变量都寻找一个匹配，即最大匹配的个数要与变量个数相等，否则回溯
-        // 利用匈牙利算法寻找最大匹配
-        for (int i = free.nextSetBit(0); i >= 0 && i < arity; i = free.nextSetBit(i + 1)) {
-            tryToMatch(i);
-        }
-
-        // 清空matched
-        matched.clear();
-        // 匹配边是由值指向变量，非匹配边是由变量指向值
-        for (int i = 0; i < arity; i++) {
-            if (digraph.getPredOf(i).isEmpty()) {
-                matching[i] = -1;
-            } else {
-                matching[i] = digraph.getPredOf(i).iterator().next();
-                matched.put(matching[i], i);
-            }
+///*
+// * This file is part of choco-solver, http://choco-solver.org/
+// *
+// * Copyright (c) 2019, IMT Atlantique. All rights reserved.
+// *
+// * Licensed under the BSD 4-clause license.
+// *
+// * See LICENSE file in the project root for full license information.
+// */
+//package org.chocosolver.solver.constraints.nary.alldifferent.algo;
 //
-        }
-
-//        System.out.println("matching: " + Arrays.toString(matching));
-    }
-
-    private void tryToMatch(int i) throws ContradictionException {
-        int mate = augmentPath_BFS(i);
-        if (mate != -1) {// 值mate是一个自由点
-            free.clear(mate);
-            free.clear(i);
-            int tmp = mate;
-            // 沿着father回溯即是增广路径
-            while (tmp != i) {
-                // 翻转边的方向
-                digraph.removeArc(father[tmp], tmp);
-                digraph.addArc(tmp, father[tmp]);
-                // 回溯
-                tmp = father[tmp];
-            }
-        } else {//应该是匹配失败，即最大匹配个数与变量个数不相等，需要回溯
-            vars[0].instantiateTo(vars[0].getLB() - 1, aCause);
-        }
-    }
-
-    // 宽度优先搜索寻找增广路径
-    private int augmentPath_BFS(int root) {
-        // root是一个自由点（变量）。
-        // 如果与root相连的值中有自由点，就返回第一个自由点；
-        // 如果没有，尝试为匹配变量找一个新的自由点，过程中通过father标记增广路径。
-        in.clear();
-        int indexFirst = 0, indexLast = 0;
-        fifo[indexLast++] = root;
-        int x;
-        ISetIterator succs;
-        while (indexFirst != indexLast) {
-            x = fifo[indexFirst++];
-            // 如果x是一个变量，那么它的后继就是非匹配的值；
-            // 如果x是一个值，那么它的后继只有一个，是与它匹配的变量。
-            succs = digraph.getSuccOf(x).iterator();
-            while (succs.hasNext()) {
-                int y = succs.nextInt();
-                if (!in.get(y)) {
-                    father[y] = x;
-                    fifo[indexLast++] = y;
-                    in.set(y);
-                    if (free.get(y)) { //自由点（值）
-                        return y;
-                    }
-                }
-            }
-        }
-        return -1;
-    }
-
-    //***********************************************************************************
-    // PRUNING
-    //***********************************************************************************
-
-    // 新建有向图
-    private void mergeNodes() {
-//        System.out.println("-------");
-        // 每次都重新建图
-        for (int i = 0; i < arity; i++) {
-            mergedDigragh.getSuccOf(i).clear();
-            mergedDigragh.getPredOf(i).clear();
-        }
-
+//import amtf.Measurer;
+//import gnu.trove.list.array.TIntArrayList;
+//import gnu.trove.map.TIntIntMap;
+//import gnu.trove.map.hash.TIntIntHashMap;
+//import org.chocosolver.solver.ICause;
+//import org.chocosolver.solver.exception.ContradictionException;
+//import org.chocosolver.solver.variables.IntVar;
+//import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityNewFinder;
+//import org.chocosolver.util.objects.SparseSet;
+//import org.chocosolver.util.objects.graphs.DirectedGraph;
+//import org.chocosolver.util.objects.setDataStructures.ISetIterator;
+//import org.chocosolver.util.objects.setDataStructures.SetType;
+//
+//import java.util.Arrays;
+//import java.util.BitSet;
+//
+///**
+// * Algorithm of Alldifferent with AC
+// * <p>
+// * Uses Zhang algorithm in the paper of IJCAI-18
+// * "A Fast Algorithm for Generalized Arc Consistency of the Alldifferent Constraint"
+// *
+// * @author Jean-Guillaume Fages, Jia'nan Chen
+// */
+//public class AlgoAllDiffACFastM2 {
+//
+//    //***********************************************************************************
+//    // VARIABLES
+//    //***********************************************************************************
+//    // 约束的个数
+//    static public int num = 0;
+//    // 约束的编号
+//    private int id;
+//
+//    // n = arity
+//    private int arity, n2, numValue;
+//    private IntVar[] vars;
+//    private ICause aCause;
+//    private TIntIntHashMap map;
+//    private DirectedGraph digraph;
+//    private DirectedGraph mergedDigragh;
+//    //     值编号对应的变量（不包括匹配变量）
+////    private TIntArrayList[] valUnmatchedVar;
+//    // matching var to val
+//    private int[] matching;
+//    // matched val to var
+//    private TIntIntMap matched;
+//    private BitSet free;
+//    // distinction为区分集，长度为n2
+//    // 变量部分（前n位），1b对应的变量属于Γ(A)，0b对应的变量属于Xc-Γ(A)
+//    // 值部分（后n2-n位），1b对应的值属于A，0b对应的值属于Dc-A
+//    private BitSet distinction;
+//    // distinction2为变量区分集，长度为n
+//    // 变量部分（前n位），1b对应的变量属于Γ(A)，0b对应的变量属于Xc-Γ(A)
+////    private BitSet distinction2;
+//    private int[] nodeSCC;
+//    private StrongConnectivityNewFinder SCCfinder;
+//    // for augmenting matching (BFS)
+//    private int[] father;
+//    private int[] fifo;
+//    private BitSet in;
+//
+//    //***********************************************************************************
+//    // CONSTRUCTORS
+//    //***********************************************************************************
+//
+//    public AlgoAllDiffACFastM2(IntVar[] variables, ICause cause) {
+//        id = num++;
+//
+//        this.vars = variables;
+//        aCause = cause;
+//        arity = vars.length;
+//        // 存储匹配
+//        matching = new int[arity];
+//        matched = new TIntIntHashMap();
+//        Arrays.fill(matching, -1);
+//        map = new TIntIntHashMap();
+//        IntVar v;
+//        int ub;
+//        int idx = arity;
+//        // 统计所有变量论域中不同值的个数
+//        for (int i = 0; i < arity; i++) {
+//            v = vars[i];
+//            ub = v.getUB();
+//            for (int j = v.getLB(); j <= ub; j = v.nextValue(j)) {
+//                if (!map.containsKey(j)) {
+//                    map.put(j, idx);
+//                    idx++;
+//                    numValue++;
+//                }
+//            }
+//        }
+//        n2 = idx;
+//        // 用Bitset邻接矩阵的有向图，因为没有辅助点，所以是n2，非n2 + 1
+//        digraph = new DirectedGraph(n2, SetType.BITSET, false);
+//        mergedDigragh = new DirectedGraph(arity, SetType.BITSET, false);
+//        // free应该区分匹配点和非匹配点（true表示非匹配点，false表示匹配点）
+//        free = new BitSet(n2);
+//        distinction = new BitSet(n2);
+////        SCCfinder = new StrongConnectivityNewFinder(digraph);
+//        SCCfinder = new StrongConnectivityNewFinder(mergedDigragh);
+//        // 用于回溯增广路径
+//        father = new int[n2];
+//        // 使用队列实现非递归广度优先搜索
+//        fifo = new int[n2];
+//        // 哪些点在fifo队列中（true表示在，false表示不在）
+//        in = new BitSet(n2);
+//    }
+//
+//    //***********************************************************************************
+//    // PROPAGATION
+//    //***********************************************************************************
+//
+//    public boolean propagate() throws ContradictionException {
+////        out.println("vars: ");
+////        for (IntVar v : vars) {
+////            System.out.println(v.toString());
+////        }
+////        System.out.println("----------------" + id + " propagate----------------");
+//        long startTime = System.nanoTime();
+//        findMaximumMatching();
+//        Measurer.matchingTime += System.nanoTime() - startTime;
+//
+//        startTime = System.nanoTime();
+//        boolean filter = filter();
+//        Measurer.filterTime += System.nanoTime() - startTime;
+//        return filter;
+//    }
+//
+//    //***********************************************************************************
+//    // Initialization
+//    //***********************************************************************************
+//
+//    private void findMaximumMatching() throws ContradictionException {
+//        // 每次都重新建图
+//        for (int i = 0; i < n2; i++) {
+//            digraph.getSuccOf(i).clear();
+//            digraph.getPredOf(i).clear();
+//        }
+//        free.set(0, n2);
+//        int k, ub;
+//        IntVar v;
+//        for (int i = 0; i < arity; i++) {
+//            v = vars[i];
+//            ub = v.getUB();
+//            int mate = matching[i];
+//            for (k = v.getLB(); k <= ub; k = v.nextValue(k)) {
+//                int j = map.get(k);
+//                // 利用之前已经找到的匹配
+//                if (mate == j) {
+//                    // 找到匹配，val->var
+//                    assert free.get(i) && free.get(j);
+//                    digraph.addArc(j, i);
+//                    free.clear(i);
+//                    free.clear(j);
+//                } else {
+//                    // var -> val
+//                    digraph.addArc(i, j);
+//                }
+//            }
+//        }
+//        // 尝试为每个变量都寻找一个匹配，即最大匹配的个数要与变量个数相等，否则回溯
+//        // 利用匈牙利算法寻找最大匹配
+//        for (int i = free.nextSetBit(0); i >= 0 && i < arity; i = free.nextSetBit(i + 1)) {
+//            tryToMatch(i);
+//        }
+//
+//        // 清空matched
+//        matched.clear();
+//        // 匹配边是由值指向变量，非匹配边是由变量指向值
+//        for (int i = 0; i < arity; i++) {
+//            if (digraph.getPredOf(i).isEmpty()) {
+//                matching[i] = -1;
+//            } else {
+//                matching[i] = digraph.getPredOf(i).iterator().next();
+//                matched.put(matching[i], i);
+//            }
+////
+//        }
+//
+////        System.out.println("matching: " + Arrays.toString(matching));
+//    }
+//
+//    private void tryToMatch(int i) throws ContradictionException {
+//        int mate = augmentPath_BFS(i);
+//        if (mate != -1) {// 值mate是一个自由点
+//            free.clear(mate);
+//            free.clear(i);
+//            int tmp = mate;
+//            // 沿着father回溯即是增广路径
+//            while (tmp != i) {
+//                // 翻转边的方向
+//                digraph.removeArc(father[tmp], tmp);
+//                digraph.addArc(tmp, father[tmp]);
+//                // 回溯
+//                tmp = father[tmp];
+//            }
+//        } else {//应该是匹配失败，即最大匹配个数与变量个数不相等，需要回溯
+//            vars[0].instantiateTo(vars[0].getLB() - 1, aCause);
+//        }
+//    }
+//
+//    // 宽度优先搜索寻找增广路径
+//    private int augmentPath_BFS(int root) {
+//        // root是一个自由点（变量）。
+//        // 如果与root相连的值中有自由点，就返回第一个自由点；
+//        // 如果没有，尝试为匹配变量找一个新的自由点，过程中通过father标记增广路径。
+//        in.clear();
+//        int indexFirst = 0, indexLast = 0;
+//        fifo[indexLast++] = root;
+//        int x;
 //        ISetIterator succs;
-        for (int i = 0; i < arity; ++i) {
-            int matchedVal = matching[i];
-//            System.out.println(i + " matchedVal = " + matchedVal);
-//            succs = digraph.getSuccOf(matchedVal).iterator();
-//            for (int j : digraph.getSuccOf(matchedVal)) {
-//                System.out.println(i + "->" + j);
-////                if (i != j) {
-////                    System.out.println(i + "->" + j);
-////                    mergedDigragh.addArc(i, j);
-////                }
-//            }
-            for (int j : digraph.getPredOf(matchedVal)) {
-//                System.out.println(i + "<-" + j);
-                if (i != j) {
-//                    System.out.println(i + "<-" + j);
-                    mergedDigragh.addArc(j, i);
-                }
-            }
+//        while (indexFirst != indexLast) {
+//            x = fifo[indexFirst++];
+//            // 如果x是一个变量，那么它的后继就是非匹配的值；
+//            // 如果x是一个值，那么它的后继只有一个，是与它匹配的变量。
+//            succs = digraph.getSuccOf(x).iterator();
 //            while (succs.hasNext()) {
-//                int j = succs.nextInt();
-//                mergedDigragh.addArc(i, j);
+//                int y = succs.nextInt();
+//                if (!in.get(y)) {
+//                    father[y] = x;
+//                    fifo[indexLast++] = y;
+//                    in.set(y);
+//                    if (free.get(y)) { //自由点（值）
+//                        return y;
+//                    }
+//                }
 //            }
-        }
-//        System.out.println("-------");
-    }
-
-    //  新函数从自由点出发，区分论文中的四个集合
-    private void distinguish() {
-        distinction.clear();
-        distinction2.clear();
-        int indexFirst = 0, indexLast = 0;
-        // 广度优先搜索，寻找从自由值出发的所有交替路
-        ISetIterator predece;
-        for (int i = free.nextSetBit(arity); i >= arity && i < n2; i = free.nextSetBit(i + 1)) {
-            // 首先把与自由值相连的变量入队列
-            distinction.set(i);
-            predece = digraph.getPredOf(i).iterator();
-            while (predece.hasNext()) {
-                int x = predece.nextInt();
-                if (!distinction.get(x)) {
-                    fifo[indexLast++] = x;
-                    distinction.set(x);
-                }
-            }
-            // 然后，对队列中每个变量的匹配值，把与该值相连的非匹配变量入队
-            while (indexFirst != indexLast) {
-                int y = fifo[indexFirst++];
-                int v = matching[y];
-                distinction.set(v);
-                predece = digraph.getPredOf(v).iterator();
-                while (predece.hasNext()) {
-                    int x = predece.nextInt();
-                    if (!distinction.get(x)) {
-                        fifo[indexLast++] = x;
-                        distinction.set(x);
-                    }
-                }
-            }
-        }
-
-//        System.out.println(distinction.toString());
-
-        // 修改distinction2
-        for (int i = distinction.nextSetBit(0); i >= 0 && i < arity; i = distinction.nextSetBit(i + 1)) {
-            distinction2.set(i);
-        }
-    }
-
-    private void buildSCC() {
-        // 调用重载函数
-        SCCfinder.findAllSCC(distinction);
-        System.out.println(distinction.toString());
-        nodeSCC = SCCfinder.getNodesSCC();
-
-        System.out.println(Arrays.toString(nodeSCC));
-    }
-
+//        }
+//        return -1;
+//    }
+//
+//    //***********************************************************************************
+//    // PRUNING
+//    //***********************************************************************************
+//
+//    // 新建有向图
+//    private void mergeNodes() {
+////        System.out.println("-------");
+//        // 每次都重新建图
+//        for (int i = 0; i < arity; i++) {
+//            mergedDigragh.getSuccOf(i).clear();
+//            mergedDigragh.getPredOf(i).clear();
+//        }
+//
+////        ISetIterator succs;
+//        for (int i = 0; i < arity; ++i) {
+//            int matchedVal = matching[i];
+////            System.out.println(i + " matchedVal = " + matchedVal);
+////            succs = digraph.getSuccOf(matchedVal).iterator();
+////            for (int j : digraph.getSuccOf(matchedVal)) {
+////                System.out.println(i + "->" + j);
+//////                if (i != j) {
+//////                    System.out.println(i + "->" + j);
+//////                    mergedDigragh.addArc(i, j);
+//////                }
+////            }
+//            for (int j : digraph.getPredOf(matchedVal)) {
+////                System.out.println(i + "<-" + j);
+//                if (i != j) {
+////                    System.out.println(i + "<-" + j);
+//                    mergedDigragh.addArc(j, i);
+//                }
+//            }
+////            while (succs.hasNext()) {
+////                int j = succs.nextInt();
+////                mergedDigragh.addArc(i, j);
+////            }
+//        }
+////        System.out.println("-------");
+//    }
+//
+//    //  新函数从自由点出发，区分论文中的四个集合
+//    private void distinguish() {
+//        distinction.clear();
+//        distinction2.clear();
+//        int indexFirst = 0, indexLast = 0;
+//        // 广度优先搜索，寻找从自由值出发的所有交替路
+//        ISetIterator predece;
+//        for (int i = free.nextSetBit(arity); i >= arity && i < n2; i = free.nextSetBit(i + 1)) {
+//            // 首先把与自由值相连的变量入队列
+//            distinction.set(i);
+//            predece = digraph.getPredOf(i).iterator();
+//            while (predece.hasNext()) {
+//                int x = predece.nextInt();
+//                if (!distinction.get(x)) {
+//                    fifo[indexLast++] = x;
+//                    distinction.set(x);
+//                }
+//            }
+//            // 然后，对队列中每个变量的匹配值，把与该值相连的非匹配变量入队
+//            while (indexFirst != indexLast) {
+//                int y = fifo[indexFirst++];
+//                int v = matching[y];
+//                distinction.set(v);
+//                predece = digraph.getPredOf(v).iterator();
+//                while (predece.hasNext()) {
+//                    int x = predece.nextInt();
+//                    if (!distinction.get(x)) {
+//                        fifo[indexLast++] = x;
+//                        distinction.set(x);
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    private void buildSCC() {
+//        // 调用重载函数
+//        SCCfinder.findAllSCC(distinction);
+//        nodeSCC = SCCfinder.getNodesSCC();
+//    }
+//
 //    private boolean filter() throws ContradictionException {
 //        boolean filter = false;
 //        // 调用区分函数
@@ -346,20 +335,20 @@ public class AlgoAllDiffACFastM2 {
 //            v = vars[i];
 //            if (!v.isInstantiated()) {
 //                ub = v.getUB();
-//                System.out.println(this.id + " var: " + i + " in [ " + v.getLB() + "," + ub + " ]");
+////                System.out.println(this.id + " var: " + i + " in [ " + v.getLB() + "," + ub + " ]");
 //                for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
 //                    j = map.get(k);
-//                    System.out.println("i = " + i + " " + distinction.get(i) + ", j = " + j + " " + distinction.get(j));
+////                    System.out.println("i = " + i + " " + distinction.get(i) + ", j = " + j + " " + distinction.get(j));
 //                    if (distinction.get(i) && !distinction.get(j)) { // 删除第一类边，变量在Γ(A)中，值在Dc-A中
-//                        System.out.println(this.id + " p1 " + i + "，val = " + j);
+////                        System.out.println(this.id + " p1 " + i + "，val = " + j);
 //                        ++Measurer.numDelValuesP1;
 //                        filter |= v.removeValue(k, aCause);
-//                        System.out.println(this.id + " first delete: " + v.getName() + ", " + k);
+////                        System.out.println(this.id + " first delete: " + v.getName() + ", " + k);
 ////                    digraph.removeArc(i, j);
 //                    } else if (!distinction.get(i) && !distinction.get(j)) { // 删除第二类边，变量在Xc-Γ(A)中，值在Dc-A中
-//                        System.out.println(this.id + " p2 " + i + "，val = " + j);
+////                        System.out.println(this.id + " p2 " + i + "，val = " + j);
 //                        int matchedVarIdx = matched.get(j);
-////                        System.out.println(this.id + " " + i + "，var = " + matchedVarIdx);
+////                        if (nodeSCC[i] != nodeSCC[j]) {
 //                        if (nodeSCC[i] != nodeSCC[matchedVarIdx]) {
 //                            if (matching[i] == j) {
 //                                int valNum = v.getDomainSize();
@@ -369,7 +358,7 @@ public class AlgoAllDiffACFastM2 {
 //                            } else {
 //                                ++Measurer.numDelValuesP2;
 //                                filter |= v.removeValue(k, aCause);
-//                                System.out.println(this.id + " second delete: " + v.getName() + ", " + k);
+////                                System.out.println(this.id + " second delete: " + v.getName() + ", " + k);
 //                                // 我觉得不用更新digraph，因为每次调用propagate时都会更新digraph
 ////                            digraph.removeArc(i, j);
 //                            }
@@ -403,76 +392,4 @@ public class AlgoAllDiffACFastM2 {
 ////        }
 //        return filter;
 //    }
-
-
-    private boolean filter() throws ContradictionException {
-        boolean filter = false;
-        // 调用区分函数
-        distinguish();
-        mergeNodes();
-        buildSCC();
-        int j, ub;
-        IntVar v;
-        // 根据变量和取值的所在集合来确定删除方式
-        for (int i = 0; i < arity; i++) {
-            v = vars[i];
-            if (!v.isInstantiated()) {
-                ub = v.getUB();
-                System.out.println(this.id + " var: " + i + " in [ " + v.getLB() + "," + ub + " ]");
-                for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
-                    j = map.get(k);
-                    System.out.println("i = " + i + " " + distinction.get(i) + ", j = " + j + " " + distinction.get(j));
-                    if (distinction.get(i) && !distinction.get(j)) { // 删除第一类边，变量在Γ(A)中，值在Dc-A中
-                        System.out.println(this.id + " p1 " + i + "，val = " + j);
-                        ++Measurer.numDelValuesP1;
-                        filter |= v.removeValue(k, aCause);
-                        System.out.println(this.id + " first delete: " + v.getName() + ", " + k);
-//                    digraph.removeArc(i, j);
-                    } else if (!distinction.get(i) && !distinction.get(j)) { // 删除第二类边，变量在Xc-Γ(A)中，值在Dc-A中
-                        System.out.println(this.id + " p2 " + i + "，val = " + j);
-                        int matchedVarIdx = matched.get(j);
-//                        if (nodeSCC[i] != nodeSCC[j]) {
-                        if (nodeSCC[i] != nodeSCC[matchedVarIdx]) {
-                            if (matching[i] == j) {
-                                int valNum = v.getDomainSize();
-                                filter |= v.instantiateTo(k, aCause);
-                                Measurer.numDelValuesP2 += valNum - 1;
-//                                System.out.println("instantiate  : " + v.getName() + ", " + k);
-                            } else {
-                                ++Measurer.numDelValuesP2;
-                                filter |= v.removeValue(k, aCause);
-                                System.out.println(this.id + " second delete: " + v.getName() + ", " + k);
-                                // 我觉得不用更新digraph，因为每次调用propagate时都会更新digraph
-//                            digraph.removeArc(i, j);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-//        for (int i = 0; i < n; i++) {
-//            v = vars[i];
-//            if (!v.hasEnumeratedDomain()) {
-//                ub = v.getUB();
-//                for (int k = v.getLB(); k <= ub; k++) {
-//                    j = map.get(k);
-//                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
-//                        filter |= v.removeValue(k, aCause);
-//                    }
-//                }
-//                int lb = v.getLB();
-//                for (int k = v.getUB(); k >= lb; k--) {
-//                    j = map.get(k);
-//                    if (!(digraph.arcExists(i, j) || digraph.arcExists(j, i))) {
-//                        filter |= v.removeValue(k, aCause);
-//                    }
-//                }
-//            }
-//        }
-//        out.println("after vars: ");
-//        for (IntVar x : vars) {
-//            System.out.println(x.toString());
-//        }
-        return filter;
-    }
-}
+//}
