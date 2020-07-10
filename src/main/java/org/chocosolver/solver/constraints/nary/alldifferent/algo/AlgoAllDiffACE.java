@@ -16,6 +16,7 @@ import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.delta.IIntDeltaMonitor;
 import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityFinder;
+import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityNewFinder;
 import org.chocosolver.util.objects.IntTuple2;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISetIterator;
@@ -53,7 +54,7 @@ public class AlgoAllDiffACE {
     private int[] matching;
     private int[] nodeSCC;
     private BitSet free;
-    private StrongConnectivityFinder SCCfinder;
+    private StrongConnectivityNewFinder SCCfinder;
     // for augmenting matching (BFS)
     private int[] father;
     private BitSet in;
@@ -108,7 +109,7 @@ public class AlgoAllDiffACE {
         father = new int[n2];
         // 标记进入fifo队列中的点（true表示进入过，false表示没有进入过）
         in = new BitSet(n2);
-        SCCfinder = new StrongConnectivityFinder(digraph);
+        SCCfinder = new StrongConnectivityNewFinder(digraph);
 
 
         // delta

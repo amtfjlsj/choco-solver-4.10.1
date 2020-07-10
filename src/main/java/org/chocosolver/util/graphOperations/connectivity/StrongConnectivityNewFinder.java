@@ -9,6 +9,7 @@
  */
 package org.chocosolver.util.graphOperations.connectivity;
 
+import org.chocosolver.solver.search.strategy.selectors.variables.Cyclic;
 import org.chocosolver.util.objects.IntTuple2;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISet;
@@ -39,14 +40,18 @@ public class StrongConnectivityNewFinder {
 
     // for early detection
     // 由构造函数传入
-    private ArrayList<IntTuple2> deletedEdges;
+
+    // deletedEdge
+    // DE存的是边，而cycles存的是nbSCC
+    private ArrayList<IntTuple2> DE, cycles;
+    private boolean unconnected = false;
 
 
     //***********************************************************************************
     // CONSTRUCTOR
     //***********************************************************************************
 
-    public StrongConnectivityNewFinder(DirectedGraph graph) {
+    public StrongConnectivityNewFinder(DirectedGraph graph, ArrayList<IntTuple2> deletedEdges) {
         this.graph = graph;
         this.n = graph.getNbMaxNodes();
         //
@@ -63,6 +68,10 @@ public class StrongConnectivityNewFinder {
         nbSCC = 0;
         //noinspection unchecked
         iterator = new Iterator[n];
+
+        //for early detection
+        DE = deletedEdges;
+        cycles = new ArrayList<>();
     }
 
     //***********************************************************************************
@@ -86,7 +95,7 @@ public class StrongConnectivityNewFinder {
         findAllSCCOf(restriction);
     }
 
-    //!!这里改成boolean
+    //!!这里改成boolean,表示提前退出propagation
     public void findAllSCCWithEarlyDetection() {
         ISet nodes = graph.getNodes();
         for (int i = 0; i < n; i++) {
@@ -123,6 +132,8 @@ public class StrongConnectivityNewFinder {
             nodeSCC[i] = -1;
         }
         nbSCC = 0;
+
+
         findSingletons(restriction);
         int first = restriction.nextSetBit(0);
         while (first >= 0) {
@@ -211,14 +222,14 @@ public class StrongConnectivityNewFinder {
         }
     }
 
-    private void findSCCWithEarlyDetection(int start, BitSet restriction, int[] stack, int[] p, int[] inf, int[] nodeOfDfsNum, int[] dfsNumOfNode, BitSet inStack) {
+    private boolean findSCCWithEarlyDetection(int start, BitSet restriction, int[] stack, int[] p, int[] inf, int[] nodeOfDfsNum, int[] dfsNumOfNode, BitSet inStack) {
         int nb = restriction.cardinality();
         // trivial case
         if (nb == 1) {
             nodeSCC[start] = nbSCC;
             sccFirstNode[nbSCC++] = start;
             restriction.clear(start);
-            return;
+            return true;
         }
         //initialization
         int stackIdx = 0;
@@ -248,6 +259,15 @@ public class StrongConnectivityNewFinder {
                         inf[i] = i;
                     } else if (inStack.get(dfsNumOfNode[j])) {
                         inf[i] = Math.min(inf[i], dfsNumOfNode[j]);
+
+                        //for early detection
+                        if (!unconnected) {
+                            addCycles(inf[i], nbSCC);
+
+                            while (inCycles(DE.get(DE.size()))){
+                                DE.remove(DE.size());
+                            }
+                        }
                     }
                 }
             } else {
@@ -268,6 +288,11 @@ public class StrongConnectivityNewFinder {
                 inf[p[i]] = Math.min(inf[p[i]], inf[i]);
                 i = p[i];
             }
+
+            if (!unconnected&&DE.isEmpty()){
+                // 停止传播
+                return false;
+            }
         }
         if (inStack.cardinality() > 0) {
             int y;
@@ -278,6 +303,8 @@ public class StrongConnectivityNewFinder {
             } while (y != start);
             nbSCC++;
         }
+
+        return true;
     }
 
 
@@ -288,8 +315,26 @@ public class StrongConnectivityNewFinder {
     }
 
 
-    private void addCycles(int ll, int a) {
+    private void addCycles(int a, int b) {
+        Iterator<IntTuple2> iter = cycles.iterator();
+        while (iter.hasNext()) {
+            IntTuple2 t = iter.next();
+            if (t.overlap(a, b)) {
+                t.a = Math.min(t.a, a);
+                t.b = Math.min(t.b, b);
+                return;
+            }
+        }
+        cycles.add(new IntTuple2(a, b));
+    }
 
+    private boolean inCycles(IntTuple2 t) {
+        for (IntTuple2 tt : cycles) {
+            if (tt.cover(dfsNumOfNode[t.a], dfsNumOfNode[t.b])) {
+                return true;
+            }
+        }
+        return false;
     }
     //***********************************************************************************
     // ACCESSORS
