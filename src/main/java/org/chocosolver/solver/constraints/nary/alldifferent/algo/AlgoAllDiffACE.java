@@ -16,12 +16,15 @@ import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.delta.IIntDeltaMonitor;
 import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityFinder;
+import org.chocosolver.util.objects.IntTuple2;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISetIterator;
 import org.chocosolver.util.objects.setDataStructures.SetType;
 import org.chocosolver.util.procedure.UnaryIntProcedure;
 
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Stack;
 
 /**
  * Algorithm of Alldifferent with AC
@@ -60,6 +63,9 @@ public class AlgoAllDiffACE {
     private ICause aCause;
     protected IIntDeltaMonitor[] monitors;
     private UnaryIntProcedure<Integer> onValRem;
+
+    // for early detection
+    private ArrayList<IntTuple2> deletedEdges;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -110,7 +116,29 @@ public class AlgoAllDiffACE {
         for (int i = 0; i < vars.length; i++) {
             monitors[i] = vars[i].monitorDelta(cause);
         }
-//        onValRem = makeProcedure();
+        onValRem = makeProcedure();
+
+
+        //for early detection
+        deletedEdges = new ArrayList<IntTuple2>();
+    }
+
+    protected UnaryIntProcedure<Integer> makeProcedure() {
+        return new UnaryIntProcedure<Integer>() {
+            int var, off;
+
+            @Override
+            public UnaryIntProcedure set(Integer o) {
+                var = o;
+//                off = offset[var];
+                return this;
+            }
+
+            @Override
+            public void execute(int i) throws ContradictionException {
+//                currTable.addToMask((supports[var][i - off]));
+            }
+        };
     }
 
     //***********************************************************************************
@@ -265,4 +293,17 @@ public class AlgoAllDiffACE {
         }
         return filter;
     }
+
+//    private void addCycles(int a, int b) {
+//
+//    }
+
+//    private boolean inCycles(IntTuple2 t) {
+//
+//        for (IntTuple2 t : deletedEdges) {
+//            if(dfs)
+//        }
+//
+//        return false;
+//    }
 }

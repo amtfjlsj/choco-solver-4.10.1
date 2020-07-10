@@ -54,9 +54,15 @@ public class PropAllDiffAC_Naive extends Propagator<IntVar> {
     public PropAllDiffAC_Naive(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
 //        out.println("vars length: " + variables.length);
-        if (variables.length <= 32) {
+
+        int maxDomainSize = 0;
+        for (IntVar v : variables) {
+            maxDomainSize = Math.max(maxDomainSize, v.getDomainSize());
+        }
+
+        if (maxDomainSize <= 32) {
             this.filter = new AlgoAllDiffAC_Naive32(variables, this);
-        } else if (variables.length <= 64) {
+        } else if (maxDomainSize <= 64) {
             this.filter = new AlgoAllDiffAC_Naive64(variables, this);
         } else {
             this.filter = new AlgoAllDiffAC_NaiveBitSet(variables, this);

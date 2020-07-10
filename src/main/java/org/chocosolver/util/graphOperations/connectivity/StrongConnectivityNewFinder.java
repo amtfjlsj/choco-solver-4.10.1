@@ -9,9 +9,11 @@
  */
 package org.chocosolver.util.graphOperations.connectivity;
 
+import org.chocosolver.util.objects.IntTuple2;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISet;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
 
@@ -34,25 +36,11 @@ public class StrongConnectivityNewFinder {
     private Iterator<Integer>[] iterator;
     private BitSet inStack;
 
-    // early detection
-    private class IntTuple2 {
-        public int a, b;
 
-        public IntTuple2(int x, int y) {
-            this.a = x;
-            this.b = y;
-        }
+    // for early detection
+    // 由构造函数传入
+    private ArrayList<IntTuple2> deletedEdges;
 
-        public boolean overlap(int x, int y) {
-            return x < b || y > a;
-        }
-
-        public boolean overlap(IntTuple2 t) {
-            return t.a < b || t.b > a;
-        }
-
-
-    }
 
     //***********************************************************************************
     // CONSTRUCTOR
@@ -98,6 +86,7 @@ public class StrongConnectivityNewFinder {
         findAllSCCOf(restriction);
     }
 
+    //!!这里改成boolean
     public void findAllSCCWithEarlyDetection() {
         ISet nodes = graph.getNodes();
         for (int i = 0; i < n; i++) {
