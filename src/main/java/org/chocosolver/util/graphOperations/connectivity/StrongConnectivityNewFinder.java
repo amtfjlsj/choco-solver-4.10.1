@@ -264,7 +264,7 @@ public class StrongConnectivityNewFinder {
                         if (!unconnected) {
                             addCycles(inf[i], nbSCC);
 
-                            while (inCycles(DE.get(DE.size()))){
+                            while (inCycles(DE.get(DE.size()))) {
                                 DE.remove(DE.size());
                             }
                         }
@@ -284,12 +284,15 @@ public class StrongConnectivityNewFinder {
                         sccAdd(y);
                     } while (z != i);
                     nbSCC++;
+
+                    //!!待议
+                    unconnected = true;
                 }
                 inf[p[i]] = Math.min(inf[p[i]], inf[i]);
                 i = p[i];
             }
 
-            if (!unconnected&&DE.isEmpty()){
+            if (!unconnected && DE.isEmpty()) {
                 // 停止传播
                 return false;
             }
