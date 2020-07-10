@@ -1,7 +1,7 @@
 /*
  * This file is part of choco-solver, http://choco-solver.org/
  *
- * Copyright (c) 2019, IMT Atlantique. All rights reserved.
+ * Copyright (c) 2020, IMT Atlantique. All rights reserved.
  *
  * Licensed under the BSD 4-clause license.
  *
@@ -9,7 +9,6 @@
  */
 package org.chocosolver.util.graphOperations.connectivity;
 
-import amtf.Measurer;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISet;
 
@@ -27,14 +26,33 @@ public class StrongConnectivityNewFinder {
     private BitSet restriction;
     private int n;
     // output
-//    private int[] sccFirstNode, nextNode, nodeSCC;
-    private int[] nodeSCC;
+    private int[] sccFirstNode, nextNode, nodeSCC;
     private int nbSCC;
 
     // util
-    private int[] stack, p, inf, dfsNumOfNode;
+    private int[] stack, p, inf, nodeOfDfsNum, dfsNumOfNode;
     private Iterator<Integer>[] iterator;
     private BitSet inStack;
+
+    // early detection
+    private class IntTuple2 {
+        public int a, b;
+
+        public IntTuple2(int x, int y) {
+            this.a = x;
+            this.b = y;
+        }
+
+        public boolean overlap(int x, int y) {
+            return x < b || y > a;
+        }
+
+        public boolean overlap(IntTuple2 t) {
+            return t.a < b || t.b > a;
+        }
+
+
+    }
 
     //***********************************************************************************
     // CONSTRUCTOR
@@ -47,11 +65,12 @@ public class StrongConnectivityNewFinder {
         stack = new int[n];
         p = new int[n];
         inf = new int[n];
+        nodeOfDfsNum = new int[n];
         dfsNumOfNode = new int[n];
         inStack = new BitSet(n);
         restriction = new BitSet(n);
-//        sccFirstNode = new int[n];
-//        nextNode = new int[n];
+        sccFirstNode = new int[n];
+        nextNode = new int[n];
         nodeSCC = new int[n];
         nbSCC = 0;
         //noinspection unchecked
@@ -62,120 +81,227 @@ public class StrongConnectivityNewFinder {
     // ALGORITHM
     //***********************************************************************************
 
-
     public void findAllSCC() {
         ISet nodes = graph.getNodes();
         for (int i = 0; i < n; i++) {
             restriction.set(i, nodes.contains(i));
         }
-        findAllSCCOf();
+        findAllSCCOf(restriction);
     }
 
-    // 重载函数findAllSCC, exception是不需要寻找强联通分量的点集
+    // exception is a set of nodes that do not need to be found SCC
     public void findAllSCC(BitSet exception) {
         ISet nodes = graph.getNodes();
-//        System.out.println("exception: " + exception.toString());
-//        for (int i = 0; i < n; i++) {
-//            if (!exception.get(i)) {
-//                restriction.set(i, nodes.contains(i));
-//            }
-//        }
         for (int i = exception.nextClearBit(0); i >= 0 && i < n; i = exception.nextClearBit(i + 1)) {
             restriction.set(i, nodes.contains(i));
         }
-//        System.out.println("restriction: " + restriction.toString());
-        findAllSCCOf();
+        findAllSCCOf(restriction);
     }
 
-    public void findAllSCCOf() {
+    public void findAllSCCWithEarlyDetection() {
+        ISet nodes = graph.getNodes();
+        for (int i = 0; i < n; i++) {
+            restriction.set(i, nodes.contains(i));
+        }
+        findAllSCCOfWithEarlyDetection(restriction);
+    }
+
+    public void findAllSCCOf(BitSet restriction) {
         inStack.clear();
         for (int i = 0; i < n; i++) {
             dfsNumOfNode[i] = 0;
             inf[i] = n + 2;
-//            nextNode[i] = -1;
-//            sccFirstNode[i] = -1;
+            nextNode[i] = -1;
+            sccFirstNode[i] = -1;
             nodeSCC[i] = -1;
         }
         nbSCC = 0;
-        findSingletons();
+        findSingletons(restriction);
         int first = restriction.nextSetBit(0);
         while (first >= 0) {
-            findSCC(first);
+            findSCC(first, restriction, stack, p, inf, nodeOfDfsNum, dfsNumOfNode, inStack);
             first = restriction.nextSetBit(first);
         }
     }
 
-    private void findSingletons() {
+    public void findAllSCCOfWithEarlyDetection(BitSet restriction) {
+        inStack.clear();
+        for (int i = 0; i < n; i++) {
+            dfsNumOfNode[i] = 0;
+            inf[i] = n + 2;
+            nextNode[i] = -1;
+            sccFirstNode[i] = -1;
+            nodeSCC[i] = -1;
+        }
+        nbSCC = 0;
+        findSingletons(restriction);
+        int first = restriction.nextSetBit(0);
+        while (first >= 0) {
+            findSCC(first, restriction, stack, p, inf, nodeOfDfsNum, dfsNumOfNode, inStack);
+            first = restriction.nextSetBit(first);
+        }
+    }
+
+    private void findSingletons(BitSet restriction) {
+        ISet nodes = graph.getNodes();
         for (int i = restriction.nextSetBit(0); i >= 0; i = restriction.nextSetBit(i + 1)) {
-            if (graph.getPredOf(i).size() == 0 || graph.getSuccOf(i).size() == 0) {
+            if (nodes.contains(i) && graph.getPredOf(i).size() * graph.getSuccOf(i).size() == 0) {
                 nodeSCC[i] = nbSCC;
-//                sccFirstNode[nbSCC++] = i;
+                sccFirstNode[nbSCC++] = i;
                 restriction.clear(i);
             }
         }
     }
 
-    private void findSCC(int start) {
+    private void findSCC(int start, BitSet restriction, int[] stack, int[] p, int[] inf, int[] nodeOfDfsNum, int[] dfsNumOfNode, BitSet inStack) {
         int nb = restriction.cardinality();
         // trivial case
         if (nb == 1) {
             nodeSCC[start] = nbSCC;
-//            sccFirstNode[nbSCC++] = start;
+            sccFirstNode[nbSCC++] = start;
             restriction.clear(start);
             return;
         }
         //initialization
         int stackIdx = 0;
-        // k是index
         int k = 0;
-        // i和j是点号，i是j的前驱
-        int i = start, j;
-        dfsNumOfNode[i] = k;
-        p[i] = i;
-        iterator[i] = graph.getSuccOf(i).iterator();
+        int i = k;
+        dfsNumOfNode[start] = k;
+        nodeOfDfsNum[k] = start;
         stack[stackIdx++] = i;
         inStack.set(i);
+        p[k] = k;
+        iterator[k] = graph.getSuccOf(start).iterator();
+        int j;
         // algo
-        while (stackIdx != 0) {
+        while (true) {
             if (iterator[i].hasNext()) {
                 j = iterator[i].next();
                 if (restriction.get(j)) {
-                    if (!inStack.get(j)) {
+                    if (dfsNumOfNode[j] == 0 && j != start) {
                         k++;
+                        nodeOfDfsNum[k] = j;
                         dfsNumOfNode[j] = k;
-                        inf[j] = k;
-                        p[j] = i;
-                        i = j;
-                        iterator[i] = graph.getSuccOf(i).iterator();
+                        p[k] = i;
+                        i = k;
+                        iterator[i] = graph.getSuccOf(j).iterator();
                         stack[stackIdx++] = i;
                         inStack.set(i);
-                    } else {
+                        inf[i] = i;
+                    } else if (inStack.get(dfsNumOfNode[j])) {
                         inf[i] = Math.min(inf[i], dfsNumOfNode[j]);
                     }
                 }
             } else {
-                if (inf[i] >= dfsNumOfNode[i]) {
-                    int y;
+                if (i == 0) {
+                    break;
+                }
+                if (inf[i] >= i) {
+                    int y, z;
                     do {
-                        y = stack[--stackIdx];
-                        inStack.clear(y);
+                        z = stack[--stackIdx];
+                        inStack.clear(z);
+                        y = nodeOfDfsNum[z];
                         restriction.clear(y);
                         sccAdd(y);
-                    } while (y != i);
+                    } while (z != i);
                     nbSCC++;
                 }
                 inf[p[i]] = Math.min(inf[p[i]], inf[i]);
                 i = p[i];
             }
         }
+        if (inStack.cardinality() > 0) {
+            int y;
+            do {
+                y = nodeOfDfsNum[stack[--stackIdx]];
+                restriction.clear(y);
+                sccAdd(y);
+            } while (y != start);
+            nbSCC++;
+        }
     }
+
+    private void findSCCWithEarlyDetection(int start, BitSet restriction, int[] stack, int[] p, int[] inf, int[] nodeOfDfsNum, int[] dfsNumOfNode, BitSet inStack) {
+        int nb = restriction.cardinality();
+        // trivial case
+        if (nb == 1) {
+            nodeSCC[start] = nbSCC;
+            sccFirstNode[nbSCC++] = start;
+            restriction.clear(start);
+            return;
+        }
+        //initialization
+        int stackIdx = 0;
+        int k = 0;
+        int i = k;
+        dfsNumOfNode[start] = k;
+        nodeOfDfsNum[k] = start;
+        stack[stackIdx++] = i;
+        inStack.set(i);
+        p[k] = k;
+        iterator[k] = graph.getSuccOf(start).iterator();
+        int j;
+        // algo
+        while (true) {
+            if (iterator[i].hasNext()) {
+                j = iterator[i].next();
+                if (restriction.get(j)) {
+                    if (dfsNumOfNode[j] == 0 && j != start) {
+                        k++;
+                        nodeOfDfsNum[k] = j;
+                        dfsNumOfNode[j] = k;
+                        p[k] = i;
+                        i = k;
+                        iterator[i] = graph.getSuccOf(j).iterator();
+                        stack[stackIdx++] = i;
+                        inStack.set(i);
+                        inf[i] = i;
+                    } else if (inStack.get(dfsNumOfNode[j])) {
+                        inf[i] = Math.min(inf[i], dfsNumOfNode[j]);
+                    }
+                }
+            } else {
+                if (i == 0) {
+                    break;
+                }
+                if (inf[i] >= i) {
+                    int y, z;
+                    do {
+                        z = stack[--stackIdx];
+                        inStack.clear(z);
+                        y = nodeOfDfsNum[z];
+                        restriction.clear(y);
+                        sccAdd(y);
+                    } while (z != i);
+                    nbSCC++;
+                }
+                inf[p[i]] = Math.min(inf[p[i]], inf[i]);
+                i = p[i];
+            }
+        }
+        if (inStack.cardinality() > 0) {
+            int y;
+            do {
+                y = nodeOfDfsNum[stack[--stackIdx]];
+                restriction.clear(y);
+                sccAdd(y);
+            } while (y != start);
+            nbSCC++;
+        }
+    }
+
 
     private void sccAdd(int y) {
         nodeSCC[y] = nbSCC;
-//        nextNode[y] = sccFirstNode[nbSCC];
-//        sccFirstNode[nbSCC] = y;
+        nextNode[y] = sccFirstNode[nbSCC];
+        sccFirstNode[nbSCC] = y;
     }
 
+
+    private void addCycles(int ll, int a) {
+
+    }
     //***********************************************************************************
     // ACCESSORS
     //***********************************************************************************
@@ -188,12 +314,12 @@ public class StrongConnectivityNewFinder {
         return nodeSCC;
     }
 
-//    public int getSCCFirstNode(int i) {
-//        return sccFirstNode[i];
-//    }
+    public int getSCCFirstNode(int i) {
+        return sccFirstNode[i];
+    }
 
-//    public int getNextNode(int j) {
-//        return nextNode[j];
-//    }
+    public int getNextNode(int j) {
+        return nextNode[j];
+    }
 
 }
