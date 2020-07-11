@@ -55,11 +55,11 @@ public class testAllDiff {
         String[] algorithms = new String[]{
                 "AC",
                 "AC2",
-                "ACFast",
+//                "ACFast",
 //                "ACFastM",
-                "ACFast2",
+//                "ACFast2",
                 "ACNaive",
-//                "BC",
+                "BC",
         };
         int runNum = 1;
 

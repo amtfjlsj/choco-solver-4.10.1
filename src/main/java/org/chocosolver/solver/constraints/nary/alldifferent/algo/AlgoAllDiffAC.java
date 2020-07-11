@@ -19,11 +19,12 @@ import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISetIterator;
 import org.chocosolver.util.objects.setDataStructures.SetType;
 
+import java.util.Arrays;
 import java.util.BitSet;
 
 /**
  * Algorithm of Alldifferent with AC
- *
+ * <p>
  * Uses Regin algorithm
  * Runs in O(m.n) worst case time for the initial propagation
  * but has a good average behavior in practice
@@ -65,7 +66,7 @@ public class AlgoAllDiffAC {
         id = num++;
 
         this.vars = variables;
-		aCause = cause;
+        aCause = cause;
         n = vars.length;
         // 存储匹配
         matching = new int[n];
@@ -155,7 +156,7 @@ public class AlgoAllDiffAC {
         }
         // 匹配边是由值指向变量，非匹配边是由变量指向值
         for (int i = 0; i < n; i++) {
-            matching[i] = digraph.getPredOf(i).isEmpty()?-1:digraph.getPredOf(i).iterator().next();
+            matching[i] = digraph.getPredOf(i).isEmpty() ? -1 : digraph.getPredOf(i).iterator().next();
         }
     }
 
@@ -174,7 +175,7 @@ public class AlgoAllDiffAC {
                 tmp = father[tmp];
             }
         } else {//应该是匹配失败，即最大匹配个数与变量个数不相等，需要回溯
-            vars[0].instantiateTo(vars[0].getLB()-1,aCause);
+            vars[0].instantiateTo(vars[0].getLB() - 1, aCause);
         }
     }
 
@@ -226,11 +227,12 @@ public class AlgoAllDiffAC {
         }
         SCCfinder.findAllSCC();
         nodeSCC = SCCfinder.getNodesSCC();
+//        System.out.println(Arrays.toString(nodeSCC));
         digraph.removeNode(n2);
     }
 
     private boolean filter() throws ContradictionException {
-        boolean filter =false;
+        boolean filter = false;
         buildSCC();
         int j, ub;
         IntVar v;

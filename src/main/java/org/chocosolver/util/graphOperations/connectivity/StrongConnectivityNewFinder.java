@@ -37,10 +37,8 @@ public class StrongConnectivityNewFinder {
     private Iterator<Integer>[] iterator;
     private BitSet inStack;
 
-
     // for early detection
     // 由构造函数传入
-
     // deletedEdge
     // DE存的是边，而cycles存的是nbSCC
     private ArrayList<IntTuple2> DE, cycles;
@@ -50,6 +48,25 @@ public class StrongConnectivityNewFinder {
     //***********************************************************************************
     // CONSTRUCTOR
     //***********************************************************************************
+
+    public StrongConnectivityNewFinder(DirectedGraph graph) {
+        this.graph = graph;
+        this.n = graph.getNbMaxNodes();
+        //
+        stack = new int[n];
+        p = new int[n];
+        inf = new int[n];
+        nodeOfDfsNum = new int[n];
+        dfsNumOfNode = new int[n];
+        inStack = new BitSet(n);
+        restriction = new BitSet(n);
+        sccFirstNode = new int[n];
+        nextNode = new int[n];
+        nodeSCC = new int[n];
+        nbSCC = 0;
+        //noinspection unchecked
+        iterator = new Iterator[n];
+    }
 
     public StrongConnectivityNewFinder(DirectedGraph graph, ArrayList<IntTuple2> deletedEdges) {
         this.graph = graph;
@@ -96,12 +113,12 @@ public class StrongConnectivityNewFinder {
     }
 
     //!!这里改成boolean,表示提前退出propagation
-    public void findAllSCCWithEarlyDetection() {
+    public boolean findAllSCCWithEarlyDetection() {
         ISet nodes = graph.getNodes();
         for (int i = 0; i < n; i++) {
             restriction.set(i, nodes.contains(i));
         }
-        findAllSCCOfWithEarlyDetection(restriction);
+        return findAllSCCOfWithEarlyDetection(restriction);
     }
 
     public void findAllSCCOf(BitSet restriction) {
@@ -122,7 +139,7 @@ public class StrongConnectivityNewFinder {
         }
     }
 
-    public void findAllSCCOfWithEarlyDetection(BitSet restriction) {
+    public boolean findAllSCCOfWithEarlyDetection(BitSet restriction) {
         inStack.clear();
         for (int i = 0; i < n; i++) {
             dfsNumOfNode[i] = 0;
@@ -133,13 +150,16 @@ public class StrongConnectivityNewFinder {
         }
         nbSCC = 0;
 
-
         findSingletons(restriction);
         int first = restriction.nextSetBit(0);
         while (first >= 0) {
-            findSCC(first, restriction, stack, p, inf, nodeOfDfsNum, dfsNumOfNode, inStack);
+            if (findSCCWithEarlyDetection(first, restriction, stack, p, inf, nodeOfDfsNum, dfsNumOfNode, inStack)) {
+                return true;
+            }
             first = restriction.nextSetBit(first);
         }
+
+        return false;
     }
 
     private void findSingletons(BitSet restriction) {
@@ -222,6 +242,8 @@ public class StrongConnectivityNewFinder {
         }
     }
 
+    // return true DE已删光，本propagator不用再运行
+    // return false DE未删光， propagator仍要运行
     private boolean findSCCWithEarlyDetection(int start, BitSet restriction, int[] stack, int[] p, int[] inf, int[] nodeOfDfsNum, int[] dfsNumOfNode, BitSet inStack) {
         int nb = restriction.cardinality();
         // trivial case
@@ -229,7 +251,7 @@ public class StrongConnectivityNewFinder {
             nodeSCC[start] = nbSCC;
             sccFirstNode[nbSCC++] = start;
             restriction.clear(start);
-            return true;
+            return false;
         }
         //initialization
         int stackIdx = 0;
@@ -294,7 +316,7 @@ public class StrongConnectivityNewFinder {
 
             if (!unconnected && DE.isEmpty()) {
                 // 停止传播
-                return false;
+                return true;
             }
         }
         if (inStack.cardinality() > 0) {
@@ -307,7 +329,7 @@ public class StrongConnectivityNewFinder {
             nbSCC++;
         }
 
-        return true;
+        return false;
     }
 
 

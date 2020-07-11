@@ -24,13 +24,14 @@ import org.chocosolver.util.objects.setDataStructures.SetType;
 import org.chocosolver.util.procedure.UnaryIntProcedure;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Stack;
 
 /**
  * Algorithm of Alldifferent with AC
  * <p>
- * Uses Regin algorithm
+ * Uses Regin algorithm 这是目前最为公平的比较
  * Runs in O(m.n) worst case time for the initial propagation
  * but has a good average behavior in practice
  * <p/>
@@ -62,10 +63,10 @@ public class AlgoAllDiffACE {
     private int[] fifo;
     private IntVar[] vars;
     private ICause aCause;
-    protected IIntDeltaMonitor[] monitors;
-    private UnaryIntProcedure<Integer> onValRem;
 
     // for early detection
+    protected IIntDeltaMonitor[] monitors;
+    private UnaryIntProcedure<Integer> onValRem;
     private ArrayList<IntTuple2> deletedEdges;
 
     //***********************************************************************************
@@ -267,6 +268,7 @@ public class AlgoAllDiffACE {
         }
         SCCfinder.findAllSCC();
         nodeSCC = SCCfinder.getNodesSCC();
+//        System.out.println(Arrays.toString(nodeSCC));
         digraph.removeNode(n2);
     }
 
