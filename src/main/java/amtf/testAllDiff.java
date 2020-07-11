@@ -53,13 +53,13 @@ public class testAllDiff {
         };
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
-                "AC",
-                "AC2",
-//                "ACFast",
-//                "ACFastM",
-//                "ACFast2",
-                "ACNaive",
-                "BC",
+//                "AC",
+//                "AC2",
+                "ACFast",
+                "ACFast2",
+                "ACFastM",
+//                "ACNaive",
+//                "BC",
         };
         int runNum = 1;
 

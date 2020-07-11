@@ -11,8 +11,7 @@ package org.chocosolver.solver.constraints.nary.alldifferent;
 
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffACE;
+import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC_Fair;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.ESat;
@@ -29,13 +28,13 @@ import org.chocosolver.util.ESat;
  *
  * @author Jean-Guillaume Fages
  */
-public class PropAllDiffACE extends Propagator<IntVar> {
+public class PropAllDiffAC_Fair extends Propagator<IntVar> {
 
     //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
 
-    protected AlgoAllDiffACE filter;
+    protected AlgoAllDiffAC_Fair filter;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -47,9 +46,9 @@ public class PropAllDiffACE extends Propagator<IntVar> {
      *
      * @param variables array of integer variables
      */
-    public PropAllDiffACE(IntVar[] variables) {
+    public PropAllDiffAC_Fair(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-        this.filter = new AlgoAllDiffACE(variables, this);
+        this.filter = new AlgoAllDiffAC_Fair(variables, this);
     }
 
     //***********************************************************************************

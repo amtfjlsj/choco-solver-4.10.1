@@ -22,15 +22,23 @@ import org.chocosolver.solver.variables.IntVar;
 public class AllDifferent extends Constraint {
 
     public static final String AC= "AC";
-    public static final String AC2= "AC2";
+
     public static final String ACFast= "ACFast";
     public static final String ACFast2= "ACFast2";
-    public static final String ACFastM= "ACFastM";
+    public static final String ACFast_Fair= "ACFast_Fair";
+    public static final String ACFastM_Fair= "ACFastM_Fair";
     public static final String ACFastE= "ACFastE";
-    public static final String ACNaive= "ACNaive";
     public static final String ACNaiveML= "ACNaiveML";
     public static final String ACNaiveMLB= "ACNaiveMLB";
     public static final String ACNaiveMLBE= "ACNaiveMLBE";
+
+    // 实验待测算法
+    public static final String AC_Fair= "AC_Fair";
+    public static final String ACZhang18= "ACZhang18";
+    public static final String ACZhang20= "ACZhang20";
+    public static final String ACZhangM= "ACZhangM";
+    public static final String ACNaive= "ACNaive";
+
     public static final String BC= "BC";
     public static final String FC= "FC";
     public static final String NEQS= "NEQS";
@@ -59,16 +67,16 @@ public class AllDifferent extends Constraint {
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffBC(VARS)};
             case AC:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS)};
-            case AC2:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC2(VARS)};
-            case ACFast:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFast(VARS)};
+            case AC_Fair:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Fair(VARS)};
+            case ACZhang18:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Zhang18(VARS)};
             case ACFast2:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFast2(VARS)};
             case ACFastE:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFast2(VARS)};
-            case ACFastM:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFastM(VARS)};
+            case ACZhangM:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_ZhangM(VARS)};
             case ACNaive:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Naive(VARS)};
             case ACNaiveML:

@@ -31,7 +31,7 @@ import java.util.BitSet;
  *
  * @author Jean-Guillaume Fages, Jia'nan Chen
  */
-public class AlgoAllDiffACFast {
+public class AlgoAllDiffAC_Fast {
 
     //***********************************************************************************
     // VARIABLES
@@ -63,7 +63,7 @@ public class AlgoAllDiffACFast {
     // CONSTRUCTORS
     //***********************************************************************************
 
-    public AlgoAllDiffACFast(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffAC_Fast(IntVar[] variables, ICause cause) {
         id = num++;
 
         this.vars = variables;
@@ -255,8 +255,8 @@ public class AlgoAllDiffACFast {
 
     private void buildSCC() {
         // 调用重载函数
-        SCCfinder.findAllSCC(distinction);
 //        System.out.println(distinction.toString());
+        SCCfinder.findAllSCC(distinction);
         nodeSCC = SCCfinder.getNodesSCC();
 //        System.out.println(Arrays.toString(nodeSCC));
     }

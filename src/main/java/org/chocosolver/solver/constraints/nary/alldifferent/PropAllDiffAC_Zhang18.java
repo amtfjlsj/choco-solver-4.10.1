@@ -11,8 +11,7 @@ package org.chocosolver.solver.constraints.nary.alldifferent;
 
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC2;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC3;
+import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC_Fast;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.ESat;
@@ -20,22 +19,24 @@ import org.chocosolver.util.ESat;
 /**
  * Propagator for AllDifferent AC constraint for integer variables
  * <p/>
- * Uses Regin algorithm
+ * Uses Zhang algorithm in the paper of IJCAI-18
+ * "A Fast Algorithm for Generalized Arc Consistency of the Alldifferent Constraint"
+ *
  * Runs in O(m.n) worst case time for the initial propagation
  * but has a good average behavior in practice
  * <p/>
  * Runs incrementally for maintaining a matching
  * <p/>
  *
- * @author Jean-Guillaume Fages
  */
-public class PropAllDiffAC2 extends Propagator<IntVar> {
+
+public class PropAllDiffAC_Zhang18 extends Propagator<IntVar> {
 
     //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
 
-    protected AlgoAllDiffAC3 filter;
+    protected AlgoAllDiffAC_Fast filter;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -47,9 +48,9 @@ public class PropAllDiffAC2 extends Propagator<IntVar> {
      *
      * @param variables array of integer variables
      */
-    public PropAllDiffAC2(IntVar[] variables) {
+    public PropAllDiffAC_Zhang18(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-        this.filter = new AlgoAllDiffAC3(variables, this);
+        this.filter = new AlgoAllDiffAC_Fast(variables, this);
     }
 
     //***********************************************************************************
