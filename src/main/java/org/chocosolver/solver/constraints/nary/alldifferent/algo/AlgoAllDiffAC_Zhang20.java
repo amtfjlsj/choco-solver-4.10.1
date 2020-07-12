@@ -67,7 +67,13 @@ public class AlgoAllDiffAC_Zhang20 {
     // for early detection
     protected IIntDeltaMonitor[] monitors;
     private UnaryIntProcedure<Integer> onValRem;
-    private ArrayList<IntTuple2> deletedEdges;
+    private Stack<IntTuple2> DE;
+
+    private BitSet[] bitDoms;
+
+    private int[] olb;
+    private int[] oub;
+    private int[] iniDomSize;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -110,8 +116,7 @@ public class AlgoAllDiffAC_Zhang20 {
         father = new int[n2];
         // 标记进入fifo队列中的点（true表示进入过，false表示没有进入过）
         in = new BitSet(n2);
-        SCCfinder = new StrongConnectivityNewFinder(digraph);
-
+        SCCfinder = new StrongConnectivityNewFinder(digraph, DE);
 
         // delta
         monitors = new IIntDeltaMonitor[vars.length];
@@ -120,25 +125,42 @@ public class AlgoAllDiffAC_Zhang20 {
         }
         onValRem = makeProcedure();
 
-
         //for early detection
-        deletedEdges = new ArrayList<IntTuple2>();
+        DE = new Stack<IntTuple2>();
+
+        // for delta
+        olb = new int[n];
+        oub = new int[n];
+        iniDomSize = new int[n];
+        bitDoms = new BitSet[n];
+        for (int i = 0, domSize; i < n; ++i) {
+            v = vars[i];
+            domSize = v.getDomainSize();
+            bitDoms[i] = new BitSet(domSize);
+            bitDoms[i].set(0, domSize);
+            iniDomSize[i] = domSize;
+
+            olb[i] = v.getLB();
+            oub[i] = v.getUB();
+        }
     }
 
     protected UnaryIntProcedure<Integer> makeProcedure() {
         return new UnaryIntProcedure<Integer>() {
-            int var, off;
+            int var;
 
             @Override
             public UnaryIntProcedure set(Integer o) {
                 var = o;
-//                off = offset[var];
                 return this;
             }
 
             @Override
             public void execute(int i) throws ContradictionException {
 //                currTable.addToMask((supports[var][i - off]));
+                DE.push(new IntTuple2(var, i));
+                IntVar v = vars[var];
+                System.out.println(vars[var].getName() + "," + var + ", " + i + " = " + v.contains(i) + ", size = " + v.getDomainSize());
             }
         };
     }
@@ -149,15 +171,56 @@ public class AlgoAllDiffAC_Zhang20 {
 
     public boolean propagate() throws ContradictionException {
 //        System.out.println("----------------" + id + " propagate----------------");
+        int k, ub;
+        IntVar v;
+        DE.clear();
+
+        for (int i = 0; i < n; ++i) {
+            monitors[i].freeze();
+            monitors[i].forEachRemVal(onValRem.set(i));
+        }
+
+//        for (int i = 0; i < n; ++i) {
+//            v = vars[i];
+//            for (int j = bitDoms[i].nextSetBit(0); j >= 0 && j < iniDomSize[i]; j = bitDoms[i].nextSetBit(j + 1)) {
+//
+//                if (!v.contains(j)) {
+//                    System.out.println("delete: " + v.getName() + ", " + j);
+//                }
+//            }
+//        }
 
         long startTime = System.nanoTime();
         findMaximumMatching();
         Measurer.matchingTime += System.nanoTime() - startTime;
 
+//        for (int i = 0; i < n; ++i) {
+////            monitors[i].freeze();
+//            monitors[i].forEachRemVal(onValRem.set(i));
+//        }
+
         startTime = System.nanoTime();
         boolean filter = filter();
         Measurer.filterTime += System.nanoTime() - startTime;
+
+        for (int i = 0; i < vars.length; i++) {
+            monitors[i].unfreeze();
+        }
+
+//        for (int i = 0; i < vars.length; i++) {
+//            bitDoms[i].clear();
+//
+//            v = vars[i];
+//            ub = v.getUB();
+//            for (k = v.getLB(); k <= ub; k = v.nextValue(k)) {
+//                bitDoms[i].set(k);
+////                System.out.println("have: " + v.getName() + ", " + k);
+//            }
+//
+////            System.out.println(v.getDomainSize() + ", " + bitDoms[i].cardinality());
+//        }
         return filter;
+
     }
 
     //***********************************************************************************
@@ -217,6 +280,7 @@ public class AlgoAllDiffAC_Zhang20 {
             }
         } else {//应该是匹配失败，即最大匹配个数与变量个数不相等，需要回溯
             vars[0].instantiateTo(vars[0].getLB() - 1, aCause);
+//            System.out.println("+instantiate : " + vars[0].getName() + ", " + (vars[0].getLB() - 1));
         }
     }
 
@@ -286,9 +350,12 @@ public class AlgoAllDiffAC_Zhang20 {
                     if (matching[i] == j) {
                         filter |= v.instantiateTo(k, aCause);
 //                        System.out.println("instantiate  : " + v.getName() + ", " + k);
+//                        bitDoms[i].clear();
+//                        bitDoms[i].set(k);
                     } else {
                         filter |= v.removeValue(k, aCause);
 //                        System.out.println("second delete: " + v.getName() + ", " + k);
+//                        bitDoms[i].clear(k);
 //                        digraph.removeArc(i, j);
                     }
                 }

@@ -17,6 +17,7 @@ import org.chocosolver.util.objects.setDataStructures.ISet;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
+import java.util.Stack;
 
 public class StrongConnectivityNewFinder {
 
@@ -26,6 +27,7 @@ public class StrongConnectivityNewFinder {
 
     // input
     private DirectedGraph graph;
+    // restriction记录寻找SCC的过程中未访问的变量
     private BitSet restriction;
     private int n;
     // output
@@ -41,7 +43,8 @@ public class StrongConnectivityNewFinder {
     // 由构造函数传入
     // deletedEdge
     // DE存的是边，而cycles存的是nbSCC
-    private ArrayList<IntTuple2> DE, cycles;
+    private ArrayList<IntTuple2> cycles;
+    private Stack<IntTuple2> DE;
     private boolean unconnected = false;
 
 
@@ -68,7 +71,7 @@ public class StrongConnectivityNewFinder {
         iterator = new Iterator[n];
     }
 
-    public StrongConnectivityNewFinder(DirectedGraph graph, ArrayList<IntTuple2> deletedEdges) {
+    public StrongConnectivityNewFinder(DirectedGraph graph, Stack<IntTuple2> deletedEdges) {
         this.graph = graph;
         this.n = graph.getNbMaxNodes();
         //
@@ -195,7 +198,11 @@ public class StrongConnectivityNewFinder {
         int j;
         // algo
         while (true) {
+            // neighbor
             if (iterator[i].hasNext()) {
+                // 有邻居么
+                // visited
+                // j是i的后继
                 j = iterator[i].next();
                 if (restriction.get(j)) {
                     if (dfsNumOfNode[j] == 0 && j != start) {
@@ -213,9 +220,11 @@ public class StrongConnectivityNewFinder {
                     }
                 }
             } else {
+                // 没有邻居了
                 if (i == 0) {
                     break;
                 }
+                // L14
                 if (inf[i] >= i) {
                     int y, z;
                     do {
@@ -270,6 +279,7 @@ public class StrongConnectivityNewFinder {
                 j = iterator[i].next();
                 if (restriction.get(j)) {
                     if (dfsNumOfNode[j] == 0 && j != start) {
+                        // j 是个新点并且j不是开头点
                         k++;
                         nodeOfDfsNum[k] = j;
                         dfsNumOfNode[j] = k;
@@ -284,10 +294,10 @@ public class StrongConnectivityNewFinder {
 
                         //for early detection
                         if (!unconnected) {
-                            addCycles(inf[i], nbSCC);
+                            addCycles(inf[j], i);
 
-                            while (inCycles(DE.get(DE.size()))) {
-                                DE.remove(DE.size());
+                            while (inCycles(DE.peek())) {
+                                DE.pop();
                             }
                         }
                     }
