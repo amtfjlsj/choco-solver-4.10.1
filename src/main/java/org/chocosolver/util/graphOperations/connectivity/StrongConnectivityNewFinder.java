@@ -294,7 +294,7 @@ public class StrongConnectivityNewFinder {
 
                         //for early detection
                         if (!unconnected) {
-                            addCycles(inf[j], i);
+                            addCycles(inf[j], k);
 
                             while (inCycles(DE.peek())) {
                                 DE.pop();
@@ -352,11 +352,12 @@ public class StrongConnectivityNewFinder {
 
     private void addCycles(int a, int b) {
         Iterator<IntTuple2> iter = cycles.iterator();
+        IntTuple2 t;
         while (iter.hasNext()) {
-            IntTuple2 t = iter.next();
+            t = iter.next();
             if (t.overlap(a, b)) {
                 t.a = Math.min(t.a, a);
-                t.b = Math.min(t.b, b);
+                t.b = Math.max(t.b, b);
                 return;
             }
         }

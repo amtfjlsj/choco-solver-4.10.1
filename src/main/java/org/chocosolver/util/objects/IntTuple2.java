@@ -28,11 +28,11 @@ public class IntTuple2 {
     }
 
     public boolean cover(int x, int y) {
-        return a < x && y < b;
+        return a <= x && y <= b;
     }
 
     public boolean covered(int x, int y) {
-        return x < a && b < y;
+        return x <= a && b <= y;
     }
 
     public static boolean Overlap(IntTuple2 t1, IntTuple2 t2) {

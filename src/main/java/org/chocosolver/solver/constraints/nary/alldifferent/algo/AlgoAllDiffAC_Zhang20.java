@@ -69,11 +69,11 @@ public class AlgoAllDiffAC_Zhang20 {
     private UnaryIntProcedure<Integer> onValRem;
     private Stack<IntTuple2> DE;
 
-    private BitSet[] bitDoms;
-
-    private int[] olb;
-    private int[] oub;
-    private int[] iniDomSize;
+//    private BitSet[] bitDoms;
+//
+//    private int[] olb;
+//    private int[] oub;
+//    private int[] iniDomSize;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -116,9 +116,13 @@ public class AlgoAllDiffAC_Zhang20 {
         father = new int[n2];
         // 标记进入fifo队列中的点（true表示进入过，false表示没有进入过）
         in = new BitSet(n2);
+
+        //for early detection
+        // 存的是变量索引及原值
+        DE = new Stack<IntTuple2>();
         SCCfinder = new StrongConnectivityNewFinder(digraph, DE);
 
-        // delta
+        // for delta
         monitors = new IIntDeltaMonitor[vars.length];
         for (int i = 0; i < vars.length; i++) {
             monitors[i] = vars[i].monitorDelta(cause);
@@ -126,23 +130,24 @@ public class AlgoAllDiffAC_Zhang20 {
         onValRem = makeProcedure();
 
         //for early detection
+        // 存的是变量索引及原值
         DE = new Stack<IntTuple2>();
 
-        // for delta
-        olb = new int[n];
-        oub = new int[n];
-        iniDomSize = new int[n];
-        bitDoms = new BitSet[n];
-        for (int i = 0, domSize; i < n; ++i) {
-            v = vars[i];
-            domSize = v.getDomainSize();
-            bitDoms[i] = new BitSet(domSize);
-            bitDoms[i].set(0, domSize);
-            iniDomSize[i] = domSize;
-
-            olb[i] = v.getLB();
-            oub[i] = v.getUB();
-        }
+//        // for delta
+//        olb = new int[n];
+//        oub = new int[n];
+//        iniDomSize = new int[n];
+//        bitDoms = new BitSet[n];
+//        for (int i = 0, domSize; i < n; ++i) {
+//            v = vars[i];
+//            domSize = v.getDomainSize();
+//            bitDoms[i] = new BitSet(domSize);
+//            bitDoms[i].set(0, domSize);
+//            iniDomSize[i] = domSize;
+//
+//            olb[i] = v.getLB();
+//            oub[i] = v.getUB();
+//        }
     }
 
     protected UnaryIntProcedure<Integer> makeProcedure() {
@@ -159,8 +164,8 @@ public class AlgoAllDiffAC_Zhang20 {
             public void execute(int i) throws ContradictionException {
 //                currTable.addToMask((supports[var][i - off]));
                 DE.push(new IntTuple2(var, i));
-                IntVar v = vars[var];
-                System.out.println(vars[var].getName() + "," + var + ", " + i + " = " + v.contains(i) + ", size = " + v.getDomainSize());
+//                IntVar v = vars[var];
+//                System.out.println(vars[var].getName() + "," + var + ", " + i + " = " + v.contains(i) + ", size = " + v.getDomainSize());
             }
         };
     }
@@ -171,10 +176,10 @@ public class AlgoAllDiffAC_Zhang20 {
 
     public boolean propagate() throws ContradictionException {
 //        System.out.println("----------------" + id + " propagate----------------");
-        int k, ub;
-        IntVar v;
         DE.clear();
 
+        long startTime = System.nanoTime();
+        // 统计delta
         for (int i = 0; i < n; ++i) {
             monitors[i].freeze();
             monitors[i].forEachRemVal(onValRem.set(i));
@@ -190,18 +195,13 @@ public class AlgoAllDiffAC_Zhang20 {
 //            }
 //        }
 
-        long startTime = System.nanoTime();
+        System.out.println("|DE| = " + DE.size());
+
         findMaximumMatching();
         Measurer.matchingTime += System.nanoTime() - startTime;
 
-//        for (int i = 0; i < n; ++i) {
-////            monitors[i].freeze();
-//            monitors[i].forEachRemVal(onValRem.set(i));
-//        }
-
         startTime = System.nanoTime();
         boolean filter = filter();
-        Measurer.filterTime += System.nanoTime() - startTime;
 
         for (int i = 0; i < vars.length; i++) {
             monitors[i].unfreeze();
@@ -209,18 +209,17 @@ public class AlgoAllDiffAC_Zhang20 {
 
 //        for (int i = 0; i < vars.length; i++) {
 //            bitDoms[i].clear();
-//
 //            v = vars[i];
 //            ub = v.getUB();
 //            for (k = v.getLB(); k <= ub; k = v.nextValue(k)) {
 //                bitDoms[i].set(k);
 ////                System.out.println("have: " + v.getName() + ", " + k);
 //            }
-//
 ////            System.out.println(v.getDomainSize() + ", " + bitDoms[i].cardinality());
 //        }
-        return filter;
 
+        Measurer.filterTime += System.nanoTime() - startTime;
+        return filter;
     }
 
     //***********************************************************************************
@@ -318,7 +317,7 @@ public class AlgoAllDiffAC_Zhang20 {
     // PRUNING
     //***********************************************************************************
 
-    private void buildSCC() {
+    private boolean buildSCC() {
         if (n2 > n * 2) {// 添加额外的点t
             digraph.removeNode(n2);
             digraph.addNode(n2);
@@ -330,15 +329,21 @@ public class AlgoAllDiffAC_Zhang20 {
                 }
             }
         }
-        SCCfinder.findAllSCC();
+        if (SCCfinder.findAllSCCWithEarlyDetection()) {
+            return true;
+        }
         nodeSCC = SCCfinder.getNodesSCC();
 //        System.out.println(Arrays.toString(nodeSCC));
         digraph.removeNode(n2);
+
+        return false;
     }
 
     private boolean filter() throws ContradictionException {
         boolean filter = false;
-        buildSCC();
+        if (buildSCC()) {
+            return true;
+        }
         int j, ub;
         IntVar v;
         for (int i = 0; i < n; i++) {

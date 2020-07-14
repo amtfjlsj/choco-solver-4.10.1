@@ -54,7 +54,7 @@ public class testAllDiff {
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
 //                "AC",
-//                "AC2",
+                "ACFair",
 //                "ACFast",
                 "ACZhang20",
 //                "ACFast2",
