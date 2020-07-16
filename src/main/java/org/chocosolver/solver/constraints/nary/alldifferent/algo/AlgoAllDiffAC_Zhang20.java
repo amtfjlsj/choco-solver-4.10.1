@@ -163,7 +163,7 @@ public class AlgoAllDiffAC_Zhang20 {
             @Override
             public void execute(int i) throws ContradictionException {
 //                currTable.addToMask((supports[var][i - off]));
-                DE.push(new IntTuple2(var, i));
+                DE.push(new IntTuple2(var, map.get(i)));
 //                IntVar v = vars[var];
 //                System.out.println(vars[var].getName() + "," + var + ", " + i + " = " + v.contains(i) + ", size = " + v.getDomainSize());
             }
@@ -329,9 +329,10 @@ public class AlgoAllDiffAC_Zhang20 {
                 }
             }
         }
-        if (SCCfinder.findAllSCCWithEarlyDetection()) {
+        if (SCCfinder.findAllSCCWithEarlyDetection(DE)) {
             return true;
         }
+//        SCCfinder.findAllSCC();
         nodeSCC = SCCfinder.getNodesSCC();
 //        System.out.println(Arrays.toString(nodeSCC));
         digraph.removeNode(n2);

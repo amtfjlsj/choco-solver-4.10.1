@@ -11,6 +11,7 @@ package org.chocosolver.solver.constraints.nary.alldifferent;
 
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
+import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC3;
 import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC_Zhang20;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
@@ -34,7 +35,7 @@ public class PropAllDiffAC_Zhang20 extends Propagator<IntVar> {
     // VARIABLES
     //***********************************************************************************
 
-    protected AlgoAllDiffAC_Zhang20 filter;
+    protected AlgoAllDiffAC3 filter;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -48,7 +49,7 @@ public class PropAllDiffAC_Zhang20 extends Propagator<IntVar> {
      */
     public PropAllDiffAC_Zhang20(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-        this.filter = new AlgoAllDiffAC_Zhang20(variables, this);
+        this.filter = new AlgoAllDiffAC3(variables, this);
     }
 
     //***********************************************************************************
@@ -57,7 +58,7 @@ public class PropAllDiffAC_Zhang20 extends Propagator<IntVar> {
 
     @Override
     public void propagate(int evtmask) throws ContradictionException {
-//        System.out.println("----------------" + this.getId() + " propagate----------------");
+        System.out.println("----------------" + this.getId() + " propagate----------------");
         filter.propagate();
     }
 

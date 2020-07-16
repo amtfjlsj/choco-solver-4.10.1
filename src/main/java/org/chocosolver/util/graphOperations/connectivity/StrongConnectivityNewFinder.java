@@ -44,8 +44,9 @@ public class StrongConnectivityNewFinder {
     // deletedEdge
     // DE存的是边，而cycles存的是nbSCC
     private ArrayList<IntTuple2> cycles;
-    private Stack<IntTuple2> DE;
+    //    private Stack<IntTuple2> DE;
     private boolean unconnected = false;
+    private long numProp = Long.MIN_VALUE;
 
 
     //***********************************************************************************
@@ -90,7 +91,7 @@ public class StrongConnectivityNewFinder {
         iterator = new Iterator[n];
 
         //for early detection
-        DE = deletedEdges;
+//        DE = deletedEdges;
         cycles = new ArrayList<>();
     }
 
@@ -116,12 +117,13 @@ public class StrongConnectivityNewFinder {
     }
 
     //!!这里改成boolean,表示提前退出propagation
-    public boolean findAllSCCWithEarlyDetection() {
+    public boolean findAllSCCWithEarlyDetection(Stack<IntTuple2> deletedEdges) {
+        numProp++;
         ISet nodes = graph.getNodes();
         for (int i = 0; i < n; i++) {
             restriction.set(i, nodes.contains(i));
         }
-        return findAllSCCOfWithEarlyDetection(restriction);
+        return findAllSCCOfWithEarlyDetection(restriction, deletedEdges);
     }
 
     public void findAllSCCOf(BitSet restriction) {
@@ -142,7 +144,7 @@ public class StrongConnectivityNewFinder {
         }
     }
 
-    public boolean findAllSCCOfWithEarlyDetection(BitSet restriction) {
+    public boolean findAllSCCOfWithEarlyDetection(BitSet restriction, Stack<IntTuple2> deletedEdges) {
         inStack.clear();
         for (int i = 0; i < n; i++) {
             dfsNumOfNode[i] = 0;
@@ -152,11 +154,13 @@ public class StrongConnectivityNewFinder {
             nodeSCC[i] = -1;
         }
         nbSCC = 0;
+        cycles.clear();
+        unconnected = false;
 
         findSingletons(restriction);
         int first = restriction.nextSetBit(0);
         while (first >= 0) {
-            if (findSCCWithEarlyDetection(first, restriction, stack, p, inf, nodeOfDfsNum, dfsNumOfNode, inStack)) {
+            if (findSCCWithEarlyDetection(first, restriction, stack, p, inf, nodeOfDfsNum, dfsNumOfNode, inStack, deletedEdges)) {
                 return true;
             }
             first = restriction.nextSetBit(first);
@@ -253,7 +257,7 @@ public class StrongConnectivityNewFinder {
 
     // return true DE已删光，本propagator不用再运行
     // return false DE未删光， propagator仍要运行
-    private boolean findSCCWithEarlyDetection(int start, BitSet restriction, int[] stack, int[] p, int[] inf, int[] nodeOfDfsNum, int[] dfsNumOfNode, BitSet inStack) {
+    private boolean findSCCWithEarlyDetection(int start, BitSet restriction, int[] stack, int[] p, int[] inf, int[] nodeOfDfsNum, int[] dfsNumOfNode, BitSet inStack, Stack<IntTuple2> deletedEdges) {
         int nb = restriction.cardinality();
         // trivial case
         if (nb == 1) {
@@ -293,11 +297,14 @@ public class StrongConnectivityNewFinder {
                         inf[i] = Math.min(inf[i], dfsNumOfNode[j]);
 
                         //for early detection
-                        if (!unconnected) {
-                            addCycles(inf[j], k);
+                        if (!deletedEdges.isEmpty() && !unconnected) {
+                            int a = Math.min(inf[j], dfsNumOfNode[j]);
+                            addCycles(a, k);
+                            System.out.println("addCycles: a = " + a + ", k = " + k + ", i = "+  i + ", j = " + j + ", DE = " + deletedEdges.size());
 
-                            while (inCycles(DE.peek())) {
-                                DE.pop();
+                            while (!deletedEdges.isEmpty() && inCycles(deletedEdges.peek())) {
+                                System.out.println("popCycles: " + deletedEdges.peek().a + ", " + deletedEdges.peek().b);
+                                deletedEdges.pop();
                             }
                         }
                     }
@@ -324,7 +331,8 @@ public class StrongConnectivityNewFinder {
                 i = p[i];
             }
 
-            if (!unconnected && DE.isEmpty()) {
+            if (numProp != Long.MIN_VALUE + 1 && !unconnected && deletedEdges.isEmpty()) {
+                System.out.println("xixi");
                 // 停止传播
                 return true;
             }

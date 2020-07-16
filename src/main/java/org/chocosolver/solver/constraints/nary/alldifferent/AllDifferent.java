@@ -33,7 +33,7 @@ public class AllDifferent extends Constraint {
     public static final String ACNaiveMLBE= "ACNaiveMLBE";
 
     // 实验待测算法
-    public static final String AC_Fair= "AC_Fair";
+    public static final String ACFair= "ACFair";
     public static final String ACZhang18= "ACZhang18";
     public static final String ACZhang20= "ACZhang20";
     public static final String ACZhangM= "ACZhangM";
@@ -67,7 +67,7 @@ public class AllDifferent extends Constraint {
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffBC(VARS)};
             case AC:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS)};
-            case AC_Fair:
+            case ACFair:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Fair(VARS)};
             case ACZhang18:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Zhang18(VARS)};
