@@ -31,6 +31,14 @@ public class IntTuple2 {
         return a <= x && y <= b;
     }
 
+    public boolean cover(int x) {
+        return x >= a && x <= b;
+    }
+
+    public static boolean EQ(IntTuple2 t1, IntTuple2 t2) {
+        return t1.a == t2.a && t1.b == t2.b;
+    }
+
     public boolean covered(int x, int y) {
         return x <= a && b <= y;
     }
@@ -39,8 +47,8 @@ public class IntTuple2 {
         return (t1.a >= t2.a && t1.a <= t2.b) || (t1.b >= t2.a && t1.b <= t2.b);
     }
 
-    public static boolean EQ(IntTuple2 t1, IntTuple2 t2) {
-        return t1.a == t2.a && t1.b == t2.b;
+    @Override
+    public String toString() {
+        return "(" + a + ", " + b + ")";
     }
-
 }

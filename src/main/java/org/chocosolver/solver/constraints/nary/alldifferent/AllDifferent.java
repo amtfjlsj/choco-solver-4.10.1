@@ -22,7 +22,7 @@ import org.chocosolver.solver.variables.IntVar;
 public class AllDifferent extends Constraint {
 
     public static final String AC= "AC";
-
+    public static final String AC2= "AC2";
     public static final String ACFast= "ACFast";
     public static final String ACFast2= "ACFast2";
     public static final String ACFast_Fair= "ACFast_Fair";
@@ -67,6 +67,8 @@ public class AllDifferent extends Constraint {
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffBC(VARS)};
             case AC:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC(VARS)};
+            case AC2:
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC2(VARS)};
             case ACFair:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Fair(VARS)};
             case ACZhang18:

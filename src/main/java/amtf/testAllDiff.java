@@ -49,12 +49,14 @@ public class testAllDiff {
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-015-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-020-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-030-9-mod.xml",
-                "C:\\bench\\X3\\Queens\\Queens-0004-m1.xml",
+                "C:\\bench\\X3\\Queens\\Queens-0005-m1.xml",
+//                "C:\\bench\\X3\\SportsScheduling\\SportsScheduling-08.xml",
         };
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
-//                "AC",
                 "ACFair",
+                "AC",
+//                "AC2",
 //                "ACFast",
                 "ACZhang20",
 //                "ACFast2",

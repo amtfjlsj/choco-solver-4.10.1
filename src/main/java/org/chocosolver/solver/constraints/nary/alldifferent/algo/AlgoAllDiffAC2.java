@@ -389,12 +389,14 @@ public class AlgoAllDiffAC2 {
                         inf[i] = Math.min(inf[i], dfn[j]);
                     }
                 }
-            } else if (i == arity && freeNode.hasNextValid()) {// i代表的是新增变量
+            }
+            else if (i == arity && freeNode.hasNextValid()) {// i代表的是新增变量
                 // j是新增变量指向的自由值，必然不在栈中
                 j = freeNode.next() + addArity;
                 stepForward(i, j);
                 i = j;
-            } else {
+            }
+            else {
                 if (inf[i] == dfn[i]) {
                     int y;
                     do {

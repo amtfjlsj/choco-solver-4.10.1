@@ -35,7 +35,7 @@ public class PropAllDiffAC_Fair extends Propagator<IntVar> {
     //***********************************************************************************
 
     protected AlgoAllDiffAC_Fair filter;
-
+    private static long numProp = 0;
     //***********************************************************************************
     // CONSTRUCTORS
     //***********************************************************************************
@@ -57,7 +57,7 @@ public class PropAllDiffAC_Fair extends Propagator<IntVar> {
 
     @Override
     public void propagate(int evtmask) throws ContradictionException {
-        System.out.println("----------------" + this.getId() + " propagate----------------");
+        System.out.println("----------------" + (++numProp) + ", " + this.getId() + " propagate----------------");
         filter.propagate();
     }
 

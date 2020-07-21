@@ -6,6 +6,8 @@
  * Licensed under the BSD 4-clause license.
  *
  * See LICENSE file in the project root for full license information.
+ *
+ * StrongConnectivityNewFinder的备份
  */
 package org.chocosolver.util.graphOperations.connectivity;
 
@@ -19,7 +21,7 @@ import java.util.BitSet;
 import java.util.Iterator;
 import java.util.Stack;
 
-public class StrongConnectivityNewFinder {
+public class StrongConnectivityFinder2 {
 
     //***********************************************************************************
     // VARIABLES
@@ -47,14 +49,13 @@ public class StrongConnectivityNewFinder {
     //    private Stack<IntTuple2> DE;
     private boolean unconnected = false;
     private long numProp = Long.MIN_VALUE;
-    private int numSearch = 0;
 
 
     //***********************************************************************************
     // CONSTRUCTOR
     //***********************************************************************************
 
-    public StrongConnectivityNewFinder(DirectedGraph graph) {
+    public StrongConnectivityFinder2(DirectedGraph graph) {
         this.graph = graph;
         this.n = graph.getNbMaxNodes();
         //
@@ -71,10 +72,9 @@ public class StrongConnectivityNewFinder {
         nbSCC = 0;
         //noinspection unchecked
         iterator = new Iterator[n];
-        cycles = new ArrayList<>();
     }
 
-    public StrongConnectivityNewFinder(DirectedGraph graph, Stack<IntTuple2> deletedEdges) {
+    public StrongConnectivityFinder2(DirectedGraph graph, Stack<IntTuple2> deletedEdges) {
         this.graph = graph;
         this.n = graph.getNbMaxNodes();
         //
@@ -146,33 +146,10 @@ public class StrongConnectivityNewFinder {
         }
     }
 
-    public boolean findAllSCCOfWithEarlyDetection(Stack<IntTuple2> deletedEdges) {
-        inStack.clear();
-        for (int i = 0; i < n; i++) {
-            dfsNumOfNode[i] = 0;
-            inf[i] = n + 2;
-            nextNode[i] = -1;
-            sccFirstNode[i] = -1;
-            nodeSCC[i] = -1;
-        }
-        nbSCC = 0;
-        cycles.clear();
-        unconnected = false;
-        findSingletons(restriction);
-        int first = restriction.nextSetBit(0);
-        while (first >= 0) {
-            if (findSCCWithEarlyDetection(first, restriction, stack, p, inf, nodeOfDfsNum, dfsNumOfNode, inStack, deletedEdges)) {
-                return true;
-            }
-            first = restriction.nextSetBit(first);
-        }
-        return false;
-    }
-
     public boolean findAllSCCOfWithEarlyDetection(BitSet restriction, Stack<IntTuple2> deletedEdges) {
         inStack.clear();
         for (int i = 0; i < n; i++) {
-            dfsNumOfNode[i] = -1;
+            dfsNumOfNode[i] = 0;
             inf[i] = n + 2;
             nextNode[i] = -1;
             sccFirstNode[i] = -1;
@@ -300,8 +277,6 @@ public class StrongConnectivityNewFinder {
         stack[stackIdx++] = i;
         inStack.set(i);
         p[k] = k;
-        inf[i] = i;
-        cycles.clear();
         iterator[k] = graph.getSuccOf(start).iterator();
         int j;
         // algo
@@ -309,7 +284,7 @@ public class StrongConnectivityNewFinder {
             if (iterator[i].hasNext()) {
                 j = iterator[i].next();
                 if (restriction.get(j)) {
-                    if (dfsNumOfNode[j] == -1 && j != start) {
+                    if (dfsNumOfNode[j] == 0 && j != start) {
                         // j 是个新点并且j不是开头点
                         k++;
                         nodeOfDfsNum[k] = j;
@@ -320,17 +295,14 @@ public class StrongConnectivityNewFinder {
                         stack[stackIdx++] = i;
                         inStack.set(i);
                         inf[i] = i;
-                        System.out.println("set inf[" + i + "] = " + inf[i] + ", nodeOfDfsNum " + nodeOfDfsNum[i]);
                     } else if (inStack.get(dfsNumOfNode[j])) {
                         inf[i] = Math.min(inf[i], dfsNumOfNode[j]);
 
                         //for early detection
                         if (!deletedEdges.isEmpty() && !unconnected) {
-//                            int a = Math.min(inf[dfsNumOfNode[j]], dfsNumOfNode[j]);
-//                            addCycles(a, k);
-                            System.out.println("addCycles: dfsNumOfNode[j] = " + dfsNumOfNode[j] + ", inf[dfsNumOfNode[j]] = " + inf[dfsNumOfNode[j]] + ", k = " + k + ", i = " + i + ", j = " + j + ", DE = " + deletedEdges.size());
-                            addCycles(inf[dfsNumOfNode[j]], k);
-//                            System.out.println("addCycles: a = " + a + ", k = " + k + ", i = "+  i + ", j = " + j + ", DE = " + deletedEdges.size());
+                            int a = Math.min(inf[j], dfsNumOfNode[j]);
+                            addCycles(a, k);
+                            System.out.println("addCycles: a = " + a + ", k = " + k + ", i = "+  i + ", j = " + j + ", DE = " + deletedEdges.size());
 
                             while (!deletedEdges.isEmpty() && inCycles(deletedEdges.peek())) {
                                 System.out.println("popCycles: " + deletedEdges.peek().a + ", " + deletedEdges.peek().b);
@@ -356,7 +328,6 @@ public class StrongConnectivityNewFinder {
 
                     //!!待议
                     unconnected = true;
-                    System.out.println("unconnected = " + unconnected);
                 }
                 inf[p[i]] = Math.min(inf[p[i]], inf[i]);
                 i = p[i];
@@ -401,25 +372,12 @@ public class StrongConnectivityNewFinder {
             }
         }
 
-//        for (int i = 0, len = cycles.size(); i < len; ++i) {
-//            t = cycles.get(i);
-//            if (t.overlap(a, b)) {
-//                t.a = Math.min(t.a, a);
-//                t.b = Math.max(t.b, b);
-//                return;
-//            }
-//        }
         cycles.add(new IntTuple2(a, b));
-        System.out.println("cycles: " + cycles);
     }
 
     private boolean inCycles(IntTuple2 t) {
         for (IntTuple2 tt : cycles) {
-            System.out.println("inCycles: (" + t.a + ", " + t.b + ") , = (" + dfsNumOfNode[t.a] + ", " + dfsNumOfNode[t.b] + ") =" +(tt.cover(dfsNumOfNode[t.a]) && tt.cover(dfsNumOfNode[t.b])));
-//            if (tt.cover(dfsNumOfNode[t.a], dfsNumOfNode[t.b])) {
-//                return true;
-//            }
-            if (tt.cover(dfsNumOfNode[t.a]) && tt.cover(dfsNumOfNode[t.b])) {
+            if (tt.cover(dfsNumOfNode[t.a], dfsNumOfNode[t.b])) {
                 return true;
             }
         }

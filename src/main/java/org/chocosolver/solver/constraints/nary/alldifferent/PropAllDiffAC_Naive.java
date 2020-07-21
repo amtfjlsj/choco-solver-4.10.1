@@ -54,21 +54,21 @@ public class PropAllDiffAC_Naive extends Propagator<IntVar> {
      */
     public PropAllDiffAC_Naive(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-        //统计值个数
-        TIntIntHashMap val2Idx = new TIntIntHashMap();
-        // 统计所有变量论域中不同值的个数
-        for (IntVar v : variables) {
-            for (int j = v.getLB(), ub = v.getUB(); j <= ub; j = v.nextValue(j)) {
-                if (!val2Idx.containsKey(j)) {
-                    val2Idx.put(j, val2Idx.size());
-                }
-            }
-        }
+//        //统计值个数
+//        TIntIntHashMap val2Idx = new TIntIntHashMap();
+//        // 统计所有变量论域中不同值的个数
+//        for (IntVar v : variables) {
+//            for (int j = v.getLB(), ub = v.getUB(); j <= ub; j = v.nextValue(j)) {
+//                if (!val2Idx.containsKey(j)) {
+//                    val2Idx.put(j, val2Idx.size());
+//                }
+//            }
+//        }
 
-        int numValues = val2Idx.size();
-        if (numValues <= 32) {
+//        int numValues = val2Idx.size();
+        if (vars.length <= 32) {
             this.filter = new AlgoAllDiffAC_Naive32(variables, this);
-        } else if (numValues <= 64) {
+        } else if (vars.length <= 64) {
             this.filter = new AlgoAllDiffAC_Naive64(variables, this);
         } else {
             this.filter = new AlgoAllDiffAC_NaiveBitSet(variables, this);

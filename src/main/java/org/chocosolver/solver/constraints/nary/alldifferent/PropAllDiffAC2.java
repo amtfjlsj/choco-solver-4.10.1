@@ -11,8 +11,8 @@ package org.chocosolver.solver.constraints.nary.alldifferent;
 
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC3;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC_Zhang20;
+import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC;
+import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC2;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.ESat;
@@ -29,14 +29,13 @@ import org.chocosolver.util.ESat;
  *
  * @author Jean-Guillaume Fages
  */
-public class PropAllDiffAC_Zhang20 extends Propagator<IntVar> {
+public class PropAllDiffAC2 extends Propagator<IntVar> {
 
     //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
 
-    protected AlgoAllDiffAC_Zhang20 filter;
-    private static long numProp = 0;
+    protected AlgoAllDiffAC2 filter;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -48,9 +47,9 @@ public class PropAllDiffAC_Zhang20 extends Propagator<IntVar> {
      *
      * @param variables array of integer variables
      */
-    public PropAllDiffAC_Zhang20(IntVar[] variables) {
+    public PropAllDiffAC2(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-        this.filter = new AlgoAllDiffAC_Zhang20(variables, this);
+        this.filter = new AlgoAllDiffAC2(variables, this);
     }
 
     //***********************************************************************************
@@ -59,7 +58,6 @@ public class PropAllDiffAC_Zhang20 extends Propagator<IntVar> {
 
     @Override
     public void propagate(int evtmask) throws ContradictionException {
-        System.out.println("----------------" + (++numProp) + ", " + this.getId() + " propagate----------------");
         filter.propagate();
     }
 

@@ -155,7 +155,7 @@ public class AlgoAllDiffAC3 {
         restriction = new BitSet(addArity);
 
         // for ED
-        DE = new Stack<IntTuple2>();
+        DE = new Stack<>();
         cycles = new ArrayList<>();
         // for delta
         monitors = new IIntDeltaMonitor[vars.length];
@@ -488,6 +488,7 @@ public class AlgoAllDiffAC3 {
                     } while (y != i);
                     nbSCC++;
                     unconnected = true;
+                    System.out.println("find partial scc");
                 }
                 inf[p[i]] = Math.min(inf[p[i]], inf[i]);
                 i = p[i];
@@ -526,10 +527,10 @@ public class AlgoAllDiffAC3 {
                     if (nodeSCC[varIdx] != nodeSCC[valIdx + addArity]) {
                         if (valIdx == var2Val[varIdx]) {
                             filter |= v.instantiateTo(k, aCause);
-//                            System.out.println("instantiate  : " + v.getName() + ", " + k);
+                            System.out.println("instantiate  : " + v.getName() + ", " + k);
                         } else {
                             filter |= v.removeValue(k, aCause);
-//                            System.out.println("second delete: " + v.getName() + ", " + k);
+                            System.out.println("second delete: " + v.getName() + ", " + k);
                         }
                     }
                 }

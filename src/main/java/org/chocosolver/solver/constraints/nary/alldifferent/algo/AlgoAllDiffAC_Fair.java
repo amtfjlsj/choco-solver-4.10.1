@@ -341,7 +341,7 @@ public class AlgoAllDiffAC_Fair {
         int k;
         for (int j = 0; j < numValues; ++j) {
             if (freeNode.contain(j)) {
-                graph.addArc(arity, j+ addArity);
+                graph.addArc(arity, j + addArity);
             } else {
                 valUnmatchedVar[j].iterateValid();
                 while (valUnmatchedVar[j].hasNextValid()) {
@@ -406,10 +406,10 @@ public class AlgoAllDiffAC_Fair {
 //                    if (nodeSCC[varIdx] != nodeSCC[valIdx + arity]) {
                         if (valIdx == var2Val[varIdx]) {
                             filter |= v.instantiateTo(k, aCause);
-//                            System.out.println("instantiate  : " + v.getName() + ", " + k);
+                            System.out.println("instantiate  : " + v.getName() + ", " + k);
                         } else {
                             filter |= v.removeValue(k, aCause);
-//                            System.out.println("second delete: " + v.getName() + ", " + k);
+                            System.out.println("second delete: " + v.getName() + ", " + k);
                         }
                     }
                 }

@@ -399,11 +399,11 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
                                 int valNum = v.getDomainSize();
                                 filter |= v.instantiateTo(k, aCause);
                                 Measurer.numDelValuesP2 += valNum - 1;
-//                            System.out.println("instantiate  : " + v.getName() + ", " + k);
+                                System.out.println("instantiate  : " + v.getName() + ", " + k);
                             } else {
                                 ++Measurer.numDelValuesP2;
                                 filter |= v.removeValue(k, aCause);
-//                            System.out.println("second delete: " + v.getName() + ", " + k);
+                                System.out.println("second delete: " + v.getName() + ", " + k);
                             }
                         }
                     }
@@ -420,6 +420,22 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
             graphLinkedFrontier[varIdx] &= ~(1 << i);
             graphLinkedMatrix[varIdx] |= graphLinkedMatrix[i];
             if ((graphLinkedMatrix[varIdx] & 1 << val2Var[valIdx]) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkSCCNew(int varIdx, int valIdx) {
+        if ((graphLinkedMatrix[varIdx] & (1 << val2Var[valIdx])) != 0) {
+            return true;
+        }
+        for (int i = nextSetBit(graphLinkedFrontier[varIdx], 0);
+             i != BITS_PER_WORD; i = nextSetBit(graphLinkedFrontier[varIdx], 0)) {
+            graphLinkedFrontier[varIdx] |= graphLinkedMatrix[i] & ~graphLinkedMatrix[varIdx];
+            graphLinkedFrontier[varIdx] &= ~(1 << i);
+            graphLinkedMatrix[varIdx] |= graphLinkedMatrix[i];
+            if ((graphLinkedMatrix[varIdx] & (1 << val2Var[valIdx])) != 0) {
                 return true;
             }
         }
