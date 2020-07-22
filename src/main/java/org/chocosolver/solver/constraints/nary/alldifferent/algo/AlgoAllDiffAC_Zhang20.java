@@ -407,11 +407,11 @@ public class AlgoAllDiffAC_Zhang20 {
             }
         }
 
-//        SCCfinder.findAllSCC();
-        if (SCCfinder.findAllSCC_ED(DE)) {
+        SCCfinder.findAllSCC();
+//        if (SCCfinder.findAllSCC_ED(DE)) {
 //            System.out.println("xixi");
-            return true;
-        }
+//            return true;
+//        }
         nodeSCC = SCCfinder.getNodesSCC();
 //        System.out.println(Arrays.toString(nodeSCC));
 //        graph.removeNode(numNodes);

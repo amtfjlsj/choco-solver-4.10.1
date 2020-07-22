@@ -80,7 +80,7 @@ public class StrongConnectivityFinderR {
     private void findAllSCCOf(BitSet restriction) {
         // initialization
         clearStack();
-        maxDFS = 1;
+        maxDFS = 0;
         nbSCC = 0;
 
         for (int i = 0; i < n; i++) {
@@ -118,7 +118,7 @@ public class StrongConnectivityFinderR {
         }
 
         if (lowLink[curnode] == DFSNum[curnode]) {
-            if (lowLink[curnode] > 1 || inStack.cardinality() > 0) {
+            if (lowLink[curnode] > 0 || inStack.cardinality() > 0) {
                 hasSCCSplit = true;
             }
             if (hasSCCSplit) {
@@ -155,7 +155,7 @@ public class StrongConnectivityFinderR {
     private boolean findAllSCCOf_ED(BitSet restriction) {
         // initialization
         clearStack();
-        maxDFS = 1;
+        maxDFS = 0;
         nbSCC = 0;
         unconnected = false;
         cycles.clear();
@@ -206,7 +206,7 @@ public class StrongConnectivityFinderR {
         }
 
         if (lowLink[curnode] == DFSNum[curnode]) {
-            if (lowLink[curnode] > 1 || inStack.cardinality() > 0) {
+            if (lowLink[curnode] > 0 || inStack.cardinality() > 0) {
                 hasSCCSplit = true;
             }
             if (hasSCCSplit) {
@@ -223,6 +223,7 @@ public class StrongConnectivityFinderR {
         }
 
         if (!unconnected && DE.empty()) {
+//            System.out.println("xixi");
             return true;
         }
 
