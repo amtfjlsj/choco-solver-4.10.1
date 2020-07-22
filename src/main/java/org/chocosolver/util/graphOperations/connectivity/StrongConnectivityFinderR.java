@@ -9,7 +9,7 @@ import java.util.Iterator;
 public class StrongConnectivityFinderR {
     // input
     private DirectedGraph graph;
-    private BitSet restriction;
+    private BitSet unvisited;
     private int n;
 
     //栈
@@ -26,6 +26,7 @@ public class StrongConnectivityFinderR {
     private int[] DFSNum;
     private int[] lowLink;
     private boolean hasSCCSplit = false;
+//    private int index = 0;
 //    private BitSet visited;
 
 
@@ -56,21 +57,19 @@ public class StrongConnectivityFinderR {
 //        iterator = new Iterator[n];
     }
 
-    void findSCC() {
+    public void findAllSCC() {
         ISet nodes = graph.getNodes();
         for (int i = 0; i < n; i++) {
-            restriction.set(i, nodes.contains(i));
+            unvisited.set(i, nodes.contains(i));
         }
-        findAllSCCOf(restriction);
+        findAllSCCOf(unvisited);
     }
 
     public void findAllSCCOf(BitSet restriction) {
         // initialization
-        inStack.clear();
-        stackIdx = 0;
+        clearStack();
         maxDFS = 1;
         nbSCC = 0;
-
 
         for (int i = 0; i < n; i++) {
             lowLink[i] = n + 2;
@@ -86,7 +85,41 @@ public class StrongConnectivityFinderR {
         }
     }
 
-    void strongConnect(int v) {
+    void strongConnect(int curnode) {
+        pushStack(curnode);
+        DFSNum[curnode] = maxDFS;
+        lowLink[curnode] = maxDFS;
+        maxDFS++;
+        unvisited.clear(curnode);
+
+        Iterator<Integer> iterator = graph.getSuccOf(curnode).iterator();
+        while (iterator.hasNext()) {
+            int newnode = iterator.next();
+            if (!unvisited.get(newnode)) {
+                if (inStack.get(newnode)) {
+                    lowLink[curnode] = Math.min(lowLink[curnode], DFSNum[newnode]);
+                }
+            } else {
+                strongConnect(newnode);
+                lowLink[curnode] = Math.min(lowLink[curnode], lowLink[newnode]);
+            }
+        }
+
+        if (lowLink[curnode] == DFSNum[curnode]) {
+            if (lowLink[curnode] > 1 || inStack.cardinality() > 0) {
+                hasSCCSplit = true;
+            }
+            if (hasSCCSplit) {
+                int stacknode = -1;
+
+                while (stacknode != curnode) {
+                    stacknode = popStack();
+                    nodeSCC[stacknode] = nbSCC;
+                }
+                nbSCC++;
+            }
+        }
+
 
     }
 
@@ -105,8 +138,21 @@ public class StrongConnectivityFinderR {
         inStack.set(v);
     }
 
-    void clearStack(){
+    void clearStack() {
         inStack.clear();
         stackIdx = 0;
     }
+
+    int popStack() {
+        int x = stack[--stackIdx];
+        inStack.clear(x);
+        return x;
+    }
+
+    public int[] getNodesSCC() {
+        return nodeSCC;
+    }
+
+//    boolean inStack()
+
 }

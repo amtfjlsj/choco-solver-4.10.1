@@ -8,6 +8,7 @@ import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.delta.IIntDeltaMonitor;
 import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityFinder;
+import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityFinderR;
 import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityNewFinder;
 import org.chocosolver.util.objects.IntTuple2;
 import org.chocosolver.util.objects.SparseSet;
@@ -79,7 +80,8 @@ public class AlgoAllDiffAC_Zhang20 {
 
     private DirectedGraph graph;
     private int[] nodeSCC;
-    private StrongConnectivityNewFinder SCCfinder;
+//    private StrongConnectivityNewFinder SCCfinder;
+    private StrongConnectivityFinderR SCCfinder;
 
     // for early detection
     protected IIntDeltaMonitor[] monitors;
@@ -144,7 +146,8 @@ public class AlgoAllDiffAC_Zhang20 {
         nodeSCC = new int[numNodes];
 
         graph = new DirectedGraph(numNodes, SetType.BITSET, false);
-        SCCfinder = new StrongConnectivityNewFinder(graph);
+//        SCCfinder = new StrongConnectivityNewFinder(graph);
+        SCCfinder = new StrongConnectivityFinderR(graph);
 
         //for early detection
         // 存的是变量索引及原值
@@ -404,10 +407,10 @@ public class AlgoAllDiffAC_Zhang20 {
             }
         }
 
-//        SCCfinder.findAllSCC();
-        if (SCCfinder.findAllSCCWithEarlyDetection(DE)) {
-            return true;
-        }
+        SCCfinder.findAllSCC();
+//        if (SCCfinder.findAllSCCWithEarlyDetection(DE)) {
+//            return true;
+//        }
         nodeSCC = SCCfinder.getNodesSCC();
 //        System.out.println(Arrays.toString(nodeSCC));
 //        graph.removeNode(numNodes);
