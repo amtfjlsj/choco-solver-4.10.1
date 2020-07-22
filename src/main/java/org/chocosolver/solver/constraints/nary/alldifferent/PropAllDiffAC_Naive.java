@@ -41,6 +41,7 @@ public class PropAllDiffAC_Naive extends Propagator<IntVar> {
     //***********************************************************************************
 
     protected AlgoAllDiffAC_Naive filter;
+    private static long numProp = 0;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -54,18 +55,6 @@ public class PropAllDiffAC_Naive extends Propagator<IntVar> {
      */
     public PropAllDiffAC_Naive(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-//        //统计值个数
-//        TIntIntHashMap val2Idx = new TIntIntHashMap();
-//        // 统计所有变量论域中不同值的个数
-//        for (IntVar v : variables) {
-//            for (int j = v.getLB(), ub = v.getUB(); j <= ub; j = v.nextValue(j)) {
-//                if (!val2Idx.containsKey(j)) {
-//                    val2Idx.put(j, val2Idx.size());
-//                }
-//            }
-//        }
-
-//        int numValues = val2Idx.size();
         if (vars.length <= 32) {
             this.filter = new AlgoAllDiffAC_Naive32(variables, this);
         } else if (vars.length <= 64) {
@@ -81,6 +70,7 @@ public class PropAllDiffAC_Naive extends Propagator<IntVar> {
 
     @Override
     public void propagate(int evtmask) throws ContradictionException {
+//        System.out.println("----------------" + (++numProp) + ", " + this.getId() + " propagate----------------");
         filter.propagate();
     }
 

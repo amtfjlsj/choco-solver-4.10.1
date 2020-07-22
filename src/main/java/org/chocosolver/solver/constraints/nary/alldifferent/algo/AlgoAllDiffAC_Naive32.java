@@ -399,11 +399,11 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
                                 int valNum = v.getDomainSize();
                                 filter |= v.instantiateTo(k, aCause);
                                 Measurer.numDelValuesP2 += valNum - 1;
-                                System.out.println("instantiate  : " + v.getName() + ", " + k);
+//                                System.out.println("instantiate  : " + v.getName() + ", " + k);
                             } else {
                                 ++Measurer.numDelValuesP2;
                                 filter |= v.removeValue(k, aCause);
-                                System.out.println("second delete: " + v.getName() + ", " + k);
+//                                System.out.println("second delete: " + v.getName() + ", " + k);
                             }
                         }
                     }

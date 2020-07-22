@@ -403,7 +403,6 @@ public class AlgoAllDiffAC_Fair {
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     int valIdx = val2Idx.get(k);
                     if (nodeSCC[varIdx] != nodeSCC[valIdx + addArity]) {
-//                    if (nodeSCC[varIdx] != nodeSCC[valIdx + arity]) {
                         if (valIdx == var2Val[varIdx]) {
                             filter |= v.instantiateTo(k, aCause);
                             System.out.println("instantiate  : " + v.getName() + ", " + k);

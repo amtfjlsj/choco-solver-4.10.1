@@ -348,6 +348,7 @@ public class AlgoAllDiffAC2 {
         // 新增变量初始化
         nodeSCC[arity] = -1;
         freeNode.iterateValid();
+
         // 开始
         int first = restriction.nextSetBit(0);
         while (first >= 0) {

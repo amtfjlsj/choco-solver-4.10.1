@@ -407,10 +407,11 @@ public class AlgoAllDiffAC_Zhang20 {
             }
         }
 
-        SCCfinder.findAllSCC();
-//        if (SCCfinder.findAllSCCWithEarlyDetection(DE)) {
-//            return true;
-//        }
+//        SCCfinder.findAllSCC();
+        if (SCCfinder.findAllSCC_ED(DE)) {
+//            System.out.println("xixi");
+            return true;
+        }
         nodeSCC = SCCfinder.getNodesSCC();
 //        System.out.println(Arrays.toString(nodeSCC));
 //        graph.removeNode(numNodes);
@@ -430,7 +431,6 @@ public class AlgoAllDiffAC_Zhang20 {
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     int valIdx = val2Idx.get(k);
                     if (nodeSCC[varIdx] != nodeSCC[valIdx + addArity]) {
-//                    if (nodeSCC[varIdx] != nodeSCC[valIdx + arity]) {
                         if (valIdx == var2Val[varIdx]) {
                             filter |= v.instantiateTo(k, aCause);
                             System.out.println("instantiate  : " + v.getName() + ", " + k);
