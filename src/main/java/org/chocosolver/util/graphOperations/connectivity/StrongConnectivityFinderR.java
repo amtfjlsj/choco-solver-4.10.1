@@ -36,6 +36,8 @@ public class StrongConnectivityFinderR {
     IntTuple2 tt;
 
     private Iterator<Integer>[] iters;
+    private int[] levelNodes;
+    private int curLevel = 0;
 //    private int index = 0;
 //    private BitSet visited;
 
@@ -56,6 +58,7 @@ public class StrongConnectivityFinderR {
         unvisited = new BitSet(n);
         cycles = new ArrayList<>();
         iters = new Iterator[n];
+        levelNodes = new int[n];
 //        p = new int[n];
 //        inf = new int[n];
 //        nodeOfDfsNum = new int[n];
@@ -92,45 +95,50 @@ public class StrongConnectivityFinderR {
         findSingletons(restriction);
         int v = restriction.nextSetBit(0);
         while (v >= 0) {
-            strongConnectR(v);
+//            strongConnectR(v);
+            strongConnect(v);
             v = restriction.nextSetBit(v);
         }
     }
 
-    private void strongConnectR(int curnode) {
-        pushStack(curnode);
-        DFSNum[curnode] = maxDFS;
-        lowLink[curnode] = maxDFS;
+    private void strongConnectR(int curNode) {
+        pushStack(curNode);
+        DFSNum[curNode] = maxDFS;
+        lowLink[curNode] = maxDFS;
         maxDFS++;
-        unvisited.clear(curnode);
+        unvisited.clear(curNode);
 
-        Iterator<Integer> iterator = graph.getSuccOf(curnode).iterator();
+        Iterator<Integer> iterator = graph.getSuccOf(curNode).iterator();
         while (iterator.hasNext()) {
-            int newnode = iterator.next();
-            if (!unvisited.get(newnode)) {
-                if (inStack.get(newnode)) {
-                    lowLink[curnode] = Math.min(lowLink[curnode], DFSNum[newnode]);
+            int newNode = iterator.next();
+//            System.out.println(curNode + ", " + newNode + ", " + unvisited.get(newNode));
+            if (!unvisited.get(newNode)) {
+                if (inStack.get(newNode)) {
+                    lowLink[curNode] = Math.min(lowLink[curNode], DFSNum[newNode]);
                 }
             } else {
-                strongConnectR(newnode);
-                lowLink[curnode] = Math.min(lowLink[curnode], lowLink[newnode]);
+                strongConnectR(newNode);
+                lowLink[curNode] = Math.min(lowLink[curNode], lowLink[newNode]);
             }
         }
 
-        if (lowLink[curnode] == DFSNum[curnode]) {
-            if (lowLink[curnode] > 0 || inStack.cardinality() > 0) {
+//        System.out.println(curNode + " has no nei " + lowLink[curNode] + ", " + DFSNum[curNode]);
+        if (lowLink[curNode] == DFSNum[curNode]) {
+            if (lowLink[curNode] > 0 || inStack.cardinality() > 0) {
                 hasSCCSplit = true;
             }
             if (hasSCCSplit) {
-                int stacknode = -1;
+                int stackNode = -1;
 
-                while (stacknode != curnode) {
-                    stacknode = popStack();
-                    nodeSCC[stacknode] = nbSCC;
+                while (stackNode != curNode) {
+                    stackNode = popStack();
+//                    System.out.println("pop: " + stackNode + ", " + nbSCC);
+                    nodeSCC[stackNode] = nbSCC;
                 }
                 nbSCC++;
             }
         }
+//        System.out.println("back");
     }
 
     private void findSingletons(BitSet restriction) {
@@ -169,7 +177,8 @@ public class StrongConnectivityFinderR {
         findSingletons(restriction);
         int v = restriction.nextSetBit(0);
         while (v >= 0) {
-            if (strongConnect_EDR(v)) {
+//            if (strongConnect_EDR(v)) {
+            if (strongConnect_ED(v)) {
                 return true;
             }
             v = restriction.nextSetBit(v);
@@ -186,22 +195,22 @@ public class StrongConnectivityFinderR {
 
         Iterator<Integer> iterator = graph.getSuccOf(curnode).iterator();
         while (iterator.hasNext()) {
-            int newnode = iterator.next();
-            if (!unvisited.get(newnode)) {
-                if (inStack.get(newnode)) {
-                    lowLink[curnode] = Math.min(lowLink[curnode], DFSNum[newnode]);
+            int newNode = iterator.next();
+            if (!unvisited.get(newNode)) {
+                if (inStack.get(newNode)) {
+                    lowLink[curnode] = Math.min(lowLink[curnode], DFSNum[newNode]);
                     if (!unconnected) {
-                        addCycles(lowLink[newnode], maxDFS - 1);
+                        addCycles(lowLink[newNode], maxDFS - 1);
                         while (!DE.empty() && inCycles(DE.peek())) {
                             DE.pop();
                         }
                     }
                 }
             } else {
-                if (strongConnect_EDR(newnode)) {
+                if (strongConnect_EDR(newNode)) {
                     return true;
                 }
-                lowLink[curnode] = Math.min(lowLink[curnode], lowLink[newnode]);
+                lowLink[curnode] = Math.min(lowLink[curnode], lowLink[newNode]);
             }
         }
 
@@ -210,11 +219,12 @@ public class StrongConnectivityFinderR {
                 hasSCCSplit = true;
             }
             if (hasSCCSplit) {
-                int stacknode = -1;
+                int stackNode = -1;
 
-                while (stacknode != curnode) {
-                    stacknode = popStack();
-                    nodeSCC[stacknode] = nbSCC;
+                while (stackNode != curnode) {
+                    stackNode = popStack();
+//                    System.out.println("pop: " + stackNode + ", " + nbSCC);
+                    nodeSCC[stackNode] = nbSCC;
                 }
                 nbSCC++;
 
@@ -230,55 +240,157 @@ public class StrongConnectivityFinderR {
         return false;
     }
 
+    private void strongConnect(int curNode) {
+        curLevel = 0;
 
-//    private void strongConnect(int curnode) {
-//        pushStack(curnode);
-//        DFSNum[curnode] = maxDFS;
-//        lowLink[curnode] = maxDFS;
-//        maxDFS++;
-//        unvisited.clear(curnode);
-//        int curLevel = 0;
-//
-//        while (stackIdx > 0) {
-//            iters[curLevel] = graph.getSuccOf(curnode).iterator();
-//            while (iters[curLevel].hasNext()) {
-//                int newnode = iters[curLevel].next();
-//                if (!unvisited.get(newnode)) {
-//                    if (inStack.get(newnode)) {
-//                        lowLink[curnode] = Math.min(lowLink[curnode], DFSNum[newnode]);
-//                    }
-//                } else {
-////                    if (strongConnect_EDR(newnode)) {
-////                        return true;
-////                    }
-//                    pushStack(newnode);
-//                    DFSNum[newnode] = maxDFS;
-//                    lowLink[newnode] = maxDFS;
-//                    maxDFS++;
-//                    unvisited.clear(newnode);
-//                    curLevel++;
-//                    iters[] = graph.getSuccOf(newnode).iterator();
-////                    lowLink[newnode] = Math.min(lowLink[curnode], lowLink[newnode]);
-//                }
-//
-////                if (unvisited.get(newnode)) {
-////                    if (!inStack.get(newnode)) {
-////                        pushStack(newnode);
-////                        DFSNum[newnode] = maxDFS;
-////                        lowLink[newnode] = maxDFS;
-////                        maxDFS++;
-////                        unvisited.clear(newnode);
-////                    }
-//////                    else {
-//////                        lowLink[curnode] = Math.min(lowLink[curnode], DFSNum[newnode]);
-//////                    }
-////                }
-////                else {
-////                    lowLink[curnode] = Math.min(lowLink[curnode], DFSNum[newnode]);
-////                }
-//            }
-//        }
-//    }
+        pushStack(curNode);
+        DFSNum[curNode] = maxDFS;
+        lowLink[curNode] = maxDFS;
+        maxDFS++;
+        unvisited.clear(curNode);
+        levelNodes[curLevel] = curNode;
+        iters[curLevel] = graph.getSuccOf(curNode).iterator();
+
+        while (stackIdx > 0) {
+            curNode = levelNodes[curLevel];
+//            System.out.println(curNode + ", " + curLevel);
+            if (iters[curLevel].hasNext()) {
+                curNode = iters[curLevel].next();
+                levelNodes[++curLevel] = curNode;
+//                System.out.println(levelNodes[curLevel - 1] + ", " + curNode + ", " + unvisited.get(curNode));
+                if (unvisited.get(curNode)) {
+                    pushStack(curNode);
+                    DFSNum[curNode] = maxDFS;
+                    lowLink[curNode] = maxDFS;
+                    maxDFS++;
+                    unvisited.clear(curNode);
+                    iters[curLevel] = graph.getSuccOf(curNode).iterator();
+                } else if (inStack.get(curNode)) {
+                    lowLink[levelNodes[curLevel - 1]] = Math.min(lowLink[levelNodes[curLevel - 1]], DFSNum[curNode]);
+                    curLevel--;
+//                    System.out.println("back");
+                } else {
+//                    System.out.println("back");
+                    curLevel--;
+                }
+            } else {
+
+//                hasSCCSplit = false;
+//                curNode = levelNodes[curLevel - 1];
+//                System.out.println(curNode + " has no nei " + lowLink[curNode] + ", " + DFSNum[curNode]);
+                if (lowLink[curNode] == DFSNum[curNode]) {
+//                    System.out.println(curLevel+", e");
+                    if (lowLink[curNode] > 0 || inStack.cardinality() > 0) {
+                        hasSCCSplit = true;
+                    }
+                    if (hasSCCSplit) {
+//                        System.out.println(curLevel + ", f");
+                        int stackNode = -1;
+
+                        while (stackNode != curNode) {
+                            stackNode = popStack();
+//                            System.out.println("pop: " + stackNode + ", " + nbSCC);
+                            nodeSCC[stackNode] = nbSCC;
+                        }
+                        nbSCC++;
+                    }
+                }
+
+                if (curLevel == 0) {
+                    break;
+                }
+
+                lowLink[levelNodes[curLevel - 1]] = Math.min(lowLink[levelNodes[curLevel - 1]], lowLink[curNode]);
+                curLevel--;
+
+//                System.out.println("back");
+            }
+
+        }
+    }
+
+    private boolean strongConnect_ED(int curNode) {
+        curLevel = 0;
+
+        pushStack(curNode);
+        DFSNum[curNode] = maxDFS;
+        lowLink[curNode] = maxDFS;
+        maxDFS++;
+        unvisited.clear(curNode);
+        levelNodes[curLevel] = curNode;
+        iters[curLevel] = graph.getSuccOf(curNode).iterator();
+
+        while (stackIdx > 0) {
+            curNode = levelNodes[curLevel];
+//            System.out.println(curNode + ", " + curLevel);
+            if (iters[curLevel].hasNext()) {
+                curNode = iters[curLevel].next();
+                levelNodes[++curLevel] = curNode;
+//                System.out.println(levelNodes[curLevel - 1] + ", " + curNode + ", " + unvisited.get(curNode));
+                if (unvisited.get(curNode)) {
+                    pushStack(curNode);
+                    DFSNum[curNode] = maxDFS;
+                    lowLink[curNode] = maxDFS;
+                    maxDFS++;
+                    unvisited.clear(curNode);
+                    iters[curLevel] = graph.getSuccOf(curNode).iterator();
+                } else if (inStack.get(curNode)) {
+                    lowLink[levelNodes[curLevel - 1]] = Math.min(lowLink[levelNodes[curLevel - 1]], DFSNum[curNode]);
+                    curLevel--;
+
+                    if (!unconnected) {
+                        addCycles(lowLink[curNode], maxDFS - 1);
+                        while (!DE.empty() && inCycles(DE.peek())) {
+                            DE.pop();
+                        }
+                    }
+//                    System.out.println("back");
+                } else {
+//                    System.out.println("back");
+                    curLevel--;
+                }
+            } else {
+
+//                hasSCCSplit = false;
+//                curNode = levelNodes[curLevel - 1];
+//                System.out.println(curNode + " has no nei " + lowLink[curNode] + ", " + DFSNum[curNode]);
+                if (lowLink[curNode] == DFSNum[curNode]) {
+//                    System.out.println(curLevel+", e");
+                    if (lowLink[curNode] > 0 || inStack.cardinality() > 0) {
+                        hasSCCSplit = true;
+                    }
+                    if (hasSCCSplit) {
+//                        System.out.println(curLevel + ", f");
+                        int stackNode = -1;
+
+                        while (stackNode != curNode) {
+                            stackNode = popStack();
+//                            System.out.println("pop: " + stackNode + ", " + nbSCC);
+                            nodeSCC[stackNode] = nbSCC;
+                        }
+                        nbSCC++;
+
+                        unconnected = true;
+                    }
+                }
+
+                if (curLevel == 0) {
+                    break;
+                }
+
+                lowLink[levelNodes[curLevel - 1]] = Math.min(lowLink[levelNodes[curLevel - 1]], lowLink[curNode]);
+                curLevel--;
+
+//                  System.out.println("back");
+
+                if (!unconnected && DE.empty()) {
+//                  System.out.println("xixi");
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     private void pushStack(int v) {
         stack[stackIdx++] = v;

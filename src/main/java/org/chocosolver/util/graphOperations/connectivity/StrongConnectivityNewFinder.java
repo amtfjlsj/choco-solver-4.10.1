@@ -145,29 +145,30 @@ public class StrongConnectivityNewFinder {
             first = restriction.nextSetBit(first);
         }
     }
-
-    public boolean findAllSCCOfWithEarlyDetection(Stack<IntTuple2> deletedEdges) {
-        inStack.clear();
-        for (int i = 0; i < n; i++) {
-            dfsNumOfNode[i] = 0;
-            inf[i] = n + 2;
-            nextNode[i] = -1;
-            sccFirstNode[i] = -1;
-            nodeSCC[i] = -1;
-        }
-        nbSCC = 0;
-        cycles.clear();
-        unconnected = false;
-        findSingletons(restriction);
-        int first = restriction.nextSetBit(0);
-        while (first >= 0) {
-            if (findSCCWithEarlyDetection(first, restriction, stack, p, inf, nodeOfDfsNum, dfsNumOfNode, inStack, deletedEdges)) {
-                return true;
-            }
-            first = restriction.nextSetBit(first);
-        }
-        return false;
-    }
+//
+//    public boolean findAllSCCOfWithEarlyDetection(Stack<IntTuple2> deletedEdges) {
+//        inStack.clear();
+//        for (int i = 0; i < n; i++) {
+//            dfsNumOfNode[i] = 0;
+//            inf[i] = n + 2;
+//            nextNode[i] = -1;
+//            sccFirstNode[i] = -1;
+//            nodeSCC[i] = -1;
+//        }
+//        nbSCC = 0;
+//        int k = 0;
+//        cycles.clear();
+//        unconnected = false;
+//        findSingletons(restriction);
+//        int first = restriction.nextSetBit(0);
+//        while (first >= 0) {
+//            if (findSCCWithEarlyDetection(first, restriction, stack, p, inf, nodeOfDfsNum, dfsNumOfNode, inStack, deletedEdges)) {
+//                return true;
+//            }
+//            first = restriction.nextSetBit(first);
+//        }
+//        return false;
+//    }
 
     public boolean findAllSCCOfWithEarlyDetection(BitSet restriction, Stack<IntTuple2> deletedEdges) {
         inStack.clear();
@@ -181,11 +182,12 @@ public class StrongConnectivityNewFinder {
         nbSCC = 0;
         cycles.clear();
         unconnected = false;
+        int k = 0;
 
         findSingletons(restriction);
         int first = restriction.nextSetBit(0);
         while (first >= 0) {
-            if (findSCCWithEarlyDetection(first, restriction, stack, p, inf, nodeOfDfsNum, dfsNumOfNode, inStack, deletedEdges)) {
+            if (findSCCWithEarlyDetection(first, k, restriction, stack, p, inf, nodeOfDfsNum, dfsNumOfNode, inStack, deletedEdges)) {
                 return true;
             }
             first = restriction.nextSetBit(first);
@@ -282,7 +284,7 @@ public class StrongConnectivityNewFinder {
 
     // return true DE已删光，本propagator不用再运行
     // return false DE未删光， propagator仍要运行
-    private boolean findSCCWithEarlyDetection(int start, BitSet restriction, int[] stack, int[] p, int[] inf, int[] nodeOfDfsNum, int[] dfsNumOfNode, BitSet inStack, Stack<IntTuple2> deletedEdges) {
+    private boolean findSCCWithEarlyDetection(int start, int k, BitSet restriction, int[] stack, int[] p, int[] inf, int[] nodeOfDfsNum, int[] dfsNumOfNode, BitSet inStack, Stack<IntTuple2> deletedEdges) {
         int nb = restriction.cardinality();
         // trivial case
         if (nb == 1) {
@@ -293,7 +295,7 @@ public class StrongConnectivityNewFinder {
         }
         //initialization
         int stackIdx = 0;
-        int k = 0;
+//        int k = 0;
         int i = k;
         dfsNumOfNode[start] = k;
         nodeOfDfsNum[k] = start;
@@ -356,14 +358,14 @@ public class StrongConnectivityNewFinder {
 
                     //!!待议
                     unconnected = true;
-                    System.out.println("unconnected = " + unconnected);
+//                    System.out.println("unconnected = " + unconnected);
                 }
                 inf[p[i]] = Math.min(inf[p[i]], inf[i]);
                 i = p[i];
             }
 
             if (numProp != Long.MIN_VALUE + 1 && !unconnected && deletedEdges.isEmpty()) {
-                System.out.println("xixi");
+//                System.out.println("xixi");
                 // 停止传播
                 return true;
             }
@@ -415,7 +417,7 @@ public class StrongConnectivityNewFinder {
 
     private boolean inCycles(IntTuple2 t) {
         for (IntTuple2 tt : cycles) {
-            System.out.println("inCycles: (" + t.a + ", " + t.b + ") , = (" + dfsNumOfNode[t.a] + ", " + dfsNumOfNode[t.b] + ") =" +(tt.cover(dfsNumOfNode[t.a]) && tt.cover(dfsNumOfNode[t.b])));
+            System.out.println("inCycles: (" + t.a + ", " + t.b + ") , = (" + dfsNumOfNode[t.a] + ", " + dfsNumOfNode[t.b] + ") =" + (tt.cover(dfsNumOfNode[t.a]) && tt.cover(dfsNumOfNode[t.b])));
 //            if (tt.cover(dfsNumOfNode[t.a], dfsNumOfNode[t.b])) {
 //                return true;
 //            }
