@@ -3,18 +3,18 @@ package org.chocosolver.solver.constraints.nary.alldifferent;
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
 //import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffACFast2;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC_ZhangM;
+import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC_Zhang18M;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.ESat;
 
-public class PropAllDiffAC_ZhangM extends Propagator<IntVar> {
+public class PropAllDiffAC_Zhang18M extends Propagator<IntVar> {
 
     //***********************************************************************************
     // VARIABLES
     //***********************************************************************************
 
-    protected AlgoAllDiffAC_ZhangM filter;
+    protected AlgoAllDiffAC_Zhang18M filter;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -26,9 +26,9 @@ public class PropAllDiffAC_ZhangM extends Propagator<IntVar> {
      *
      * @param variables array of integer variables
      */
-    public PropAllDiffAC_ZhangM(IntVar[] variables) {
+    public PropAllDiffAC_Zhang18M(IntVar[] variables) {
         super(variables, PropagatorPriority.QUADRATIC, false);
-        this.filter = new AlgoAllDiffAC_ZhangM(variables, this);
+        this.filter = new AlgoAllDiffAC_Zhang18M(variables, this);
     }
 
     //***********************************************************************************

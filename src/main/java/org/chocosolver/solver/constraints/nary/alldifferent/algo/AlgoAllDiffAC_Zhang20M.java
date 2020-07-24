@@ -25,7 +25,7 @@ import java.util.BitSet;
  *
  * @author Jean-Guillaume Fages, Zhe Li, Jia'nan Chen
  */
-public class AlgoAllDiffAC_ZhangM {
+public class AlgoAllDiffAC_Zhang20M {
 
     //***********************************************************************************
     // VARIABLES
@@ -85,7 +85,7 @@ public class AlgoAllDiffAC_ZhangM {
     //***********************************************************************************
     // CONSTRUCTORS
     //***********************************************************************************
-    public AlgoAllDiffAC_ZhangM(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffAC_Zhang20M(IntVar[] variables, ICause cause) {
         id = num++;
 
         this.vars = variables;

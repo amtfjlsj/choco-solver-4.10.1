@@ -80,7 +80,7 @@ public class AllDifferent extends Constraint {
             case ACFastE:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFast2(VARS)};
             case ACZhangM:
-                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_ZhangM(VARS)};
+                return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Zhang18M(VARS)};
             case ACNaive:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Naive(VARS)};
             case ACNaiveML:

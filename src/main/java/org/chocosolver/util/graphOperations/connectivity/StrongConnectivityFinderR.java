@@ -274,8 +274,7 @@ public class StrongConnectivityFinderR {
                     curLevel--;
                 }
             } else {
-
-//                hasSCCSplit = false;
+                hasSCCSplit = false;
 //                curNode = levelNodes[curLevel - 1];
 //                System.out.println(curNode + " has no nei " + lowLink[curNode] + ", " + DFSNum[curNode]);
                 if (lowLink[curNode] == DFSNum[curNode]) {
@@ -302,8 +301,6 @@ public class StrongConnectivityFinderR {
 
                 lowLink[levelNodes[curLevel - 1]] = Math.min(lowLink[levelNodes[curLevel - 1]], lowLink[curNode]);
                 curLevel--;
-
-//                System.out.println("back");
             }
 
         }
@@ -344,14 +341,12 @@ public class StrongConnectivityFinderR {
                             DE.pop();
                         }
                     }
-//                    System.out.println("back");
                 } else {
-//                    System.out.println("back");
+//                    System.out.println("xixi");
                     curLevel--;
                 }
             } else {
-
-//                hasSCCSplit = false;
+                hasSCCSplit = false;
 //                curNode = levelNodes[curLevel - 1];
 //                System.out.println(curNode + " has no nei " + lowLink[curNode] + ", " + DFSNum[curNode]);
                 if (lowLink[curNode] == DFSNum[curNode]) {
@@ -380,8 +375,6 @@ public class StrongConnectivityFinderR {
 
                 lowLink[levelNodes[curLevel - 1]] = Math.min(lowLink[levelNodes[curLevel - 1]], lowLink[curNode]);
                 curLevel--;
-
-//                  System.out.println("back");
 
                 if (!unconnected && DE.empty()) {
 //                  System.out.println("xixi");
@@ -412,43 +405,22 @@ public class StrongConnectivityFinderR {
         return nodeSCC;
     }
 
-//    boolean inStack()
-
     private void addCycles(int a, int b) {
-//        Iterator<IntTuple2> iter = cycles.iterator();
-//        IntTuple2 t;
-//        while (iter.hasNext()) {
-//            t = iter.next();
-//            if (t.overlap(a, b)) {
-//                t.a = Math.min(t.a, a);
-//                t.b = Math.max(t.b, b);
-//                return;
-//            }
-//        }
-
+        Iterator<IntTuple2> iter = cycles.iterator();
         IntTuple2 t;
-        for (int i = 0, len = cycles.size(); i < len; ++i) {
-            t = cycles.get(i);
+        while (iter.hasNext()) {
+            t = iter.next();
             if (t.overlap(a, b)) {
                 t.a = Math.min(t.a, a);
                 t.b = Math.max(t.b, b);
                 return;
             }
         }
+
         cycles.add(new IntTuple2(a, b));
-//        System.out.println("cycles: " + cycles);
     }
 
     private boolean inCycles(IntTuple2 t) {
-//        for (IntTuple2 tt : cycles) {
-////            System.out.println("inCycles: (" + t.a + ", " + t.b + ") , = (" + dfsNumOfNode[t.a] + ", " + dfsNumOfNode[t.b] + ") =" +(tt.cover(dfsNumOfNode[t.a]) && tt.cover(dfsNumOfNode[t.b])));
-////            if (tt.cover(dfsNumOfNode[t.a], dfsNumOfNode[t.b])) {
-////                return true;
-////            }
-//            if (tt.cover(DFSNum[t.a]) && tt.cover(DFSNum[t.b])) {
-//                return true;
-//            }
-//        }
         IntTuple2 tt;
         for (int i = 0, len = cycles.size(); i < len; ++i) {
             tt = cycles.get(i);

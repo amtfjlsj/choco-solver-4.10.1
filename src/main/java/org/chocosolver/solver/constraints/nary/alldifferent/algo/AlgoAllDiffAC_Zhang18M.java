@@ -7,28 +7,25 @@ import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityFinder;
-import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityFinderR;
-import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityNewFinder;
 import org.chocosolver.util.objects.SparseSet;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.SetType;
 
-import java.util.Arrays;
 import java.util.BitSet;
 
 /**
  * Algorithm of Alldifferent with AC
  * <p>
- * Uses Regin algorithm with FF-BFS incremental matching + graph based scc
- * Runs in O(m.n) worst case time for the initial propagation
- * but has a good average behavior in practice
- * <p/>
- * Keeps track of previous matching for further calls
- * <p/>
+ * Uses Zhang algorithm in the paper of IJCAI-18
+ * "A Fast Algorithm for Generalized Arc Consistency of the Alldifferent Constraint"
+ * <p>
+ * We try to use the bit to speed up.
+ * <p>
+ * <p>
  *
- * @author Jean-Guillaume Fages
+ * @author Jean-Guillaume Fages, Zhe Li, Jia'nan Chen
  */
-public class AlgoAllDiffAC_Fair {
+public class AlgoAllDiffAC_Zhang18M {
 
     //***********************************************************************************
     // VARIABLES
@@ -43,7 +40,7 @@ public class AlgoAllDiffAC_Fair {
     private ICause aCause;
 
     // numValue是二部图中取值编号的个数
-    private int numValues;
+    private int numValue;
 
     // 索引到值
     private int[] idx2Val;
@@ -67,27 +64,33 @@ public class AlgoAllDiffAC_Fair {
 
     // 自由值集合
     private SparseSet freeNode;
+    // Xc-Γ(A)
+    private SparseSet notGamma;
+    // Dc-A
+    private SparseSet notA;
 
-    // 新增一点（视为变量）
-    private int addArity;
+    private int[] fifo;
 
-    //    // SCC
-    private int numNodes;
-
-    private DirectedGraph graph;
+    // SCC
+    private int n;
     private int[] nodeSCC;
-    private StrongConnectivityFinderR SCCfinder;
+
+    private DirectedGraph mergedDigragh;
+    private StrongConnectivityFinder SCCfinder;
+
+    //    // util
+//    private int[] stack, p, inf, dfn;
+    private BitSet distinction, restriction;
 
     //***********************************************************************************
     // CONSTRUCTORS
     //***********************************************************************************
-    public AlgoAllDiffAC_Fair(IntVar[] variables, ICause cause) {
+    public AlgoAllDiffAC_Zhang18M(IntVar[] variables, ICause cause) {
         id = num++;
 
         this.vars = variables;
         aCause = cause;
         arity = vars.length;
-        addArity = arity + 1;
         val2Idx = new TIntIntHashMap();
         // 统计所有变量论域中不同值的个数
         for (int i = 0; i < arity; ++i) {
@@ -99,17 +102,17 @@ public class AlgoAllDiffAC_Fair {
             }
         }
 
-        numValues = val2Idx.size();
-        idx2Val = new int[numValues];
+        numValue = val2Idx.size();
+        idx2Val = new int[numValue];
         TIntIntIterator it = val2Idx.iterator();
         while (it.hasNext()) {
             it.advance();
             idx2Val[it.value()] = it.key();
         }
 
-        valUnmatchedVar = new SparseSet[numValues];
-        for (int i = 0; i < numValues; ++i) {
-            valUnmatchedVar[i] = new SparseSet(addArity);
+        valUnmatchedVar = new SparseSet[numValue];
+        for (int i = 0; i < numValue; ++i) {
+            valUnmatchedVar[i] = new SparseSet(arity);
         }
 
         // 记录访问过的变量
@@ -117,26 +120,37 @@ public class AlgoAllDiffAC_Fair {
         variable_visited_ = new BitSet(arity);
         // 变量的前驱变量，若前驱变量是-1，则表示无前驱变量，就是第一个变量
         variable_visited_from_ = new int[arity];
-        value_visited_ = new BitSet(numValues);
+        value_visited_ = new BitSet(numValue);
 
         var2Val = new int[arity];
+        val2Var = new int[numValue];
         for (int i = 0; i < arity; ++i) {
             var2Val[i] = -1;
         }
-        val2Var = new int[numValues];
-        for (int i = 0; i < numValues; ++i) {
+        for (int i = 0; i < numValue; ++i) {
             val2Var[i] = -1;
         }
 
-        // freeNode区分匹配点和非匹配点(正好是新增变量的取值范围）
-        freeNode = new SparseSet(numValues);
+        // freeNode区分匹配点和非匹配点
+        freeNode = new SparseSet(numValue);
+        notGamma = new SparseSet(arity);
+        notA = new SparseSet(numValue);
+
+        fifo = new int[arity];
 
         // SCC
-        numNodes = addArity + numValues;
-        nodeSCC = new int[numNodes];
+        n = arity + numValue;
+        nodeSCC = new int[n];
 
-        graph = new DirectedGraph(numNodes, SetType.BITSET, false);
-        SCCfinder = new StrongConnectivityFinderR(graph);
+//        stack = new int[n];
+//        p = new int[n];
+//        inf = new int[n];
+//        dfn = new int[n];
+//        inStack = new BitSet(n);
+        restriction = new BitSet(arity);
+        distinction = new BitSet(n);
+        mergedDigragh = new DirectedGraph(arity, SetType.BITSET, false);
+        SCCfinder = new StrongConnectivityFinder(mergedDigragh);
     }
 
     //***********************************************************************************
@@ -145,7 +159,7 @@ public class AlgoAllDiffAC_Fair {
 
     public boolean propagate() throws ContradictionException {
 //        System.out.println("----------------" + id + " propagate----------------");
-//        if (id == 0) {
+//        if (id == 2) {
 //            System.out.println("vars: ");
 //            for (IntVar v : vars) {
 //                System.out.println(v.toString());
@@ -241,9 +255,8 @@ public class AlgoAllDiffAC_Fair {
     }
 
     private void findMaximumMatching() throws ContradictionException {
-        for (int i = 0; i < numValues; ++i) {
+        for (int i = 0; i < numValue; ++i) {
             valUnmatchedVar[i].clear();
-            valUnmatchedVar[i].add(arity);
         }
         freeNode.fill();
         // 增量检查
@@ -324,92 +337,119 @@ public class AlgoAllDiffAC_Fair {
     // PRUNING
     //***********************************************************************************
 
-    private void buildSCC() {
-
-        for (int i = 0; i < numNodes; i++) {
-            graph.getSuccOf(i).clear();
-            graph.getPredOf(i).clear();
-        }
-
-        // 添加匹配边 var->val
-        for (int i = 0; i < arity; ++i) {
-            int matchedVal = var2Val[i];
-            graph.addArc(i, matchedVal + addArity);
-
-        }
-
-        // 添加非匹配边 val->var; val->t
-        int k;
-        for (int j = 0; j < numValues; ++j) {
-            if (freeNode.contain(j)) {
-                graph.addArc(arity, j + addArity);
-            } else {
-                valUnmatchedVar[j].iterateValid();
-                while (valUnmatchedVar[j].hasNextValid()) {
-                    k = valUnmatchedVar[j].next();
-                    graph.addArc(j + addArity, k);
+    private void distinguish() {
+        notGamma.fill();
+        notA.fill();
+        // restriction记录寻找SCC的过程中未访问的变量
+        restriction.clear();
+        restriction.flip(0, arity);
+        int valIdx, varIdx;
+        int indexFirst = 0, indexLast = 0;
+        freeNode.iterateValid();
+        while (freeNode.hasNextValid()) {
+            valIdx = freeNode.next();
+            notA.remove(valIdx);
+            // 首先把与自由值相连的变量入队列
+            valUnmatchedVar[valIdx].iterateValid();
+            while (valUnmatchedVar[valIdx].hasNextValid()) {
+                varIdx = valUnmatchedVar[valIdx].next();
+                if (notGamma.contain(varIdx)) {
+                    fifo[indexLast++] = varIdx;
+                    notGamma.remove(varIdx);
+                    restriction.clear(varIdx);
+                }
+            }
+            // 然后，对队列中每个变量的匹配值，把与该值相连的非匹配变量入队
+            while (indexFirst != indexLast) {
+                varIdx = fifo[indexFirst++];
+                valIdx = var2Val[varIdx];
+                notA.remove(valIdx);
+                valUnmatchedVar[valIdx].iterateValid();
+                while (valUnmatchedVar[valIdx].hasNextValid()) {
+                    varIdx = valUnmatchedVar[valIdx].next();
+                    if (notGamma.contain(varIdx)) {
+                        fifo[indexLast++] = varIdx;
+                        notGamma.remove(varIdx);
+                        restriction.clear(varIdx);
+                    }
                 }
             }
         }
+    }
 
-//        freeNode.contain(i)
+    private void buildSCC() {
+        // 重新构造distinction
+        distinction.clear();
 
-////         添加额外的点t
-//        if (numNodes > arity * 2) {
-//            graph.removeNode(numNodes);
-//            graph.addNode(numNodes);
-//            for (int i = 0; i < numValues; i++) {
-//                if (freeNode.contain(i)) {
-//                    graph.addArc(numNodes, i + arity);
-//                } else {
-//                    graph.addArc(i + arity, numNodes);
-//                }
-//            }
-//        }
+        int i;
+        notGamma.iterateInvalid();
+        while (notGamma.hasNextInvalid()) {
+            i = notGamma.next();
+            distinction.set(i);
+        }
 
-//        for (int i = 0; i < numValues; i++) {
-//            if (freeNode.contain(i)) {
-//                graph.addArc(numNodes - 1, i + arity);
-//            } else {
-//                graph.addArc(i + arity, numNodes - 1);
-//            }
-//        }
-//        int n2 = numNodes - 1;
-//        if (numNodes - 1 > arity * 2) {// 添加额外的点t
-//            graph.removeNode(n2);
-//            graph.addNode(n2);
-//            for (int i = 0; i < n2; i++) {
-//                if (freeNode.contain(i)) {
-//                    graph.addArc(i, n2);
-//                } else {
-//                    graph.addArc(n2, i);
-//                }
-//            }
-//        }
+        notA.iterateInvalid();
+        while (notA.hasNextInvalid()) {
+            i = notA.next() + arity;
+            distinction.set(i);
+        }
 
-        SCCfinder.findAllSCC();
+//        System.out.println(distinction.toString());
+        SCCfinder.findAllSCC(distinction);
         nodeSCC = SCCfinder.getNodesSCC();
 //        System.out.println(Arrays.toString(nodeSCC));
-//        graph.removeNode(numNodes);
+    }
 
+    private void mergeNodes() {
+        // 初始化
+        // 每次都重新建图
+        for (int i = 0; i < arity; i++) {
+            mergedDigragh.getSuccOf(i).clear();
+            mergedDigragh.getPredOf(i).clear();
+        }
+
+        for (int i = 0, j; i < arity; ++i) {
+            int matchedVal = var2Val[i];
+//            for (int j : digraph.getPredOf(matchedVal)) {
+////                System.out.println(i + "<-" + j);
+//                mergedDigragh.addArc(j, i);
+//            }
+            valUnmatchedVar[matchedVal].iterateValid();
+            while (valUnmatchedVar[matchedVal].hasNextValid()) {
+                j = valUnmatchedVar[matchedVal].next();
+                mergedDigragh.addArc(i, j);
+            }
+        }
     }
 
     private boolean filter() throws ContradictionException {
-        boolean filter = false;
+        distinguish();
+        mergeNodes();
         buildSCC();
-        for (int varIdx = 0; varIdx < arity; varIdx++) {
-            IntVar v = vars[varIdx];
+        boolean filter = false;
+        for (int i = 0; i < arity; i++) {
+            IntVar v = vars[i];
             if (!v.isInstantiated()) {
                 int ub = v.getUB();
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     int valIdx = val2Idx.get(k);
-                    if (nodeSCC[varIdx] != nodeSCC[valIdx + addArity]) {
-                        if (valIdx == var2Val[varIdx]) {
-                            filter |= v.instantiateTo(k, aCause);
+                    if (!notGamma.contain(i) && notA.contain(valIdx)) {
+                        ++Measurer.numDelValuesP1;
+                        filter |= v.removeValue(k, aCause);
+                        //                System.out.println("first delete: " + v.getName() + ", " + k);
+                    } else if (notGamma.contain(i) && notA.contain(valIdx)) {
+                        int matchedVarIdx = val2Var[valIdx];
+                        if (nodeSCC[i] != nodeSCC[matchedVarIdx]) {
+                            if (valIdx == var2Val[i]) {
+                                int valNum = v.getDomainSize();
+                                filter |= v.instantiateTo(k, aCause);
+                                Measurer.numDelValuesP2 += valNum - 1;
 //                            System.out.println("instantiate  : " + v.getName() + ", " + k);
-                        } else {
-                            filter |= v.removeValue(k, aCause);
+                            } else {
+                                ++Measurer.numDelValuesP2;
+                                filter |= v.removeValue(k, aCause);
 //                            System.out.println("second delete: " + v.getName() + ", " + k);
+                            }
                         }
                     }
                 }
