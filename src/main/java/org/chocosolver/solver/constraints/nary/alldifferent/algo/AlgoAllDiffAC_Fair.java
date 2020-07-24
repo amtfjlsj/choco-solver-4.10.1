@@ -405,10 +405,10 @@ public class AlgoAllDiffAC_Fair {
                     if (nodeSCC[varIdx] != nodeSCC[valIdx + addArity]) {
                         if (valIdx == var2Val[varIdx]) {
                             filter |= v.instantiateTo(k, aCause);
-                            System.out.println("instantiate  : " + v.getName() + ", " + k);
+//                            System.out.println("instantiate  : " + v.getName() + ", " + k);
                         } else {
                             filter |= v.removeValue(k, aCause);
-                            System.out.println("second delete: " + v.getName() + ", " + k);
+//                            System.out.println("second delete: " + v.getName() + ", " + k);
                         }
                     }
                 }

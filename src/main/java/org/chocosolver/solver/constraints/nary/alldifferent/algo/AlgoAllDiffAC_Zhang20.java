@@ -80,7 +80,7 @@ public class AlgoAllDiffAC_Zhang20 {
 
     private DirectedGraph graph;
     private int[] nodeSCC;
-//    private StrongConnectivityNewFinder SCCfinder;
+    //    private StrongConnectivityNewFinder SCCfinder;
     private StrongConnectivityFinderR SCCfinder;
 
     // for early detection
@@ -409,7 +409,7 @@ public class AlgoAllDiffAC_Zhang20 {
 
 //        SCCfinder.findAllSCC();
         if (SCCfinder.findAllSCC_ED(DE)) {
-////            System.out.println("xixi");
+//            System.out.println("xixi");
             return true;
         }
         nodeSCC = SCCfinder.getNodesSCC();
@@ -433,10 +433,10 @@ public class AlgoAllDiffAC_Zhang20 {
                     if (nodeSCC[varIdx] != nodeSCC[valIdx + addArity]) {
                         if (valIdx == var2Val[varIdx]) {
                             filter |= v.instantiateTo(k, aCause);
-                            System.out.println("instantiate  : " + v.getName() + ", " + k);
+//                            System.out.println("instantiate  : " + v.getName() + ", " + k);
                         } else {
                             filter |= v.removeValue(k, aCause);
-                            System.out.println("second delete: " + v.getName() + ", " + k);
+//                            System.out.println("second delete: " + v.getName() + ", " + k);
                         }
                     }
                 }

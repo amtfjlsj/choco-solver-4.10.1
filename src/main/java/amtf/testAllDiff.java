@@ -49,8 +49,8 @@ public class testAllDiff {
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-015-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-020-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-030-9-mod.xml",
-                "C:\\bench\\X3\\Queens\\Queens-0008-m1.xml",
-//                "C:\\bench\\X3\\SportsScheduling\\SportsScheduling-08.xml",
+//                "C:\\bench\\X3\\Queens\\Queens-0020-m1.xml",
+                "C:\\bench\\X3\\SportsScheduling\\SportsScheduling-08.xml",
 //                "/Users/lizhe/allDiff_Series/Queens/Queens-m1-s1/Queens-0020-m1.xml"
         };
         XCSPParser parser = new XCSPParser();
@@ -63,7 +63,7 @@ public class testAllDiff {
                 "ACZhang20",
 //                "ACFast2",
 //                "ACFastM",
-//                "ACNaive",
+                "ACNaive",
 //                "BC",
         };
         int runNum = 1;
@@ -86,8 +86,8 @@ public class testAllDiff {
                     }
                     Arrays.sort(decVars, Comparator.comparingInt(IntVar::getId));
                     Solver solver = model.getSolver();
-//                    solver.setSearch(activityBasedSearch(decVars));
-                    solver.setSearch(Search.defaultSearch(model));
+                    solver.setSearch(activityBasedSearch(decVars));
+//                    solver.setSearch(Search.defaultSearch(model));
 //                solver.setSearch(intVarSearch(new FirstFail(model), new IntDomainMin(), decVars));
 
                     if (solver.solve()) {
