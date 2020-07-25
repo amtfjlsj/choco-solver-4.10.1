@@ -397,8 +397,8 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
                         if ((graphLinkedMatrix[varIdx] & 1 << val2Var[valIdx]) == 0 && !checkSCC(varIdx, valIdx)) {
                             if (valIdx == var2Val[varIdx]) {
                                 int valNum = v.getDomainSize();
-                                filter |= v.instantiateTo(k, aCause);
                                 Measurer.numDelValuesP2 += valNum - 1;
+                                filter |= v.instantiateTo(k, aCause);
 //                                System.out.println("instantiate  : " + v.getName() + ", " + k);
                             } else {
                                 ++Measurer.numDelValuesP2;

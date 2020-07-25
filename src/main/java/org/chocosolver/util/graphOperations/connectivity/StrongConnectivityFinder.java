@@ -12,6 +12,7 @@ package org.chocosolver.util.graphOperations.connectivity;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISet;
 
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Iterator;
 
@@ -105,6 +106,8 @@ public class StrongConnectivityFinder {
                 restriction.clear(i);
             }
         }
+
+//        System.out.println("fs: " + Arrays.toString(nodeSCC));
     }
 
     private void findSCC(int start, BitSet restriction, int[] stack, int[] p, int[] inf, int[] nodeOfDfsNum, int[] dfsNumOfNode, BitSet inStack) {
@@ -132,6 +135,7 @@ public class StrongConnectivityFinder {
         while (true) {
             if (iterator[i].hasNext()) {
                 j = iterator[i].next();
+//                System.out.println(start + ", " + j);
                 if (restriction.get(j)) {
                     if (dfsNumOfNode[j] == -1 && j != start) {
                         k++;
@@ -159,6 +163,7 @@ public class StrongConnectivityFinder {
                         y = nodeOfDfsNum[z];
                         restriction.clear(y);
                         sccAdd(y);
+//                        System.out.println("pop: " + z + ", " + nbSCC);
                     } while (z != i);
                     nbSCC++;
                 }
@@ -172,6 +177,7 @@ public class StrongConnectivityFinder {
                 y = nodeOfDfsNum[stack[--stackIdx]];
                 restriction.clear(y);
                 sccAdd(y);
+//                System.out.println("pop: " + y + ", " + nbSCC);
             } while (y != start);
             nbSCC++;
         }

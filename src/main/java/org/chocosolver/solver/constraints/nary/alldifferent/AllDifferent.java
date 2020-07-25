@@ -36,7 +36,7 @@ public class AllDifferent extends Constraint {
     public static final String ACFair= "ACFair";
     public static final String ACZhang18= "ACZhang18";
     public static final String ACZhang20= "ACZhang20";
-    public static final String ACZhangM= "ACZhangM";
+    public static final String ACZhang18M = "ACZhang18M";
     public static final String ACNaive= "ACNaive";
 
     public static final String BC= "BC";
@@ -79,7 +79,7 @@ public class AllDifferent extends Constraint {
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFast2(VARS)};
             case ACFastE:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffACFast2(VARS)};
-            case ACZhangM:
+            case ACZhang18M:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Zhang18M(VARS)};
             case ACNaive:
                 return new Propagator[]{new PropAllDiffInst(VARS), new PropAllDiffAC_Naive(VARS)};

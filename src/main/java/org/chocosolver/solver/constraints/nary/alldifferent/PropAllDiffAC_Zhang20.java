@@ -9,9 +9,9 @@
  */
 package org.chocosolver.solver.constraints.nary.alldifferent;
 
+import amtf.Measurer;
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
-import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC3;
 import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC_Zhang20;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
@@ -60,6 +60,7 @@ public class PropAllDiffAC_Zhang20 extends Propagator<IntVar> {
     @Override
     public void propagate(int evtmask) throws ContradictionException {
 //        System.out.println("----------------" + (++numProp) + ", " + this.getId() + " propagate----------------");
+        Measurer.numProp++;
         filter.propagate();
     }
 

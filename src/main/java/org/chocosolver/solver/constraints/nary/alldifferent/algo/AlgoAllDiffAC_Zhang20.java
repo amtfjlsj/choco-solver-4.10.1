@@ -432,11 +432,14 @@ public class AlgoAllDiffAC_Zhang20 {
                     int valIdx = val2Idx.get(k);
                     if (nodeSCC[varIdx] != nodeSCC[valIdx + addArity]) {
                         if (valIdx == var2Val[varIdx]) {
+                            int valNum = v.getDomainSize();
+                            Measurer.numDelValuesP2 += valNum - 1;
                             filter |= v.instantiateTo(k, aCause);
-//                            System.out.println("instantiate  : " + v.getName() + ", " + k);
+//                            System.out.println("instantiate  : " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
                         } else {
+                            ++Measurer.numDelValuesP2;
+//                            System.out.println("second delete: " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
                             filter |= v.removeValue(k, aCause);
-//                            System.out.println("second delete: " + v.getName() + ", " + k);
                         }
                     }
                 }

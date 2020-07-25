@@ -7,6 +7,7 @@ import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityFinder;
+import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityFinderR;
 import org.chocosolver.util.objects.SparseSet;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.SetType;
@@ -76,7 +77,8 @@ public class AlgoAllDiffAC_Zhang18 {
     private int[] nodeSCC;
 
     private DirectedGraph graph;
-    private StrongConnectivityFinder SCCfinder;
+//    private StrongConnectivityFinder SCCfinder;
+    private StrongConnectivityFinderR SCCfinder;
 
     //    // util
 //    private int[] stack, p, inf, dfn;
@@ -150,7 +152,8 @@ public class AlgoAllDiffAC_Zhang18 {
         restriction = new BitSet(arity);
         distinction = new BitSet(n);
         graph = new DirectedGraph(n, SetType.BITSET, false);
-        SCCfinder = new StrongConnectivityFinder(graph);
+//        SCCfinder = new StrongConnectivityFinder(graph);
+        SCCfinder = new StrongConnectivityFinderR(graph);
     }
 
     //***********************************************************************************

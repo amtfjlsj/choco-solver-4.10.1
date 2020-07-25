@@ -1,9 +1,16 @@
 plugins {
     id 'java'
+    id 'idea'
 }
 
 group 'ctrl'
 version '1.0-SNAPSHOT'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+//[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 //sourceCompatibility = 1.8
 
@@ -11,11 +18,10 @@ repositories {
     mavenCentral()
 }
 
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
-}
+//tasks.withType(JavaCompile) {
+//    options.encoding = "UTF-8"
+//}
 
 dependencies {
 //    testCompile group: 'junit', name: 'junit', version: '4.8.1'

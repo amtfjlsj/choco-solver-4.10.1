@@ -36,9 +36,11 @@ public class expAllDiff {
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
                 "AC",
-                "AC2",
-                "ACFast",
-                "ACFast2",
+                "ACFair",
+                "ACZhang18",
+                "ACZhang18M",
+                "ACZhang20",
+//                "ACFast2",
                 "ACNaive",
                 "BC"
         };

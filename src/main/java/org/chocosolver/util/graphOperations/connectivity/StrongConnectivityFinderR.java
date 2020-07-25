@@ -4,10 +4,7 @@ import org.chocosolver.util.objects.IntTuple2;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISet;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Iterator;
-import java.util.Stack;
+import java.util.*;
 
 public class StrongConnectivityFinderR {
     // input
@@ -57,8 +54,8 @@ public class StrongConnectivityFinderR {
 
         unvisited = new BitSet(n);
         cycles = new ArrayList<>();
-        iters = new Iterator[n];
-        levelNodes = new int[n];
+        iters = new Iterator[n + 1];
+        levelNodes = new int[n + 1];
 //        p = new int[n];
 //        inf = new int[n];
 //        nodeOfDfsNum = new int[n];
@@ -75,6 +72,14 @@ public class StrongConnectivityFinderR {
     public void findAllSCC() {
         ISet nodes = graph.getNodes();
         for (int i = 0; i < n; i++) {
+            unvisited.set(i, nodes.contains(i));
+        }
+        findAllSCCOf(unvisited);
+    }
+
+    public void findAllSCC(BitSet exception) {
+        ISet nodes = graph.getNodes();
+        for (int i = exception.nextClearBit(0); i >= 0 && i < n; i = exception.nextClearBit(i + 1)) {
             unvisited.set(i, nodes.contains(i));
         }
         findAllSCCOf(unvisited);
@@ -146,9 +151,11 @@ public class StrongConnectivityFinderR {
         for (int i = restriction.nextSetBit(0); i >= 0; i = restriction.nextSetBit(i + 1)) {
             if (nodes.contains(i) && graph.getPredOf(i).size() * graph.getSuccOf(i).size() == 0) {
                 nodeSCC[i] = nbSCC;
+                nbSCC++;
                 restriction.clear(i);
             }
         }
+//        System.out.println("fs: " + Arrays.toString(nodeSCC));
     }
 
     public boolean findAllSCC_ED(Stack<IntTuple2> deleteEdge) {

@@ -7,10 +7,12 @@ import org.chocosolver.solver.ICause;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityFinder;
+import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityFinderR;
 import org.chocosolver.util.objects.SparseSet;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.SetType;
 
+import java.util.Arrays;
 import java.util.BitSet;
 
 /**
@@ -76,7 +78,8 @@ public class AlgoAllDiffAC_Zhang18M {
     private int[] nodeSCC;
 
     private DirectedGraph mergedDigragh;
-    private StrongConnectivityFinder SCCfinder;
+    private StrongConnectivityFinderR SCCfinder;
+//    private StrongConnectivityFinder SCCfinder;
 
     //    // util
 //    private int[] stack, p, inf, dfn;
@@ -150,7 +153,8 @@ public class AlgoAllDiffAC_Zhang18M {
         restriction = new BitSet(arity);
         distinction = new BitSet(n);
         mergedDigragh = new DirectedGraph(arity, SetType.BITSET, false);
-        SCCfinder = new StrongConnectivityFinder(mergedDigragh);
+        SCCfinder = new StrongConnectivityFinderR(mergedDigragh);
+//        SCCfinder = new StrongConnectivityFinder(mergedDigragh);
     }
 
     //***********************************************************************************
@@ -436,19 +440,19 @@ public class AlgoAllDiffAC_Zhang18M {
                     if (!notGamma.contain(i) && notA.contain(valIdx)) {
                         ++Measurer.numDelValuesP1;
                         filter |= v.removeValue(k, aCause);
-                        //                System.out.println("first delete: " + v.getName() + ", " + k);
+//                        System.out.println("first delete: " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP1);
                     } else if (notGamma.contain(i) && notA.contain(valIdx)) {
                         int matchedVarIdx = val2Var[valIdx];
                         if (nodeSCC[i] != nodeSCC[matchedVarIdx]) {
                             if (valIdx == var2Val[i]) {
                                 int valNum = v.getDomainSize();
-                                filter |= v.instantiateTo(k, aCause);
                                 Measurer.numDelValuesP2 += valNum - 1;
-//                            System.out.println("instantiate  : " + v.getName() + ", " + k);
+                                filter |= v.instantiateTo(k, aCause);
+//                                System.out.println("instantiate  : " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP2);
                             } else {
                                 ++Measurer.numDelValuesP2;
                                 filter |= v.removeValue(k, aCause);
-//                            System.out.println("second delete: " + v.getName() + ", " + k);
+//                                System.out.println("second delete: " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP2);
                             }
                         }
                     }

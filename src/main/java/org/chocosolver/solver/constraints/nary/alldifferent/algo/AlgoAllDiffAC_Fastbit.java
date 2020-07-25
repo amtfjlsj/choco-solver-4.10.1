@@ -451,7 +451,7 @@ public class AlgoAllDiffAC_Fastbit {
             // 头部扩展，匹配变量
             notGamma.iterateValid();
             while (notGamma.hasNextValid()) {
-                Measurer.propNum++;
+                Measurer.numProp++;
                 int varIdx = notGamma.next();
                 int fromIdx = varIdx * numValue;
                 int endIdx = fromIdx + numValue - 1;

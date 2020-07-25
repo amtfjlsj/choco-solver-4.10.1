@@ -1,15 +1,9 @@
 package amtf;
 
 import amtf.parser.XCSPParser;
-import gnu.trove.impl.sync.TSynchronizedShortByteMap;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.search.strategy.Search;
-import org.chocosolver.solver.search.strategy.selectors.values.IntDomainMin;
-import org.chocosolver.solver.search.strategy.selectors.variables.FirstFail;
-import org.chocosolver.solver.search.strategy.selectors.variables.ImpactBased;
-import org.chocosolver.solver.search.strategy.selectors.variables.ImpactBasedOpt;
-import org.chocosolver.solver.search.strategy.selectors.variables.VariableSelector;
 import org.chocosolver.solver.variables.IntVar;
 
 import java.util.Arrays;
@@ -51,21 +45,23 @@ public class testAllDiff {
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-015-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-020-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-030-9-mod.xml",
-                "C:\\bench\\X3\\Queens\\Queens-0008-m1.xml",
+                "C:\\bench\\X3\\Queens\\Queens-0004-m1.xml",
 //                "C:\\bench\\X3\\SportsScheduling\\SportsScheduling-08.xml",
 //                "/Users/lizhe/allDiff_Series/Queens/Queens-m1-s1/Queens-0020-m1.xml"
         };
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
 //                "ACFair",
-                "ACFair",
+//                "ACFair",
 //                "AC",
 //                "AC2",
 //                "ACFast",
-                "ACZhang20",
+//                "ACZhang18",
+                "ACZhang18M",
+//                "ACZhang20",
 //                "ACFast2",
 //                "ACFastM",
-                "ACNaive",
+//                "ACNaive",
 //                "BC",
         };
         int runNum = 1;
@@ -88,8 +84,8 @@ public class testAllDiff {
                     }
                     Arrays.sort(decVars, Comparator.comparingInt(IntVar::getId));
                     Solver solver = model.getSolver();
-//                    solver.setSearch(activityBasedSearch(decVars));
                     solver.setSearch(Search.defaultSearch(model));
+//                    solver.setSearch(activityBasedSearch(decVars));
 //                    solver.setSearch(Search.activityBasedSearch (decVars));
 //                    solver.setSearch(Search.domOverWDegSearch(decVars));
 //                    solver.setSearch(intVarSearch(new FirstFail(model), new IntDomainMin(), decVars));
@@ -111,7 +107,10 @@ public class testAllDiff {
                         out.println("find matching time: " + Measurer.matchingTime / IN_SEC + "s");
                         out.println("filter time: " + Measurer.filterTime / IN_SEC + "s");
                         out.println("scc time: " + Measurer.checkSCCTime / IN_SEC + "s");
-                        solver.printStatistics();
+                        out.println("|P1|: " + Measurer.numDelValuesP1);
+                        out.println("|P2|: " + Measurer.numDelValuesP2);
+                        out.println("|Prop|: " + Measurer.numProp);
+//                        solver.printStatistics();
                     }
                 }
             }

@@ -402,8 +402,8 @@ public class AlgoAllDiffAC_NaiveBitSet extends AlgoAllDiffAC_Naive {
                         if (!graphLinkedMatrix[varIdx].get(val2Var[valIdx]) && !checkSCC(varIdx, valIdx)) {
                             if (valIdx == var2Val[varIdx]) {
                                 int valNum = v.getDomainSize();
-                                filter |= v.instantiateTo(k, aCause);
                                 Measurer.numDelValuesP2 += valNum - 1;
+                                filter |= v.instantiateTo(k, aCause);
 //                            System.out.println("instantiate  : " + v.getName() + ", " + k);
                             } else {
                                 ++Measurer.numDelValuesP2;
