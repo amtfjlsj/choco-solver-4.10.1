@@ -34,27 +34,29 @@ public class Measurer {
 //    public static long numP2;
 //    public static long numP1AndP2;
 
-    public void resetMask() {
+    public static void resetMask() {
         propStatisticsMask = 0;
     }
 
-    public void resetPropState() {
+    public static void resetPropState() {
 //        HASNOTNONE = true;
         HASNONE = false;
         HASNOTSKIPPED = true;
         HASNOTP1 = true;
         HASNOTP2 = true;
-        HASNOTP1ANDP2 = true;
+//        HASNOTP1ANDP2 = true;
     }
 
-    public void enterProp() {
+    public static void enterProp() {
+        resetPropState();
+        numProp++;
         if (!HASNONE) {
             numNone++;
             HASNONE = true;
         }
     }
 
-    public void enterSkip() {
+    public static void enterSkip() {
         if (HASNOTSKIPPED) {
             numSkip++;
             HASNOTSKIPPED = false;
@@ -65,10 +67,13 @@ public class Measurer {
         }
     }
 
-    public void enterP1() {
+    public static void enterP1() {
         if (HASNOTP1) {
             numP1++;
             HASNOTP1 = false;
+            if (!HASNOTP2) {
+                numP1AndP2++;
+            }
             if (HASNONE) {
                 numNone--;
                 HASNONE = false;
@@ -76,25 +81,30 @@ public class Measurer {
         }
     }
 
-    public void enterP2() {
+    public static void enterP2() {
         if (HASNOTP2) {
             numP2++;
             HASNOTP2 = false;
+            if (!HASNOTP1) {
+                numP1AndP2++;
+            }
             if (HASNONE) {
                 numNone--;
                 HASNONE = false;
             }
         }
     }
-
-    public void enterP1ANDP2() {
-        if (HASNOTP1ANDP2) {
-            numP1AndP2++;
-            if (HASNONE) {
-                numNone--;
-            }
-        }
-    }
+//
+//    public static void enterP1ANDP2() {
+//        if (HASNOTP1ANDP2) {
+//            numP1AndP2++;
+//            HASNOTP1ANDP2 = false;
+//            if (HASNONE) {
+//                numNone--;
+//                HASNONE = false;
+//            }
+//        }
+//    }
 //    }
 //
 //    public enum propState {
@@ -146,7 +156,7 @@ public class Measurer {
         numP1 = 0;
         numP2 = 0;
         numP1AndP2 = 0;
-
+        resetPropState();
     }
 
     public void clearPropStat() {

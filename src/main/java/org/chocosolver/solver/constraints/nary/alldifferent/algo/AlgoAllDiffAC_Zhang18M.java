@@ -78,8 +78,8 @@ public class AlgoAllDiffAC_Zhang18M {
     private int[] nodeSCC;
 
     private DirectedGraph mergedDigragh;
-    private StrongConnectivityFinderR SCCfinder;
-//    private StrongConnectivityFinder SCCfinder;
+//    private StrongConnectivityFinderR SCCfinder;
+    private StrongConnectivityFinder SCCfinder;
 
     //    // util
 //    private int[] stack, p, inf, dfn;
@@ -153,8 +153,8 @@ public class AlgoAllDiffAC_Zhang18M {
         restriction = new BitSet(arity);
         distinction = new BitSet(n);
         mergedDigragh = new DirectedGraph(arity, SetType.BITSET, false);
-        SCCfinder = new StrongConnectivityFinderR(mergedDigragh);
-//        SCCfinder = new StrongConnectivityFinder(mergedDigragh);
+//        SCCfinder = new StrongConnectivityFinderR(mergedDigragh);
+        SCCfinder = new StrongConnectivityFinder(mergedDigragh);
     }
 
     //***********************************************************************************
@@ -169,6 +169,7 @@ public class AlgoAllDiffAC_Zhang18M {
 //                System.out.println(v.toString());
 //            }
 //        }
+        Measurer.enterProp();
         long startTime = System.nanoTime();
         findMaximumMatching();
         Measurer.matchingTime += System.nanoTime() - startTime;
@@ -439,20 +440,22 @@ public class AlgoAllDiffAC_Zhang18M {
                     int valIdx = val2Idx.get(k);
                     if (!notGamma.contain(i) && notA.contain(valIdx)) {
                         ++Measurer.numDelValuesP1;
+                        Measurer.enterP1();
                         filter |= v.removeValue(k, aCause);
 //                        System.out.println("first delete: " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP1);
                     } else if (notGamma.contain(i) && notA.contain(valIdx)) {
                         int matchedVarIdx = val2Var[valIdx];
                         if (nodeSCC[i] != nodeSCC[matchedVarIdx]) {
+                            Measurer.enterP2();
                             if (valIdx == var2Val[i]) {
                                 int valNum = v.getDomainSize();
                                 Measurer.numDelValuesP2 += valNum - 1;
+                                System.out.println("instantiate  : " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP2);
                                 filter |= v.instantiateTo(k, aCause);
-//                                System.out.println("instantiate  : " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP2);
                             } else {
                                 ++Measurer.numDelValuesP2;
+                                System.out.println("second delete: " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP2);
                                 filter |= v.removeValue(k, aCause);
-//                                System.out.println("second delete: " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP2);
                             }
                         }
                     }

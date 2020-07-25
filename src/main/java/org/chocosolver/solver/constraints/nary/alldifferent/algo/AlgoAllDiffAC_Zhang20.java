@@ -190,15 +190,13 @@ public class AlgoAllDiffAC_Zhang20 {
     //***********************************************************************************
 
     public boolean propagate() throws ContradictionException {
+        Measurer.enterProp();
         long startTime = System.nanoTime();
         DE.clear();
         for (int i = 0; i < arity; ++i) {
             monitors[i].freeze();
             monitors[i].forEachRemVal(onValRem.set(i));
         }
-
-//        System.out.println("|DE| = " + DE.size());
-//        System.out.println(DE);
 
         findMaximumMatching();
         Measurer.matchingTime += System.nanoTime() - startTime;
@@ -422,6 +420,7 @@ public class AlgoAllDiffAC_Zhang20 {
     private boolean filter() throws ContradictionException {
         boolean filter = false;
         if (buildSCC()) {
+            Measurer.enterSkip();
             return true;
         }
         for (int varIdx = 0; varIdx < arity; varIdx++) {
@@ -431,14 +430,15 @@ public class AlgoAllDiffAC_Zhang20 {
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     int valIdx = val2Idx.get(k);
                     if (nodeSCC[varIdx] != nodeSCC[valIdx + addArity]) {
+                        Measurer.enterP2();
                         if (valIdx == var2Val[varIdx]) {
                             int valNum = v.getDomainSize();
                             Measurer.numDelValuesP2 += valNum - 1;
+                            System.out.println("instantiate  : " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
                             filter |= v.instantiateTo(k, aCause);
-//                            System.out.println("instantiate  : " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
                         } else {
                             ++Measurer.numDelValuesP2;
-//                            System.out.println("second delete: " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
+                            System.out.println("second delete: " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
                             filter |= v.removeValue(k, aCause);
                         }
                     }

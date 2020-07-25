@@ -45,24 +45,24 @@ public class testAllDiff {
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-015-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-020-9-mod.xml",
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-030-9-mod.xml",
-                "C:\\bench\\X3\\Queens\\Queens-0004-m1.xml",
+//                "C:\\bench\\X3\\Queens\\Queens-0004-m1.xml",
 //                "C:\\bench\\X3\\SportsScheduling\\SportsScheduling-08.xml",
-//                "/Users/lizhe/allDiff_Series/Queens/Queens-m1-s1/Queens-0020-m1.xml"
+                "/Users/lizhe/allDiff_Series/Queens/Queens-m1-s1/Queens-0004-m1.xml"
         };
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
 //                "ACFair",
-//                "ACFair",
-//                "AC",
+                "AC",
+                "ACFair",
 //                "AC2",
 //                "ACFast",
-//                "ACZhang18",
+                "ACZhang18",
                 "ACZhang18M",
-//                "ACZhang20",
+                "ACZhang20",
 //                "ACFast2",
 //                "ACFastM",
-//                "ACNaive",
-//                "BC",
+                "ACNaive",
+                "BC",
         };
         int runNum = 1;
 
@@ -107,9 +107,12 @@ public class testAllDiff {
                         out.println("find matching time: " + Measurer.matchingTime / IN_SEC + "s");
                         out.println("filter time: " + Measurer.filterTime / IN_SEC + "s");
                         out.println("scc time: " + Measurer.checkSCCTime / IN_SEC + "s");
-                        out.println("|P1|: " + Measurer.numDelValuesP1);
-                        out.println("|P2|: " + Measurer.numDelValuesP2);
-                        out.println("|Prop|: " + Measurer.numProp);
+                        out.println("numProp: " + Measurer.numProp);
+                        out.println("numNone: " + Measurer.numNone);
+                        out.println("numSkip: " + Measurer.numSkip);
+                        out.println("numP1: " + Measurer.numP1);
+                        out.println("numP2: " + Measurer.numP2);
+                        out.println("numP1AndP2: " + Measurer.numP1AndP2);
 //                        solver.printStatistics();
                     }
                 }

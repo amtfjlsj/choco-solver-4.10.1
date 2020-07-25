@@ -108,7 +108,7 @@ public class AlgoAllDiffAC {
 
     public boolean propagate() throws ContradictionException {
 //        System.out.println("----------------" + id + " propagate----------------");
-
+        Measurer.enterProp();
         long startTime = System.nanoTime();
         findMaximumMatching();
         Measurer.matchingTime += System.nanoTime() - startTime;
@@ -242,12 +242,13 @@ public class AlgoAllDiffAC {
             for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                 j = map.get(k);
                 if (nodeSCC[i] != nodeSCC[j]) {
+                    Measurer.enterP2();
                     if (matching[i] == j) {
+                        System.out.println("instantiate  : " + v.getName() + ", " + k);
                         filter |= v.instantiateTo(k, aCause);
-//                        System.out.println("instantiate  : " + v.getName() + ", " + k);
                     } else {
+                        System.out.println("second delete: " + v.getName() + ", " + k);
                         filter |= v.removeValue(k, aCause);
-//                        System.out.println("second delete: " + v.getName() + ", " + k);
 //                        digraph.removeArc(i, j);
                     }
                 }

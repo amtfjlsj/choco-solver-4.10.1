@@ -36,7 +36,6 @@ public class PropAllDiffAC_Zhang20 extends Propagator<IntVar> {
     //***********************************************************************************
 
     protected AlgoAllDiffAC_Zhang20 filter;
-    private static long numProp = 0;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -59,8 +58,8 @@ public class PropAllDiffAC_Zhang20 extends Propagator<IntVar> {
 
     @Override
     public void propagate(int evtmask) throws ContradictionException {
-//        System.out.println("----------------" + (++numProp) + ", " + this.getId() + " propagate----------------");
-        Measurer.numProp++;
+        System.out.println("----------------" + (Measurer.numProp) + ", " + this.getId() + " propagate----------------");
+//        Measurer.numProp++;
         filter.propagate();
     }
 

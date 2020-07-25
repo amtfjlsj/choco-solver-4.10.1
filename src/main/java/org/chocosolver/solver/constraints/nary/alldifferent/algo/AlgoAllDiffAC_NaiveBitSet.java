@@ -149,13 +149,7 @@ public class AlgoAllDiffAC_NaiveBitSet extends AlgoAllDiffAC_Naive {
     //***********************************************************************************
 
     public boolean propagate() throws ContradictionException {
-//        System.out.println("----------------" + id + " propagate----------------");
-//        if (id == 2) {
-//            System.out.println("vars: ");
-//            for (IntVar v : vars) {
-//                System.out.println(v.toString());
-//            }
-//        }
+        Measurer.enterProp();
         long startTime = System.nanoTime();
         findMaximumMatching();
         Measurer.matchingTime += System.nanoTime() - startTime;
@@ -396,10 +390,12 @@ public class AlgoAllDiffAC_NaiveBitSet extends AlgoAllDiffAC_Naive {
                     int valIdx = val2Idx.get(k);
                     if (!notGamma.contain(varIdx) && notA.contain(valIdx)) {
                         ++Measurer.numDelValuesP1;
+                        Measurer.enterP1();
                         filter |= v.removeValue(k, aCause);
                         //                System.out.println("first delete: " + v.getName() + ", " + k);
                     } else if (notGamma.contain(varIdx) && notA.contain(valIdx)) {
                         if (!graphLinkedMatrix[varIdx].get(val2Var[valIdx]) && !checkSCC(varIdx, valIdx)) {
+                            Measurer.enterP2();
                             if (valIdx == var2Val[varIdx]) {
                                 int valNum = v.getDomainSize();
                                 Measurer.numDelValuesP2 += valNum - 1;

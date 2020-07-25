@@ -41,7 +41,6 @@ public class PropAllDiffAC_Naive extends Propagator<IntVar> {
     //***********************************************************************************
 
     protected AlgoAllDiffAC_Naive filter;
-    private static long numProp = 0;
 
     //***********************************************************************************
     // CONSTRUCTORS
