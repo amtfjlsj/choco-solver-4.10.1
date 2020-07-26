@@ -12,6 +12,7 @@ import org.chocosolver.util.objects.SparseSet;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.SetType;
 
+import java.util.Arrays;
 import java.util.BitSet;
 
 /**
@@ -428,30 +429,33 @@ public class AlgoAllDiffAC_Zhang18 {
     private boolean filter() throws ContradictionException {
         distinguish();
         buildSCC();
+//        System.out.println(val2Idx);
+//        System.out.println(Arrays.toString(var2Val));
         boolean filter = false;
-        for (int i = 0; i < arity; i++) {
-            IntVar v = vars[i];
+        for (int varIdx = 0; varIdx < arity; varIdx++) {
+            IntVar v = vars[varIdx];
             if (!v.isInstantiated()) {
                 int ub = v.getUB();
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     int valIdx = val2Idx.get(k);
-                    if (!notGamma.contain(i) && notA.contain(valIdx)) {
+                    if (!notGamma.contain(varIdx) && notA.contain(valIdx)) {
                         ++Measurer.numDelValuesP1;
                         Measurer.enterP1();
                         filter |= v.removeValue(k, aCause);
-                        //                System.out.println("first delete: " + v.getName() + ", " + k);
-                    } else if (notGamma.contain(i) && notA.contain(valIdx)) {
+//                        System.out.println("first delete: " + v.getName() + ", " + k);
+                    } else if (notGamma.contain(varIdx) && notA.contain(valIdx)) {
                         int matchedVarIdx = val2Var[valIdx];
-                        if (nodeSCC[i] != nodeSCC[matchedVarIdx]) {
+//                        System.out.println(varIdx + ", " + valIdx + ", " + nodeSCC[varIdx] + ", " + nodeSCC[matchedVarIdx]);
+                        if (nodeSCC[varIdx] != nodeSCC[valIdx + arity]) {
                             Measurer.enterP2();
-                            if (valIdx == var2Val[i]) {
+                            if (valIdx == var2Val[varIdx]) {
                                 int valNum = v.getDomainSize();
                                 filter |= v.instantiateTo(k, aCause);
-                                System.out.println("instantiate  : " + v.getName() + ", " + k);
+//                                System.out.println("instantiate  : " + v.getName() + ", " + k);
                                 Measurer.numDelValuesP2 += valNum - 1;
                             } else {
                                 ++Measurer.numDelValuesP2;
-                                System.out.println("second delete: " + v.getName() + ", " + k);
+//                                System.out.println("second delete: " + v.getName() + ", " + k);
                                 filter |= v.removeValue(k, aCause);
                             }
                         }

@@ -150,6 +150,7 @@ public class AlgoAllDiffAC2 {
 //                System.out.println(v.toString());
 //            }
 //        }
+        Measurer.enterProp();
         long startTime = System.nanoTime();
         findMaximumMatching();
         Measurer.matchingTime += System.nanoTime() - startTime;

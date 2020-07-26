@@ -9,6 +9,7 @@
  */
 package org.chocosolver.solver.constraints.nary.alldifferent;
 
+import amtf.Measurer;
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
 import org.chocosolver.solver.constraints.nary.alldifferent.algo.AlgoAllDiffAC_Fast2;
@@ -59,6 +60,7 @@ public class PropAllDiffACFast2 extends Propagator<IntVar> {
 
     @Override
     public void propagate(int evtmask) throws ContradictionException {
+//        System.out.println("----------------" + (Measurer.numProp) + ", " + this.getId() + " propagate----------------");
         filter.propagate();
     }
 

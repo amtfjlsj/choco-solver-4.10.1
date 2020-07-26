@@ -11,6 +11,7 @@ import org.chocosolver.util.graphOperations.connectivity.StrongConnectivityFinde
 import org.chocosolver.util.objects.SparseSet;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.SetType;
+import org.xml.sax.SAXParseException;
 
 import java.util.Arrays;
 import java.util.BitSet;
@@ -78,12 +79,13 @@ public class AlgoAllDiffAC_Zhang18M {
     private int[] nodeSCC;
 
     private DirectedGraph mergedDigragh;
-//    private StrongConnectivityFinderR SCCfinder;
-    private StrongConnectivityFinder SCCfinder;
+    private StrongConnectivityFinderR SCCfinder;
+//    private StrongConnectivityFinder SCCfinder;
 
     //    // util
 //    private int[] stack, p, inf, dfn;
     private BitSet distinction, restriction;
+    private SparseSet singleton;
 
     //***********************************************************************************
     // CONSTRUCTORS
@@ -144,7 +146,7 @@ public class AlgoAllDiffAC_Zhang18M {
         // SCC
         n = arity + numValue;
         nodeSCC = new int[n];
-
+        singleton = new SparseSet(n);
 //        stack = new int[n];
 //        p = new int[n];
 //        inf = new int[n];
@@ -153,8 +155,8 @@ public class AlgoAllDiffAC_Zhang18M {
         restriction = new BitSet(arity);
         distinction = new BitSet(n);
         mergedDigragh = new DirectedGraph(arity, SetType.BITSET, false);
-//        SCCfinder = new StrongConnectivityFinderR(mergedDigragh);
-        SCCfinder = new StrongConnectivityFinder(mergedDigragh);
+        SCCfinder = new StrongConnectivityFinderR(mergedDigragh);
+//        SCCfinder = new StrongConnectivityFinder(mergedDigragh);
     }
 
     //***********************************************************************************
@@ -402,6 +404,7 @@ public class AlgoAllDiffAC_Zhang18M {
 //        System.out.println(distinction.toString());
         SCCfinder.findAllSCC(distinction);
         nodeSCC = SCCfinder.getNodesSCC();
+        singleton = SCCfinder.getSingleton();
 //        System.out.println(Arrays.toString(nodeSCC));
     }
 
@@ -431,32 +434,42 @@ public class AlgoAllDiffAC_Zhang18M {
         distinguish();
         mergeNodes();
         buildSCC();
+//        System.out.println(val2Idx);
+//        System.out.println(Arrays.toString(var2Val));
         boolean filter = false;
-        for (int i = 0; i < arity; i++) {
-            IntVar v = vars[i];
+        for (int varIdx = 0; varIdx < arity; varIdx++) {
+            IntVar v = vars[varIdx];
             if (!v.isInstantiated()) {
                 int ub = v.getUB();
                 for (int k = v.getLB(); k <= ub; k = v.nextValue(k)) {
                     int valIdx = val2Idx.get(k);
-                    if (!notGamma.contain(i) && notA.contain(valIdx)) {
+                    if (!notGamma.contain(varIdx) && notA.contain(valIdx)) {
                         ++Measurer.numDelValuesP1;
                         Measurer.enterP1();
                         filter |= v.removeValue(k, aCause);
 //                        System.out.println("first delete: " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP1);
-                    } else if (notGamma.contain(i) && notA.contain(valIdx)) {
+                    } else if (notGamma.contain(varIdx) && notA.contain(valIdx)) {
                         int matchedVarIdx = val2Var[valIdx];
-                        if (nodeSCC[i] != nodeSCC[matchedVarIdx]) {
+//                        System.out.println(varIdx + ", " + valIdx + ", " + nodeSCC[varIdx] + ", " + nodeSCC[matchedVarIdx]);
+                        if (nodeSCC[varIdx] != nodeSCC[matchedVarIdx]) {
                             Measurer.enterP2();
-                            if (valIdx == var2Val[i]) {
+                            if (valIdx == var2Val[varIdx]) {
+//                            if (singleton.contain(varIdx)) {
                                 int valNum = v.getDomainSize();
                                 Measurer.numDelValuesP2 += valNum - 1;
-                                System.out.println("instantiate  : " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP2);
+//                                System.out.println("instantiate  : " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP2);
                                 filter |= v.instantiateTo(k, aCause);
                             } else {
                                 ++Measurer.numDelValuesP2;
-                                System.out.println("second delete: " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP2);
+//                                System.out.println("second delete: " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP2);
                                 filter |= v.removeValue(k, aCause);
                             }
+                        } else if (singleton.contain(nodeSCC[varIdx])){
+                            Measurer.enterP2();
+                            int valNum = v.getDomainSize();
+                            Measurer.numDelValuesP2 += valNum - 1;
+//                            System.out.println("instantiate  : " + v.getName() + ", " + k + ", " + filter + ", " + Measurer.numDelValuesP2);
+                            filter |= v.instantiateTo(k, aCause);
                         }
                     }
                 }

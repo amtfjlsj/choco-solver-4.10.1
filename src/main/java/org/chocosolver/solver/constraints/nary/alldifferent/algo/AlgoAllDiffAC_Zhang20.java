@@ -407,6 +407,7 @@ public class AlgoAllDiffAC_Zhang20 {
 
 //        SCCfinder.findAllSCC();
         if (SCCfinder.findAllSCC_ED(DE)) {
+            Measurer.enterSkip();
 //            System.out.println("xixi");
             return true;
         }
@@ -420,7 +421,6 @@ public class AlgoAllDiffAC_Zhang20 {
     private boolean filter() throws ContradictionException {
         boolean filter = false;
         if (buildSCC()) {
-            Measurer.enterSkip();
             return true;
         }
         for (int varIdx = 0; varIdx < arity; varIdx++) {
@@ -434,11 +434,11 @@ public class AlgoAllDiffAC_Zhang20 {
                         if (valIdx == var2Val[varIdx]) {
                             int valNum = v.getDomainSize();
                             Measurer.numDelValuesP2 += valNum - 1;
-                            System.out.println("instantiate  : " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
+//                            System.out.println("instantiate  : " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
                             filter |= v.instantiateTo(k, aCause);
                         } else {
                             ++Measurer.numDelValuesP2;
-                            System.out.println("second delete: " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
+//                            System.out.println("second delete: " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
                             filter |= v.removeValue(k, aCause);
                         }
                     }

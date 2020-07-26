@@ -4,6 +4,7 @@ import amtf.parser.XCSPParser;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.search.strategy.Search;
+import org.chocosolver.solver.search.strategy.selectors.variables.ImpactBased;
 import org.chocosolver.solver.variables.IntVar;
 
 import java.util.Arrays;
@@ -47,20 +48,17 @@ public class testAllDiff {
 //                "F:\\chenj\\data\\XCSP3\\AllDiff\\SchurrLemma-mod-s1\\SchurrLemma-030-9-mod.xml",
 //                "C:\\bench\\X3\\Queens\\Queens-0004-m1.xml",
 //                "C:\\bench\\X3\\SportsScheduling\\SportsScheduling-08.xml",
-                "/Users/lizhe/allDiff_Series/Queens/Queens-m1-s1/Queens-0004-m1.xml"
+//                "C:\\bench\\X3\\SportsScheduling\\SportsScheduling-08.xml",
+                "/Users/lizhe/allDiff_Series/Queens/Queens-m1-s1/Queens-0004-m1.xml",
+//                "F:\\X3Benchmarks\\alldiff\\Queens-m1-s1\\Queens-0050-m1.xml"
         };
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
-//                "ACFair",
                 "AC",
                 "ACFair",
-//                "AC2",
-//                "ACFast",
                 "ACZhang18",
                 "ACZhang18M",
                 "ACZhang20",
-//                "ACFast2",
-//                "ACFastM",
                 "ACNaive",
                 "BC",
         };
@@ -84,12 +82,13 @@ public class testAllDiff {
                     }
                     Arrays.sort(decVars, Comparator.comparingInt(IntVar::getId));
                     Solver solver = model.getSolver();
-                    solver.setSearch(Search.defaultSearch(model));
-//                    solver.setSearch(activityBasedSearch(decVars));
-//                    solver.setSearch(Search.activityBasedSearch (decVars));
-//                    solver.setSearch(Search.domOverWDegSearch(decVars));
-//                    solver.setSearch(intVarSearch(new FirstFail(model), new IntDomainMin(), decVars));
+//                    solver.setSearch(Search.defaultSearch(model));
+                    solver.setSearch(Search.activityBasedSearch(decVars));
+//                    solver.setSearch(Search.minDomLBSearch(decVars));
 //                    solver.setSearch(new ImpactBased(decVars, true));
+//                    solver.setSearch(Search.domOverWDegSearch(decVars));
+
+//                    solver.setSearch(intVarSearch(new FirstFail(model), new IntDomainMin(), decVars));
 //                solver.setSearch(intVarSearch();
 
                     if (solver.solve()) {

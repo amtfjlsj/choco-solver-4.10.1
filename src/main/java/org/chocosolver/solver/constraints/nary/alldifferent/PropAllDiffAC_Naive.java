@@ -9,6 +9,7 @@
  */
 package org.chocosolver.solver.constraints.nary.alldifferent;
 
+import amtf.Measurer;
 import gnu.trove.map.hash.TIntIntHashMap;
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.constraints.PropagatorPriority;
@@ -69,7 +70,7 @@ public class PropAllDiffAC_Naive extends Propagator<IntVar> {
 
     @Override
     public void propagate(int evtmask) throws ContradictionException {
-//        System.out.println("----------------" + (++numProp) + ", " + this.getId() + " propagate----------------");
+//        System.out.println("----------------" + (Measurer.numProp) + ", " + this.getId() + " propagate----------------");
         filter.propagate();
     }
 

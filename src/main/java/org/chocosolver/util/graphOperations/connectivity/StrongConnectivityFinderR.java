@@ -1,6 +1,7 @@
 package org.chocosolver.util.graphOperations.connectivity;
 
 import org.chocosolver.util.objects.IntTuple2;
+import org.chocosolver.util.objects.SparseSet;
 import org.chocosolver.util.objects.graphs.DirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISet;
 
@@ -35,6 +36,8 @@ public class StrongConnectivityFinderR {
     private Iterator<Integer>[] iters;
     private int[] levelNodes;
     private int curLevel = 0;
+    private SparseSet singleton;
+    private int sccSize = 0;
 //    private int index = 0;
 //    private BitSet visited;
 
@@ -56,6 +59,7 @@ public class StrongConnectivityFinderR {
         cycles = new ArrayList<>();
         iters = new Iterator[n + 1];
         levelNodes = new int[n + 1];
+        singleton = new SparseSet(n);
 //        p = new int[n];
 //        inf = new int[n];
 //        nodeOfDfsNum = new int[n];
@@ -70,6 +74,7 @@ public class StrongConnectivityFinderR {
     }
 
     public void findAllSCC() {
+        singleton.clear();
         ISet nodes = graph.getNodes();
         for (int i = 0; i < n; i++) {
             unvisited.set(i, nodes.contains(i));
@@ -78,6 +83,7 @@ public class StrongConnectivityFinderR {
     }
 
     public void findAllSCC(BitSet exception) {
+        singleton.clear();
         ISet nodes = graph.getNodes();
         for (int i = exception.nextClearBit(0); i >= 0 && i < n; i = exception.nextClearBit(i + 1)) {
             unvisited.set(i, nodes.contains(i));
@@ -134,11 +140,15 @@ public class StrongConnectivityFinderR {
             }
             if (hasSCCSplit) {
                 int stackNode = -1;
-
+                sccSize = 0;
                 while (stackNode != curNode) {
                     stackNode = popStack();
 //                    System.out.println("pop: " + stackNode + ", " + nbSCC);
                     nodeSCC[stackNode] = nbSCC;
+                    sccSize++;
+                }
+                if (sccSize == 1) {
+                    singleton.add(nbSCC);
                 }
                 nbSCC++;
             }
@@ -151,6 +161,7 @@ public class StrongConnectivityFinderR {
         for (int i = restriction.nextSetBit(0); i >= 0; i = restriction.nextSetBit(i + 1)) {
             if (nodes.contains(i) && graph.getPredOf(i).size() * graph.getSuccOf(i).size() == 0) {
                 nodeSCC[i] = nbSCC;
+                singleton.add(nbSCC);
                 nbSCC++;
                 restriction.clear(i);
             }
@@ -159,6 +170,7 @@ public class StrongConnectivityFinderR {
     }
 
     public boolean findAllSCC_ED(Stack<IntTuple2> deleteEdge) {
+        singleton.clear();
         DE = deleteEdge;
         ISet nodes = graph.getNodes();
         for (int i = 0; i < n; i++) {
@@ -227,11 +239,15 @@ public class StrongConnectivityFinderR {
             }
             if (hasSCCSplit) {
                 int stackNode = -1;
-
+                sccSize = 0;
                 while (stackNode != curnode) {
                     stackNode = popStack();
 //                    System.out.println("pop: " + stackNode + ", " + nbSCC);
                     nodeSCC[stackNode] = nbSCC;
+                    sccSize++;
+                }
+                if (sccSize == 1) {
+                    singleton.add(nbSCC);
                 }
                 nbSCC++;
 
@@ -292,11 +308,15 @@ public class StrongConnectivityFinderR {
                     if (hasSCCSplit) {
 //                        System.out.println(curLevel + ", f");
                         int stackNode = -1;
-
+                        sccSize = 0;
                         while (stackNode != curNode) {
                             stackNode = popStack();
 //                            System.out.println("pop: " + stackNode + ", " + nbSCC);
                             nodeSCC[stackNode] = nbSCC;
+                            sccSize++;
+                        }
+                        if (sccSize == 1) {
+                            singleton.add(nbSCC);
                         }
                         nbSCC++;
                     }
@@ -364,11 +384,15 @@ public class StrongConnectivityFinderR {
                     if (hasSCCSplit) {
 //                        System.out.println(curLevel + ", f");
                         int stackNode = -1;
-
+                        sccSize = 0;
                         while (stackNode != curNode) {
                             stackNode = popStack();
 //                            System.out.println("pop: " + stackNode + ", " + nbSCC);
                             nodeSCC[stackNode] = nbSCC;
+                            sccSize++;
+                        }
+                        if (sccSize == 1) {
+                            singleton.add(nbSCC);
                         }
                         nbSCC++;
 
@@ -410,6 +434,10 @@ public class StrongConnectivityFinderR {
 
     public int[] getNodesSCC() {
         return nodeSCC;
+    }
+
+    public SparseSet getSingleton() {
+        return singleton;
     }
 
     private void addCycles(int a, int b) {

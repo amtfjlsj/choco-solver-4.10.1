@@ -244,10 +244,10 @@ public class AlgoAllDiffAC {
                 if (nodeSCC[i] != nodeSCC[j]) {
                     Measurer.enterP2();
                     if (matching[i] == j) {
-                        System.out.println("instantiate  : " + v.getName() + ", " + k);
+//                        System.out.println("instantiate  : " + v.getName() + ", " + k);
                         filter |= v.instantiateTo(k, aCause);
                     } else {
-                        System.out.println("second delete: " + v.getName() + ", " + k);
+//                        System.out.println("second delete: " + v.getName() + ", " + k);
                         filter |= v.removeValue(k, aCause);
 //                        digraph.removeArc(i, j);
                     }
