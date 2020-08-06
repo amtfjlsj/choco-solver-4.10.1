@@ -49,13 +49,14 @@ public class testAllDiff {
 //                "C:\\bench\\X3\\Queens\\Queens-0004-m1.xml",
 //                "C:\\bench\\X3\\SportsScheduling\\SportsScheduling-08.xml",
 //                "C:\\bench\\X3\\SportsScheduling\\SportsScheduling-08.xml",
-//                "/Users/lizhe/allDiff_Series/Queens/Queens-m1-s1/Queens-0004-m1.xml",
+                "/Users/lizhe/allDiff_Series/Queens/Queens-m1-s1/Queens-0008-m1.xml",
+//                "/Users/lizhe/allDiff_Series/ColouredQueens/ColouredQueens-m1-s1/ColouredQueens-05.xml",
 //                "F:\\X3Benchmarks\\alldiff\\Queens-m1-s1\\Queens-0050-m1.xml"
-                "F:/X3Benchmarks/alldiff/ColouredQueens-m1-s1/ColouredQueens-05.xml"
+//                "F:/X3Benchmarks/alldiff/ColouredQueens-m1-s1/ColouredQueens-05.xml"
         };
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
-//                "AC",
+                "AC",
                 "ACFair",
 //                "AC2",
 //                "ACZhang18",

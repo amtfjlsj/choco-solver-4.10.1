@@ -390,18 +390,14 @@ public class AlgoAllDiffAC_Zhang20 {
         }
 
         // 添加非匹配边 val->var; val->t
-        int k;
-        for (int j = 0; j < numValues; ++j) {
-            // t-> free nodes
+        for (int j = 0, k = 0; j < numValues; ++j) {
             if (freeNode.contain(j)) {
                 graph.addArc(arity, j + addArity);
-            } else {
-                valUnmatchedVar[j].iterateValid();
-                while (valUnmatchedVar[j].hasNextValid()) {
-                    k = valUnmatchedVar[j].next();
-                    // val -> var
-                    graph.addArc(j + addArity, k);
-                }
+            }
+            valUnmatchedVar[j].iterateValid();
+            while (valUnmatchedVar[j].hasNextValid()) {
+                k = valUnmatchedVar[j].next();
+                graph.addArc(j + addArity, k);
             }
         }
 

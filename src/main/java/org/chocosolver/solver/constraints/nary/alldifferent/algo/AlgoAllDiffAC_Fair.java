@@ -311,11 +311,11 @@ public class AlgoAllDiffAC_Fair {
         }
 
 //        if (id == 2) {
-        System.out.println("-----final matching-----");
-        for (int i = 0; i < arity; i++) {
-            System.out.println(vars[i].getName() + " match " + idx2Val[var2Val[i]]);
-        }
-        System.out.println("------------------");
+//        System.out.println("-----final matching-----");
+//        for (int i = 0; i < arity; i++) {
+//            System.out.println(vars[i].getName() + " match " + idx2Val[var2Val[i]]);
+//        }
+//        System.out.println("------------------");
 //        }
 //        System.out.println(Arrays.toString(var2Val));
 //        System.out.println(Arrays.toString(val2Var));
@@ -340,17 +340,28 @@ public class AlgoAllDiffAC_Fair {
 
         }
 
-        // 添加非匹配边 val->var; val->t
-        int k;
-        for (int j = 0; j < numValues; ++j) {
+//        // 添加非匹配边 val->var; val->t
+//        int k;
+//        for (int j = 0; j < numValues; ++j) {
+//            if (freeNode.contain(j)) {
+//                graph.addArc(arity, j + addArity);
+//            } else {
+//                valUnmatchedVar[j].iterateValid();
+//                while (valUnmatchedVar[j].hasNextValid()) {
+//                    k = valUnmatchedVar[j].next();
+//                    graph.addArc(j + addArity, k);
+//                }
+//            }
+//        }
+
+        for (int j = 0, k = 0; j < numValues; ++j) {
             if (freeNode.contain(j)) {
                 graph.addArc(arity, j + addArity);
-            } else {
-                valUnmatchedVar[j].iterateValid();
-                while (valUnmatchedVar[j].hasNextValid()) {
-                    k = valUnmatchedVar[j].next();
-                    graph.addArc(j + addArity, k);
-                }
+            }
+            valUnmatchedVar[j].iterateValid();
+            while (valUnmatchedVar[j].hasNextValid()) {
+                k = valUnmatchedVar[j].next();
+                graph.addArc(j + addArity, k);
             }
         }
 
@@ -391,7 +402,7 @@ public class AlgoAllDiffAC_Fair {
 
         SCCfinder.findAllSCC();
         nodeSCC = SCCfinder.getNodesSCC();
-        System.out.println(Arrays.toString(nodeSCC));
+//        System.out.println(Arrays.toString(nodeSCC));
 //        graph.removeNode(numNodes);
 
     }
@@ -410,11 +421,11 @@ public class AlgoAllDiffAC_Fair {
                         if (valIdx == var2Val[varIdx]) {
                             int valNum = v.getDomainSize();
                             Measurer.numDelValuesP2 += valNum - 1;
-                            System.out.println("instantiate  : " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
+//                            System.out.println("instantiate  : " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
                             filter |= v.instantiateTo(k, aCause);
                         } else {
                             ++Measurer.numDelValuesP2;
-                            System.out.println("second delete: " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
+//                            System.out.println("second delete: " + v.getName() + ", " + k + " P2: " + Measurer.numDelValuesP2);
                             filter |= v.removeValue(k, aCause);
                         }
                     }
