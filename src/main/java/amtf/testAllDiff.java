@@ -49,18 +49,20 @@ public class testAllDiff {
 //                "C:\\bench\\X3\\Queens\\Queens-0004-m1.xml",
 //                "C:\\bench\\X3\\SportsScheduling\\SportsScheduling-08.xml",
 //                "C:\\bench\\X3\\SportsScheduling\\SportsScheduling-08.xml",
-                "/Users/lizhe/allDiff_Series/Queens/Queens-m1-s1/Queens-0004-m1.xml",
+//                "/Users/lizhe/allDiff_Series/Queens/Queens-m1-s1/Queens-0004-m1.xml",
 //                "F:\\X3Benchmarks\\alldiff\\Queens-m1-s1\\Queens-0050-m1.xml"
+                "F:/X3Benchmarks/alldiff/ColouredQueens-m1-s1/ColouredQueens-05.xml"
         };
         XCSPParser parser = new XCSPParser();
         String[] algorithms = new String[]{
-                "AC",
+//                "AC",
                 "ACFair",
-                "ACZhang18",
-                "ACZhang18M",
-                "ACZhang20",
-                "ACNaive",
-                "BC",
+//                "AC2",
+//                "ACZhang18",
+//                "ACZhang18M",
+//                "ACZhang20",
+//                "ACNaive",
+//                "BC",
         };
         int runNum = 1;
 
@@ -84,6 +86,7 @@ public class testAllDiff {
                     Solver solver = model.getSolver();
 //                    solver.setSearch(Search.defaultSearch(model));
                     solver.setSearch(Search.activityBasedSearch(decVars));
+
 //                    solver.setSearch(Search.minDomLBSearch(decVars));
 //                    solver.setSearch(new ImpactBased(decVars, true));
 //                    solver.setSearch(Search.domOverWDegSearch(decVars));

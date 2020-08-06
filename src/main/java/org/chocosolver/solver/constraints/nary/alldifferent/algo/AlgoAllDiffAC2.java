@@ -8,6 +8,7 @@ import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.util.objects.SparseSet;
 
+import java.util.Arrays;
 import java.util.BitSet;
 
 /**
@@ -309,11 +310,11 @@ public class AlgoAllDiffAC2 {
         }
 
 //        if (id == 2) {
-//            System.out.println("-----final matching-----");
-//            for (int i = 0; i < arity; i++) {
-//                System.out.println(vars[i].getName() + " match " + idx2Val[var2Val[i]]);
-//            }
-//            System.out.println("------------------");
+        System.out.println("-----final matching-----");
+        for (int i = 0; i < arity; i++) {
+            System.out.println(vars[i].getName() + " match " + idx2Val[var2Val[i]]);
+        }
+        System.out.println("------------------");
 //        }
 //        System.out.println(Arrays.toString(var2Val));
 //        System.out.println(Arrays.toString(val2Var));
@@ -426,6 +427,7 @@ public class AlgoAllDiffAC2 {
 
     private boolean filter() throws ContradictionException {
         buildSCC();
+        System.out.println(Arrays.toString(nodeSCC));
         boolean filter = false;
         for (int varIdx = 0; varIdx < arity; varIdx++) {
             IntVar v = vars[varIdx];
@@ -436,10 +438,10 @@ public class AlgoAllDiffAC2 {
                     if (nodeSCC[varIdx] != nodeSCC[valIdx + addArity]) {
                         if (valIdx == var2Val[varIdx]) {
                             filter |= v.instantiateTo(k, aCause);
-//                            System.out.println("instantiate  : " + v.getName() + ", " + k);
+                            System.out.println("instantiate  : " + v.getName() + ", " + k);
                         } else {
                             filter |= v.removeValue(k, aCause);
-//                            System.out.println("second delete: " + v.getName() + ", " + k);
+                            System.out.println("second delete: " + v.getName() + ", " + k);
                         }
                     }
                 }

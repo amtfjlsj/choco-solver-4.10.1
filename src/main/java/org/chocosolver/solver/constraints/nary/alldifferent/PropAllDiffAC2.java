@@ -59,7 +59,7 @@ public class PropAllDiffAC2 extends Propagator<IntVar> {
 
     @Override
     public void propagate(int evtmask) throws ContradictionException {
-//        System.out.println("----------------" + (Measurer.numProp) + ", " + this.getId() + " propagate----------------");
+        System.out.println("----------------" + (Measurer.numProp) + ", " + this.getId() + " propagate----------------");
         filter.propagate();
     }
 

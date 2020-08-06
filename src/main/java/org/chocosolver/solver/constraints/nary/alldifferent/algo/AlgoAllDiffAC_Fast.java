@@ -258,7 +258,7 @@ public class AlgoAllDiffAC_Fast {
 //        System.out.println(distinction.toString());
         SCCfinder.findAllSCC(distinction);
         nodeSCC = SCCfinder.getNodesSCC();
-//        System.out.println(Arrays.toString(nodeSCC));
+        System.out.println(Arrays.toString(nodeSCC));
     }
 
     private boolean filter() throws ContradictionException {

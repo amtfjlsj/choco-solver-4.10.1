@@ -394,7 +394,7 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
                         ++Measurer.numDelValuesP1;
                         Measurer.enterP1();
                         filter |= v.removeValue(k, aCause);
-//                        System.out.println("first delete: " + v.getName() + ", " + k);
+                        System.out.println("first delete: " + v.getName() + ", " + k);
                     } else if (notGamma.contain(varIdx) && notA.contain(valIdx)) {
                         if ((graphLinkedMatrix[varIdx] & 1 << val2Var[valIdx]) == 0 && !checkSCC(varIdx, valIdx)) {
                             Measurer.enterP2();
@@ -402,11 +402,11 @@ public class AlgoAllDiffAC_Naive32 extends AlgoAllDiffAC_Naive {
                                 int valNum = v.getDomainSize();
                                 Measurer.numDelValuesP2 += valNum - 1;
                                 filter |= v.instantiateTo(k, aCause);
-//                                System.out.println("instantiate  : " + v.getName() + ", " + k);
+                                System.out.println("instantiate  : " + v.getName() + ", " + k);
                             } else {
                                 ++Measurer.numDelValuesP2;
                                 filter |= v.removeValue(k, aCause);
-//                                System.out.println("second delete: " + v.getName() + ", " + k);
+                                System.out.println("second delete: " + v.getName() + ", " + k);
                             }
                         }
                     }

@@ -158,6 +158,8 @@ public class AlgoAllDiffAC {
         for (int i = 0; i < n; i++) {
             matching[i] = digraph.getPredOf(i).isEmpty() ? -1 : digraph.getPredOf(i).iterator().next();
         }
+
+        System.out.println("matching: " + Arrays.toString(matching));
     }
 
     private void tryToMatch(int i) throws ContradictionException {
@@ -227,7 +229,7 @@ public class AlgoAllDiffAC {
         }
         SCCfinder.findAllSCC();
         nodeSCC = SCCfinder.getNodesSCC();
-//        System.out.println(Arrays.toString(nodeSCC));
+        System.out.println(Arrays.toString(nodeSCC));
         digraph.removeNode(n2);
     }
 
@@ -244,10 +246,10 @@ public class AlgoAllDiffAC {
                 if (nodeSCC[i] != nodeSCC[j]) {
                     Measurer.enterP2();
                     if (matching[i] == j) {
-//                        System.out.println("instantiate  : " + v.getName() + ", " + k);
+                        System.out.println("instantiate  : " + v.getName() + ", " + k);
                         filter |= v.instantiateTo(k, aCause);
                     } else {
-//                        System.out.println("second delete: " + v.getName() + ", " + k);
+                        System.out.println("second delete: " + v.getName() + ", " + k);
                         filter |= v.removeValue(k, aCause);
 //                        digraph.removeArc(i, j);
                     }
